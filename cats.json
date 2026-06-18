@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "name": "袁小牛",
+    "gender": "male",
+    "avatar": "images/yuan_cow_01.jpg",
+    "avatar_hd": "images/yuan_cow_01.jpg",
+    "affection": 5,
+    "status": "normal",
+    "desc": "精神正常的奶牛",
+    "story": "袁小牛是2026年出现的一只新猫，一开始有点怕人一直在学校里面转悠，后来遇到了袁小花就一点点暴露出亲人的本性了",
+    "otherPhotos": [
+      { "thumb": "images/yuan_cow_02.jpg", "hd": "images/yuan_cow_02.jpg" },
+      { "thumb": "images/yuan_cow_03.jpg", "hd": "images/yuan_cow_03.jpg" }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "袁小花",
+    "gender": "female",
+    "avatar": "images/yuan_hana_01.jpg",
+    "avatar_hd": "images/yuan_hana_01.jpg",
+    "affection": 5,
+    "status": "normal",
+    "desc": "不高冷的小三花。",
+    "story": "袁小花是2026年出现的一只新猫，第一天就知道找人要吃的，而且特别会撒娇。",
+    "otherPhotos": []
+  }
+]
