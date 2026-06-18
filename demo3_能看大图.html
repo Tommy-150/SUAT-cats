@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐾 我的猫咪档案馆</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ================= 基础与背景 ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Nunito', "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #F7F5F0;
+            color: #333; min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 200, 150, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(150, 200, 255, 0.15) 0%, transparent 40%);
+            background-attachment: fixed; padding: 40px 20px;
+        }
+        body.modal-open { overflow: hidden; }
+
+        /* ================= 头部与筛选区 ================= */
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 2.5rem; font-weight: 800; color: #4A4A4A; letter-spacing: 2px; }
+        .header p { color: #888; margin-top: 8px; font-size: 1.1rem; }
+        .filters { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 50px; }
+        .filter-btn {
+            padding: 10px 24px; border: none; border-radius: 50px;
+            background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px);
+            color: #666; font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.03); font-family: inherit;
+        }
+        .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .filter-btn.active { background: #4A4A4A; color: #fff; box-shadow: 0 8px 20px rgba(74,74,74,0.2); }
+
+        /* ================= 卡片网格 ================= */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
+        .card {
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px);
+            border-radius: 24px; padding: 30px 20px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.8);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden; cursor: pointer;
+        }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+        .avatar-wrapper { width: 140px; height: 140px; margin: 0 auto 20px; position: relative; }
+        .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.1); transition: all 0.5s ease; }
+        .status-icon {
+            position: absolute; bottom: 5px; right: 5px; width: 36px; height: 36px;
+            background: #fff; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            opacity: 0; transform: scale(0.5); transition: all 0.3s ease;
+        }
+        .name-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .name { font-size: 1.5rem; font-weight: 800; color: #333; }
+        .gender { font-size: 1.2rem; }
+        .gender.male { color: #5B8DEF; }
+        .gender.female { color: #FF7E93; }
+        .affection { font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 10px; }
+        .paw-empty { opacity: 0.2; }
+        .desc { font-size: 0.9rem; color: #888; line-height: 1.6; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
+        .click-hint { margin-top: 15px; font-size: 0.8rem; color: #bbb; opacity: 0; transition: opacity 0.3s; }
+        .card:hover .click-hint { opacity: 1; }
+
+        /* ================= 特殊状态 ================= */
+        .card.status-star { border: 1px solid #e0e0e0; }
+        .card.status-star .avatar { filter: grayscale(100%); opacity: 0.8; }
+        .card.status-star .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-star .name { color: #888; }
+        .card.status-lost { border: 1px dashed #d0d0d0; }
+        .card.status-lost .avatar { filter: sepia(60%) saturate(60%); opacity: 0.7; }
+        .card.status-lost .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-lost .name { color: #999; }
+
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ================= 故事弹窗 ================= */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: #fff; width: 90%; max-width: 600px; max-height: 85vh;
+            border-radius: 24px; padding: 40px; position: relative;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            transform: scale(0.9) translateY(20px); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; flex-direction: column;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .close-btn {
+            position: absolute; top: 20px; right: 20px; width: 36px; height: 36px;
+            background: #f0f0f0; border: none; border-radius: 50%; font-size: 1.2rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: #666; transition: all 0.2s; z-index: 10;
+        }
+        .close-btn:hover { background: #e0e0e0; transform: rotate(90deg); }
+        .modal-header { display: flex; gap: 25px; align-items: center; margin-bottom: 25px; }
+        
+        /* 🌟 弹窗里的图片容器：增加点击放大提示 */
+        .modal-avatar-wrapper {
+            position: relative; flex-shrink: 0; cursor: zoom-in; /* 鼠标变成放大镜 */
+            border-radius: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .modal-avatar { width: 120px; height: 120px; object-fit: cover; display: block; transition: transform 0.4s ease; }
+        .zoom-hint {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1.5rem; opacity: 0; transition: opacity 0.3s;
+        }
+        .modal-avatar-wrapper:hover .modal-avatar { transform: scale(1.1); }
+        .modal-avatar-wrapper:hover .zoom-hint { opacity: 1; }
+
+        .modal-info { flex: 1; min-width: 0; }
+        .modal-info h2 { font-size: 2rem; margin-bottom: 10px; color: #333; word-break: break-all; }
+        .modal-meta { display: flex; gap: 20px; color: #888; font-size: 0.95rem; align-items: center; flex-wrap: nowrap; white-space: nowrap; }
+        .modal-story { flex: 1; overflow-y: auto; padding-right: 10px; }
+        .modal-story h3 { font-size: 1.2rem; color: #555; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px dashed #eee; }
+        .modal-story p { font-size: 1.05rem; line-height: 1.9; color: #444; margin-bottom: 18px; text-align: justify; text-indent: 2em; }
+        .modal-story p:last-child { margin-bottom: 0; }
+        .modal-story::-webkit-scrollbar { width: 6px; }
+        .modal-story::-webkit-scrollbar-track { background: transparent; }
+        .modal-story::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+
+        /* ================= 🌟 全屏高清看图组件 (Lightbox) ================= */
+        .lightbox {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); /* 极暗的背景，突出照片 */
+            z-index: 2000; /* 必须比故事弹窗层级更高 */
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .lightbox.active { opacity: 1; visibility: visible; }
+        
+        .lightbox-close {
+            position: absolute; top: 30px; right: 30px; width: 44px; height: 44px;
+            background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
+            color: #fff; font-size: 1.5rem; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; transition: background 0.2s;
+        }
+        .lightbox-close:hover { background: rgba(255,255,255,0.4); }
+
+        .lightbox-img {
+            max-width: 90%; max-height: 90vh; border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            opacity: 0; transform: scale(0.95); transition: all 0.4s ease;
+        }
+        .lightbox-img.loaded { opacity: 1; transform: scale(1); }
+
+        /* Loading 动画 (纯 CSS 转圈圈) */
+        .spinner {
+            width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #fff; border-radius: 50%; position: absolute;
+            animation: spin 0.8s linear infinite;
+        }
+        .spinner.hidden { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🐾 喵星人档案馆</h1>
+        <p>记录每一个相遇与告别</p>
+    </div>
+
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all">全部猫咪</button>
+        <button class="filter-btn" data-filter="male">♂ 男孩</button>
+        <button class="filter-btn" data-filter="female">♀ 女孩</button>
+        <button class="filter-btn" data-filter="star">⭐ 去了喵星</button>
+        <button class="filter-btn" data-filter="lost">🔍 失踪</button>
+    </div>
+
+    <div class="grid" id="catGrid"></div>
+
+    <!-- 故事弹窗 -->
+    <div class="modal-overlay" id="storyModal">
+        <div class="modal-content" id="modalContent">
+            <button class="close-btn" id="closeModal">✕</button>
+            <div class="modal-header">
+                <!-- 🌟 改造图片区域，增加点击放大效果 -->
+                <div class="modal-avatar-wrapper" id="modalAvatarWrapper">
+                    <img src="" alt="" class="modal-avatar" id="modalAvatar">
+                    <div class="zoom-hint">🔍</div>
+                </div>
+                <div class="modal-info">
+                    <h2 id="modalName"></h2>
+                    <div class="modal-meta">
+                        <span id="modalGender"></span>
+                        <span id="modalAffection"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-story">
+                <h3>📖 我们的故事</h3>
+                <div id="modalStoryText"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🌟 全屏高清看图组件 (Lightbox) -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose">✕</button>
+        <div class="spinner" id="lightboxSpinner"></div>
+        <img src="" alt="HD Image" class="lightbox-img" id="lightboxImg">
+    </div>
+
+    <script>
+        // 🌟 数据更新：区分了 avatar (缩略图) 和 avatar_hd (高清原图)
+        const catsData = [
+            {
+                id: 1, name: "橘子", gender: "male",
+                avatar: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400", 
+                avatar_hd: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=1600&q=90", // 高清图
+                affection: 5, status: "normal",
+                desc: "一只贪吃的橘猫，给口吃的就能随便摸。",
+                story: "橘子是我在小区楼下捡到的。那天晚上下着大雨，它躲在电动车踏板下面瑟瑟发抖，叫得很大声。\n\n我本来只是想喂它一根火腿肠，结果它吃完就蹭我的裤腿，赶都赶不走。带回家后，它展现出了惊人的干饭天赋，半年就从 6 斤涨到了 14 斤。\n\n虽然它现在胖得跳不上沙发，但每次我加班回家，它都会拖着沉重的身躯走到门口接我。它是我的解压神器。"
+            },
+            {
+                id: 2, name: "雪球", gender: "female",
+                avatar: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=400",
+                avatar_hd: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=1600&q=90",
+                affection: 3, status: "normal",
+                desc: "高冷的小公主，只允许我摸她的下巴。",
+                story: "雪球是个非常有原则的女孩。\n\n她不喜欢被抱，不喜欢被摸肚子，甚至不喜欢我盯着她看太久。但她有一个软肋：下巴。\n\n只要我伸出食指，轻轻挠她的下巴，她就会立刻闭上眼睛，发出拖拉机一样的呼噜声。那一刻，我觉得我是全世界最幸福的人。"
+            },
+            {
+                id: 3, name: "小黑", gender: "male",
+                avatar: "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=400",
+                avatar_hd: "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=1600&q=90",
+                affection: 5, status: "star",
+                desc: "回到喵星去抓星星了，永远怀念你。",
+                story: "小黑陪伴了我整整 15 年，从我高中一直到工作、成家。\n\n它见证了我无数个熬夜苦读的夜晚，也陪伴了我失恋时痛哭的凌晨。它不会说话，但它总是静静地趴在我的键盘旁边，用尾巴扫我的手背。\n\n它走的那天很安详，就在我怀里睡着了，再也没有醒来。我知道它没有离开，只是换了一种方式，变成了天上最亮的那颗星星，继续看着我。"
+            },
+            {
+                id: 4, name: "花花", gender: "female",
+                avatar: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400",
+                avatar_hd: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=1600&q=90",
+                affection: 2, status: "lost",
+                desc: "2023年冬天走丢了，如果你看到她请告诉我。",
+                story: "花花是一只胆子很小的三花猫，平时连大门都不敢出。\n\n2023 年冬天，家里装修，工人不小心没关好门，她受惊跑了出去。我找了她整整三个月，贴了无数寻猫启事，走遍了附近的每一个小区，但都没有她的消息。\n\n我现在依然在家里放着她的猫砂盆和最爱吃的罐头。我总觉得，她只是贪玩迷路了，总有一天会自己找回来的。如果你在街角看到一只缺了半个左耳朵的三花猫，请一定要告诉我。"
+            }
+        ];
+
+        const grid = document.getElementById('catGrid');
+        const modal = document.getElementById('storyModal');
+        const modalContent = document.getElementById('modalContent');
+        const closeBtn = document.getElementById('closeModal');
+        
+        // Lightbox 元素
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxSpinner = document.getElementById('lightboxSpinner');
+        const lightboxClose = document.getElementById('lightboxClose');
+
+        // 当前正在查看的高清图 URL (用于点击放大)
+        let currentHDUrl = '';
+
+        function getPaws(level) {
+            let paws = '';
+            for(let i=1; i<=5; i++) paws += i <= level ? '🐾' : '<span class="paw-empty">🐾</span>';
+            return paws;
+        }
+
+        function getStatusIcon(status) {
+            if (status === 'star') return '⭐';
+            if (status === 'lost') return '🔍';
+            return '';
+        }
+
+        function renderCats(filter = 'all') {
+            grid.innerHTML = '';
+            let filteredCats = catsData;
+            if (filter === 'male') filteredCats = catsData.filter(c => c.gender === 'male');
+            else if (filter === 'female') filteredCats = catsData.filter(c => c.gender === 'female');
+            else if (filter === 'star') filteredCats = catsData.filter(c => c.status === 'star');
+            else if (filter === 'lost') filteredCats = catsData.filter(c => c.status === 'lost');
+
+            filteredCats.forEach((cat, index) => {
+                const card = document.createElement('div');
+                card.className = `card status-${cat.status} fade-in`;
+                card.style.animationDelay = `${index * 0.1}s`; 
+                // 列表里依然只显示小图 avatar
+                card.innerHTML = `
+                    <div class="avatar-wrapper">
+                        <img src="${cat.avatar}" alt="${cat.name}" class="avatar">
+                        <div class="status-icon">${getStatusIcon(cat.status)}</div>
+                    </div>
+                    <div class="name-row">
+                        <span class="name">${cat.name}</span>
+                        <span class="gender ${cat.gender}">${cat.gender === 'male' ? '♂' : '♀'}</span>
+                    </div>
+                    <div class="affection">${getPaws(cat.affection)}</div>
+                    <div class="desc">${cat.desc}</div>
+                    <div class="click-hint">点击查看故事 👆</div>
+                `;
+                card.addEventListener('click', () => openModal(cat));
+                grid.appendChild(card);
+            });
+        }
+
+        function openModal(cat) {
+            document.getElementById('modalAvatar').src = cat.avatar; // 弹窗里也先加载小图
+            document.getElementById('modalName').innerText = cat.name;
+            document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${cat.gender === 'male' ? '♂ 男孩' : '♀ 女孩'}</span>`;
+            document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
+            
+            const paragraphs = cat.story.split('\n\n');
+            const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+            document.getElementById('modalStoryText').innerHTML = storyHTML;
+            
+            modalContent.className = `modal-content status-${cat.status}`;
+            modal.classList.add('active');
+            document.body.classList.add('modal-open');
+            
+            // 记录当前猫咪的高清图地址
+            currentHDUrl = cat.avatar_hd;
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.classList.remove('modal-open');
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (lightbox.classList.contains('active')) closeLightbox();
+                else if (modal.classList.contains('active')) closeModal();
+            }
+        });
+
+        // ================= 🌟 高清看图逻辑 =================
+        const modalAvatarWrapper = document.getElementById('modalAvatarWrapper');
+        
+        modalAvatarWrapper.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止冒泡，防止触发关闭弹窗
+            openLightbox(currentHDUrl);
+        });
+
+        function openLightbox(hdUrl) {
+            lightbox.classList.add('active');
+            lightboxSpinner.classList.remove('hidden'); // 显示 Loading
+            lightboxImg.classList.remove('loaded'); // 隐藏旧图片
+            
+            // 预加载高清大图
+            const img = new Image();
+            img.src = hdUrl;
+            
+            img.onload = () => {
+                // 图片下载完毕后，替换 src 并显示
+                lightboxImg.src = hdUrl;
+                lightboxSpinner.classList.add('hidden'); // 隐藏 Loading
+                setTimeout(() => lightboxImg.classList.add('loaded'), 50); // 稍微延迟触发淡入动画
+            };
+            
+            img.onerror = () => {
+                // 如果高清图加载失败，降级显示缩略图
+                lightboxImg.src = document.getElementById('modalAvatar').src;
+                lightboxSpinner.classList.add('hidden');
+                lightboxImg.classList.add('loaded');
+            };
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+        }
+
+        lightboxClose.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+
+        // ================= 筛选逻辑 =================
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                renderCats(this.dataset.filter);
+            });
+        });
+
+        renderCats();
+    </script>
+</body>
+</html>
