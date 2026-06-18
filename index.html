@@ -6,7 +6,6 @@
     <title>🐾 我的猫咪档案馆</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        /* ================= 基础与背景 ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Nunito', "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -17,8 +16,9 @@
             background-attachment: fixed; padding: 40px 20px;
         }
         body.modal-open { overflow: hidden; }
+        .loading-text { text-align: center; font-size: 1.2rem; color: #888; margin-top: 100px; grid-column: 1 / -1; }
+        .error-text { text-align: center; font-size: 1.2rem; color: red; margin-top: 100px; grid-column: 1 / -1; }
 
-        /* ================= 头部与筛选区 ================= */
         .header { text-align: center; margin-bottom: 40px; }
         .header h1 { font-size: 2.5rem; font-weight: 800; color: #4A4A4A; letter-spacing: 2px; }
         .header p { color: #888; margin-top: 8px; font-size: 1.1rem; }
@@ -32,7 +32,6 @@
         .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
         .filter-btn.active { background: #4A4A4A; color: #fff; box-shadow: 0 8px 20px rgba(74,74,74,0.2); }
 
-        /* ================= 卡片网格 ================= */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
         .card {
             background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px);
@@ -61,7 +60,6 @@
         .click-hint { margin-top: 15px; font-size: 0.8rem; color: #bbb; opacity: 0; transition: opacity 0.3s; }
         .card:hover .click-hint { opacity: 1; }
 
-        /* ================= 特殊状态 ================= */
         .card.status-star { border: 1px solid #e0e0e0; }
         .card.status-star .avatar { filter: grayscale(100%); opacity: 0.8; }
         .card.status-star .status-icon { opacity: 1; transform: scale(1); }
@@ -71,10 +69,9 @@
         .card.status-lost .status-icon { opacity: 1; transform: scale(1); }
         .card.status-lost .name { color: #999; }
 
-        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ================= 故事弹窗 ================= */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px);
@@ -98,7 +95,6 @@
         }
         .close-btn:hover { background: #e0e0e0; transform: rotate(90deg); }
         .modal-header { display: flex; gap: 25px; align-items: center; margin-bottom: 25px; }
-        
         .modal-avatar-wrapper {
             position: relative; flex-shrink: 0; cursor: zoom-in;
             border-radius: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
@@ -115,60 +111,28 @@
         .modal-info { flex: 1; min-width: 0; }
         .modal-info h2 { font-size: 2rem; margin-bottom: 10px; color: #333; word-break: break-all; }
         .modal-meta { display: flex; gap: 20px; color: #888; font-size: 0.95rem; align-items: center; flex-wrap: nowrap; white-space: nowrap; }
-        
         .modal-story { flex: 1; overflow-y: auto; padding-right: 10px; }
         .modal-story h3 { font-size: 1.2rem; color: #555; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px dashed #eee; }
         .modal-story p { font-size: 1.05rem; line-height: 1.9; color: #444; margin-bottom: 18px; text-align: justify; text-indent: 2em; }
-        .modal-story p:last-child { margin-bottom: 0; }
-        
-        /* 滚动条美化 */
         .modal-story::-webkit-scrollbar { width: 6px; }
         .modal-story::-webkit-scrollbar-track { background: transparent; }
         .modal-story::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
 
-        /* ================= 🌟 新增：更多瞬间 (照片画廊) 样式 ================= */
-        .gallery-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px dashed #eee;
-        }
-        .gallery-section.hidden { display: none; } /* 没有照片时隐藏 */
-        .gallery-title { font-size: 1.1rem; color: #666; margin-bottom: 15px; font-weight: 700; }
-        
-        .gallery-scroll {
-            display: flex;
-            gap: 12px;
-            overflow-x: auto; /* 允许横向滚动 */
-            padding-bottom: 10px; /* 给滚动条留空间 */
-        }
-        
+        .gallery-section { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #eee; }
+        .gallery-section.hidden { display: none; }
+        .gallery-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; }
         .gallery-item {
-            position: relative;
-            flex-shrink: 0; /* 防止图片被压缩 */
-            width: 100px;
-            height: 100px;
-            border-radius: 16px;
-            overflow: hidden;
-            cursor: zoom-in;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
+            position: relative; flex-shrink: 0; width: 100px; height: 100px;
+            border-radius: 16px; overflow: hidden; cursor: zoom-in;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.3s ease;
         }
         .gallery-item:hover { transform: translateY(-4px); }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
         .gallery-item:hover img { transform: scale(1.1); }
-        
-        /* 复用放大镜遮罩效果 */
-        .gallery-item .zoom-hint {
-            font-size: 1.2rem;
-            background: rgba(0,0,0,0.3);
-        }
+        .gallery-item .zoom-hint { font-size: 1.2rem; background: rgba(0,0,0,0.3); }
         .gallery-item:hover .zoom-hint { opacity: 1; }
-
-        /* 隐藏横向滚动条，保持干净 */
         .gallery-scroll::-webkit-scrollbar { display: none; }
-        .gallery-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* ================= 全屏高清看图组件 (Lightbox) ================= */
         .lightbox {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); z-index: 2000;
@@ -213,9 +177,10 @@
         <button class="filter-btn" data-filter="lost">🔍 失踪</button>
     </div>
 
-    <div class="grid" id="catGrid"></div>
+    <div class="grid" id="catGrid">
+        <p class="loading-text" id="loadingText">正在读取猫咪档案...</p>
+    </div>
 
-    <!-- 故事弹窗 -->
     <div class="modal-overlay" id="storyModal">
         <div class="modal-content" id="modalContent">
             <button class="close-btn" id="closeModal">✕</button>
@@ -235,19 +200,14 @@
             <div class="modal-story">
                 <h3>📖 我们的故事</h3>
                 <div id="modalStoryText"></div>
-                
-                <!-- 🌟 新增：更多瞬间 (其他图片) 区块 -->
                 <div class="gallery-section hidden" id="gallerySection">
                     <h3>📸 更多瞬间</h3>
-                    <div class="gallery-scroll" id="galleryScroll">
-                        <!-- JS 动态生成小图 -->
-                    </div>
+                    <div class="gallery-scroll" id="galleryScroll"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 全屏高清看图组件 -->
     <div class="lightbox" id="lightbox">
         <button class="lightbox-close" id="lightboxClose">✕</button>
         <div class="spinner" id="lightboxSpinner"></div>
@@ -255,70 +215,21 @@
     </div>
 
     <script>
-        // 🌟 数据更新：增加了 otherPhotos 数组
-        const catsData = [
-            {
-                id: 1, name: "橘子", gender: "male",
-                avatar: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400", 
-                avatar_hd: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=1600&q=90",
-                affection: 5, status: "normal",
-                desc: "一只贪吃的橘猫，给口吃的就能随便摸。",
-                story: "橘子是我在小区楼下捡到的。那天晚上下着大雨，它躲在电动车踏板下面瑟瑟发抖，叫得很大声。\n\n我本来只是想喂它一根火腿肠，结果它吃完就蹭我的裤腿，赶都赶不走。带回家后，它展现出了惊人的干饭天赋，半年就从 6 斤涨到了 14 斤。\n\n虽然它现在胖得跳不上沙发，但每次我加班回家，它都会拖着沉重的身躯走到门口接我。它是我的解压神器。",
-                // 🌟 橘子的额外照片（有 3 张）
-                otherPhotos: [
-                    { thumb: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200", hd: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1600&q=90" },
-                    { thumb: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=200", hd: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=1600&q=90" },
-                    { thumb: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=200", hd: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=1600&q=90" }
-                ]
-            },
-            {
-                id: 2, name: "雪球", gender: "female",
-                avatar: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=400",
-                avatar_hd: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=1600&q=90",
-                affection: 3, status: "normal",
-                desc: "高冷的小公主，只允许我摸她的下巴。",
-                story: "雪球是个非常有原则的女孩。\n\n她不喜欢被抱，不喜欢被摸肚子，甚至不喜欢我盯着她看太久。但她有一个软肋：下巴。\n\n只要我伸出食指，轻轻挠她的下巴，她就会立刻闭上眼睛，发出拖拉机一样的呼噜声。那一刻，我觉得我是全世界最幸福的人。",
-                // 🌟 雪球只有 1 张额外照片
-                otherPhotos: [
-                    { thumb: "https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=200", hd: "https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=1600&q=90" }
-                ]
-            },
-            {
-                id: 3, name: "小黑", gender: "male",
-                avatar: "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=400",
-                avatar_hd: "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=1600&q=90",
-                affection: 5, status: "star",
-                desc: "回到喵星去抓星星了，永远怀念你。",
-                story: "小黑陪伴了我整整 15 年，从我高中一直到工作、成家。\n\n它见证了我无数个熬夜苦读的夜晚，也陪伴了我失恋时痛哭的凌晨。它不会说话，但它总是静静地趴在我的键盘旁边，用尾巴扫我的手背。\n\n它走的那天很安详，就在我怀里睡着了，再也没有醒来。我知道它没有离开，只是换了一种方式，变成了天上最亮的那颗星星，继续看着我。",
-                // 🌟 小黑没有额外照片 (空数组或干脆不写这个字段，代码都能兼容)
-                otherPhotos: [] 
-            },
-            {
-                id: 4, name: "花花", gender: "female",
-                avatar: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400",
-                avatar_hd: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=1600&q=90",
-                affection: 2, status: "lost",
-                desc: "2023年冬天走丢了，如果你看到她请告诉我。",
-                story: "花花是一只胆子很小的三花猫，平时连大门都不敢出。\n\n2023 年冬天，家里装修，工人不小心没关好门，她受惊跑了出去。我找了她整整三个月，贴了无数寻猫启事，走遍了附近的每一个小区，但都没有她的消息。\n\n我现在依然在家里放着她的猫砂盆和最爱吃的罐头。我总觉得，她只是贪玩迷路了，总有一天会自己找回来的。如果你在街角看到一只缺了半个左耳朵的三花猫，请一定要告诉我。",
-                // 花花没有写 otherPhotos 字段，测试代码的容错性
-            }
-        ];
-
         const grid = document.getElementById('catGrid');
+        const loadingText = document.getElementById('loadingText');
         const modal = document.getElementById('storyModal');
         const modalContent = document.getElementById('modalContent');
         const closeBtn = document.getElementById('closeModal');
-        
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightboxImg');
         const lightboxSpinner = document.getElementById('lightboxSpinner');
         const lightboxClose = document.getElementById('lightboxClose');
-        
-        // 获取画廊元素
         const gallerySection = document.getElementById('gallerySection');
         const galleryScroll = document.getElementById('galleryScroll');
 
+        let catsData = [];
         let currentHDUrl = '';
+        let currentFilter = 'all';
 
         function getPaws(level) {
             let paws = '';
@@ -332,16 +243,23 @@
             return '';
         }
 
-        function renderCats(filter = 'all') {
+        function renderCats() {
             grid.innerHTML = '';
             let filteredCats = catsData;
-            if (filter === 'male') filteredCats = catsData.filter(c => c.gender === 'male');
-            else if (filter === 'female') filteredCats = catsData.filter(c => c.gender === 'female');
-            else if (filter === 'star') filteredCats = catsData.filter(c => c.status === 'star');
-            else if (filter === 'lost') filteredCats = catsData.filter(c => c.status === 'lost');
+            
+            if (currentFilter === 'male') filteredCats = catsData.filter(c => c.gender === 'male');
+            else if (currentFilter === 'female') filteredCats = catsData.filter(c => c.gender === 'female');
+            else if (currentFilter === 'star') filteredCats = catsData.filter(c => c.status === 'star');
+            else if (currentFilter === 'lost') filteredCats = catsData.filter(c => c.status === 'lost');
+
+            if (filteredCats.length === 0) {
+                grid.innerHTML = '<p class="loading-text">没有找到符合条件的猫咪</p>';
+                return;
+            }
 
             filteredCats.forEach((cat, index) => {
                 const card = document.createElement('div');
+                // 修复了这里的反引号
                 card.className = `card status-${cat.status} fade-in`;
                 card.style.animationDelay = `${index * 0.1}s`; 
                 card.innerHTML = `
@@ -365,19 +283,18 @@
         function openModal(cat) {
             document.getElementById('modalAvatar').src = cat.avatar;
             document.getElementById('modalName').innerText = cat.name;
+            // 修复了这里的反引号
             document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${cat.gender === 'male' ? '♂ 男孩' : '♀ 女孩'}</span>`;
             document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
             
+            // 修复了换行符的解析
             const paragraphs = cat.story.split('\n\n');
             const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
             document.getElementById('modalStoryText').innerHTML = storyHTML;
             
-            // 🌟 处理“更多瞬间”画廊逻辑
-            galleryScroll.innerHTML = ''; // 先清空旧的图片
-            // 容错处理：如果 otherPhotos 存在且数组长度大于 0
+            galleryScroll.innerHTML = ''; 
             if (cat.otherPhotos && cat.otherPhotos.length > 0) {
-                gallerySection.classList.remove('hidden'); // 显示区块
-                
+                gallerySection.classList.remove('hidden'); 
                 cat.otherPhotos.forEach(photo => {
                     const item = document.createElement('div');
                     item.className = 'gallery-item';
@@ -385,18 +302,18 @@
                         <img src="${photo.thumb}" alt="Gallery photo">
                         <div class="zoom-hint">🔍</div>
                     `;
-                    // 绑定点击事件，点击小图打开高清 Lightbox
-                    item.addEventListener('click', () => openLightbox(photo.hd));
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openLightbox(photo.hd);
+                    });
                     galleryScroll.appendChild(item);
                 });
             } else {
-                gallerySection.classList.add('hidden'); // 没有额外照片则隐藏区块
+                gallerySection.classList.add('hidden'); 
             }
-            
             modalContent.className = `modal-content status-${cat.status}`;
             modal.classList.add('active');
             document.body.classList.add('modal-open');
-            
             currentHDUrl = cat.avatar_hd;
         }
 
@@ -407,7 +324,6 @@
 
         closeBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-        
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (lightbox.classList.contains('active')) closeLightbox();
@@ -415,7 +331,6 @@
             }
         });
 
-        // ================= 高清看图逻辑 =================
         const modalAvatarWrapper = document.getElementById('modalAvatarWrapper');
         modalAvatarWrapper.addEventListener('click', (e) => {
             e.stopPropagation(); 
@@ -426,16 +341,13 @@
             lightbox.classList.add('active');
             lightboxSpinner.classList.remove('hidden'); 
             lightboxImg.classList.remove('loaded'); 
-            
             const img = new Image();
             img.src = hdUrl;
-            
             img.onload = () => {
                 lightboxImg.src = hdUrl;
                 lightboxSpinner.classList.add('hidden'); 
                 setTimeout(() => lightboxImg.classList.add('loaded'), 50); 
             };
-            
             img.onerror = () => {
                 lightboxImg.src = document.getElementById('modalAvatar').src;
                 lightboxSpinner.classList.add('hidden');
@@ -450,17 +362,32 @@
         lightboxClose.addEventListener('click', closeLightbox);
         lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
 
-        // ================= 筛选逻辑 =================
         const filterBtns = document.querySelectorAll('.filter-btn');
         filterBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 filterBtns.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
-                renderCats(this.dataset.filter);
+                currentFilter = this.dataset.filter;
+                renderCats();
             });
         });
 
-        renderCats();
+        // 核心：读取 cats.json
+        fetch('cats.json')
+            .then(response => {
+                if (!response.ok) throw new Error('找不到 cats.json 文件');
+                return response.json();
+            })
+            .then(data => {
+                catsData = data;
+                // 移除 loading 提示
+                if(loadingText) loadingText.remove();
+                renderCats();
+            })
+            .catch(error => {
+                console.error('读取数据失败:', error);
+                grid.innerHTML = '<p class="error-text">❌ 读取猫咪档案失败，请检查 cats.json 文件是否存在且格式正确。</p>';
+            });
     </script>
 </body>
 </html>
