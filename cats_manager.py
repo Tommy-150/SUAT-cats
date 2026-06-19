@@ -1,0 +1,1633 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+SUAT-cats 管理器
+================
+仿 index.html 的卡片网格风格，集成：基本信息编辑、故事编辑、图片预览、
+缩略图编辑、新增猫咪、自动同步前端（Excel + cats.json）。
+
+依赖：Pillow、openpyxl
+"""
+import os
+import re
+import sys
+import json
+import glob
+import shutil
+import traceback
+import subprocess
+from pathlib import Path
+
+import tkinter as tk
+from tkinter import ttk, filedialog, messagebox
+import tkinter.font as tkfont
+
+try:
+    from PIL import Image, ImageTk
+except ImportError:
+    print("缺少 Pillow：pip install Pillow")
+    sys.exit(1)
+try:
+    from openpyxl import load_workbook
+except ImportError:
+    print("缺少 openpyxl：pip install openpyxl")
+    sys.exit(1)
+
+
+# ============================================================
+# Windows 高 DPI 适配，避免界面糊
+# ============================================================
+def _enable_dpi_awareness():
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        try:
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)  # Per-monitor v2
+        except Exception:
+            try:
+                ctypes.windll.user32.SetProcessDPIAware()
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
+_enable_dpi_awareness()
+
+
+# ============================================================
+# 视觉常量（仿 index.html 的米色 + 白卡 + 蓝紫粉点缀）
+# ============================================================
+COLOR_BG = "#F7F5F0"           # body 背景
+COLOR_CARD = "#FFFFFF"
+COLOR_CARD_BORDER = "#ECE7DC"
+COLOR_TEXT = "#333333"
+COLOR_SUBTEXT = "#888888"
+COLOR_ACCENT = "#4A4A4A"
+COLOR_ACCENT_LIGHT = "#6c6c6c"
+COLOR_MALE = "#5B8DEF"
+COLOR_FEMALE = "#FF7E93"
+COLOR_UNKNOWN = "#AAAAAA"
+COLOR_PAW = "#D9A05B"
+COLOR_HOVER = "#FAF7EE"
+COLOR_DIVIDER = "#EEE9DD"
+COLOR_DANGER = "#E57373"
+COLOR_OK = "#7CB87C"
+COLOR_WARN = "#E8A53A"
+COLOR_INFO = "#5B8DEF"
+
+# UI 字体：运行时探测开源字体，避免指定版权字体
+# 优先级是常见的 SIL OFL / Apache 2.0 开源中文字体；都没装就用 Tk 默认
+FONT_CANDIDATES_UI = [
+    "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC",
+    "Source Han Sans CN", "思源黑体", "思源黑体 CN",
+    "Sarasa Gothic SC", "Sarasa UI SC",
+    "LXGW WenKai", "LXGW WenKai GB", "霞鹜文楷",
+    "WenQuanYi Micro Hei", "文泉驿微米黑",
+    "DejaVu Sans", "Liberation Sans",
+]
+FONT_CANDIDATES_MONO = [
+    "JetBrains Mono", "Sarasa Mono SC", "Source Code Pro",
+    "DejaVu Sans Mono", "Liberation Mono",
+]
+
+# 实际使用的字体名，在 main() 运行时探测后赋值
+FONT_FAMILY_UI = None
+FONT_FAMILY_MONO = None
+
+# 字号集中管理
+FS_TITLE = 22
+FS_SUBTITLE = 11
+FS_CARD_NAME = 13
+FS_CARD_DESC = 9
+FS_BODY = 10
+FS_SMALL = 9
+FS_TINY = 8
+
+
+# ============================================================
+# 路径与字段
+# ============================================================
+BASE_DIR = Path(__file__).resolve().parent
+EXCEL_PATH = BASE_DIR / "统计信息.xlsx"
+JSON_PATH = BASE_DIR / "cats.json"
+CLASSIFIED_DIR = BASE_DIR / "classified"
+INDEX_HTML = BASE_DIR / "index.html"
+
+THUMB_SUFFIX = "_thumb"
+THUMB_OUTPUT_SIZE = 300
+THUMB_QUALITY = 90
+CARD_THUMB_SIZE = 150
+PREVIEW_SIZE = 320
+
+GENDER_OPTIONS = ["male", "female", "unknown"]
+STATUS_OPTIONS = ["normal", "star", "lost", "adopted"]
+GENDER_LABEL = {"male": "♂ 男孩", "female": "♀ 女孩", "unknown": "❓ 未知"}
+GENDER_COLOR = {"male": COLOR_MALE, "female": COLOR_FEMALE, "unknown": COLOR_UNKNOWN}
+STATUS_LABEL = {"normal": "正常", "star": "⭐ 喵星", "lost": "🔍 失踪", "adopted": "🏡 被领养"}
+STATUS_BADGE = {"normal": "", "star": "⭐", "lost": "🔍", "adopted": "🏡"}
+
+COLUMN_KEYWORDS = {
+    "id": "编号", "name": "姓名", "gender": "性别", "affection": "亲人指数",
+    "status": "状态", "desc": "概要", "story": "故事", "pic": "图名",
+}
+
+
+# ============================================================
+# Excel 读写
+# ============================================================
+class ExcelStore:
+    def __init__(self, path):
+        self.path = path
+        self.wb = None
+        self.ws = None
+        self.col_idx = {}
+
+    def load(self):
+        if not self.path.exists():
+            raise FileNotFoundError(f"找不到 {self.path}")
+        self.wb = load_workbook(self.path)
+        self.ws = self.wb.active
+        headers = {}
+        for c in range(1, self.ws.max_column + 1):
+            v = self.ws.cell(row=1, column=c).value
+            if v is None:
+                continue
+            headers[c] = str(v).strip()
+        for key, kw in COLUMN_KEYWORDS.items():
+            matched = [c for c, h in headers.items() if kw in h]
+            if not matched:
+                raise KeyError(f"Excel 中找不到含 '{kw}' 的列")
+            if len(matched) > 1:
+                raise ValueError(f"列 '{kw}' 匹配到多个: {matched}")
+            self.col_idx[key] = matched[0]
+
+    def all_rows(self):
+        rows = []
+        for r in range(2, self.ws.max_row + 1):
+            raw_id = self.ws.cell(row=r, column=self.col_idx["id"]).value
+            if raw_id is None or str(raw_id).strip() == "":
+                continue
+            rows.append({
+                "_row": r,
+                "id": self._fmt_id(raw_id),
+                "name": self._cell_str(r, "name"),
+                "gender": self._cell_str(r, "gender") or "unknown",
+                "affection": self._cell_int(r, "affection", default=1),
+                "status": self._cell_str(r, "status") or "normal",
+                "desc": self._cell_str(r, "desc"),
+                "story": self._cell_str(r, "story"),
+                "pic_name": self._cell_str(r, "pic"),
+            })
+        return rows
+
+    def _cell_str(self, r, key):
+        v = self.ws.cell(row=r, column=self.col_idx[key]).value
+        return "" if v is None else str(v).strip()
+
+    def _cell_int(self, r, key, default=1):
+        v = self.ws.cell(row=r, column=self.col_idx[key]).value
+        if v is None or str(v).strip() == "":
+            return default
+        try:
+            return int(v)
+        except Exception:
+            return default
+
+    @staticmethod
+    def _fmt_id(raw):
+        if isinstance(raw, (int, float)):
+            return f"{int(raw):02d}"
+        return str(raw).strip().zfill(2)
+
+    def update_row(self, row_index, fields):
+        for key, val in fields.items():
+            if key in self.col_idx:
+                self.ws.cell(row=row_index, column=self.col_idx[key]).value = val
+
+    def find_row_by_id(self, cat_id):
+        for r in range(2, self.ws.max_row + 1):
+            raw = self.ws.cell(row=r, column=self.col_idx["id"]).value
+            if raw is None:
+                continue
+            if self._fmt_id(raw) == cat_id:
+                return r
+        return None
+
+    def append_row(self, fields):
+        new_r = self.ws.max_row + 1
+        while self.ws.cell(row=new_r, column=self.col_idx["id"]).value not in (None, ""):
+            new_r += 1
+        self.update_row(new_r, fields)
+        return new_r
+
+    def delete_row(self, row_index):
+        self.ws.delete_rows(row_index, 1)
+
+    def next_id(self):
+        max_id = 0
+        for r in range(2, self.ws.max_row + 1):
+            raw = self.ws.cell(row=r, column=self.col_idx["id"]).value
+            if raw is None:
+                continue
+            try:
+                max_id = max(max_id, int(str(raw).strip()))
+            except Exception:
+                pass
+        return f"{max_id + 1:02d}"
+
+    def save(self):
+        self.wb.save(self.path)
+
+
+# ============================================================
+# cats.json 重生成
+# ============================================================
+def regenerate_cats_json(rows, classified_dir, json_path):
+    warnings = []
+    cats = []
+    for row in rows:
+        cat_id = row["id"]
+        name = row["name"]
+        pic_name = row["pic_name"]
+        folder_name = f"{cat_id} {name}"
+        folder_real = classified_dir / folder_name
+        folder_json = f"classified/{folder_name}"
+
+        if not folder_real.is_dir():
+            warnings.append(f"[{cat_id}] 文件夹缺失: {folder_name}")
+            continue
+        if not pic_name:
+            warnings.append(f"[{cat_id}] 图名为空")
+            continue
+
+        avatar = f"{folder_json}/{pic_name}_01_thumb.jpg"
+        avatar_hd = f"{folder_json}/{pic_name}_01.jpg"
+        if not (folder_real / f"{pic_name}_01.jpg").is_file():
+            warnings.append(f"[{cat_id}] 缺头像原图 {pic_name}_01.jpg")
+        if not (folder_real / f"{pic_name}_01_thumb.jpg").is_file():
+            warnings.append(f"[{cat_id}] 缺头像缩略图 {pic_name}_01_thumb.jpg")
+
+        other_photos = []
+        pattern = str(folder_real / f"{pic_name}_[0-9][0-9].jpg")
+        for fpath in sorted(glob.glob(pattern)):
+            m = re.match(rf"^{re.escape(pic_name)}_(\d{{2}})\.jpg$", os.path.basename(fpath))
+            if not m:
+                continue
+            seq = int(m.group(1))
+            if seq < 2:
+                continue
+            seq_str = f"{seq:02d}"
+            thumb_file = folder_real / f"{pic_name}_{seq_str}_thumb.jpg"
+            if not thumb_file.is_file():
+                warnings.append(f"[{cat_id}] 缺缩略图 {thumb_file.name}")
+            other_photos.append({
+                "thumb": f"{folder_json}/{pic_name}_{seq_str}_thumb.jpg",
+                "hd": f"{folder_json}/{pic_name}_{seq_str}.jpg",
+            })
+
+        cats.append({
+            "id": cat_id, "name": name,
+            "gender": row["gender"] or "unknown",
+            "avatar": avatar, "avatar_hd": avatar_hd,
+            "affection": row["affection"],
+            "status": row["status"] or "normal",
+            "desc": row["desc"], "story": row["story"],
+            "otherPhotos": other_photos,
+        })
+
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(cats, f, ensure_ascii=False, indent=2)
+    return len(cats), warnings
+
+
+# ============================================================
+# 缩略图工具
+# ============================================================
+def auto_thumbnail(src_path, dst_path, output_size=THUMB_OUTPUT_SIZE, crop_ratio=0.6):
+    img = Image.open(src_path).convert("RGB")
+    w, h = img.size
+    crop = max(100, int(min(w, h) * crop_ratio))
+    left = (w - crop) // 2
+    top = (h - crop) // 2
+    img = img.crop((left, top, left + crop, top + crop))
+    img = img.resize((output_size, output_size), Image.LANCZOS)
+    img.save(dst_path, "JPEG", quality=THUMB_QUALITY, optimize=True)
+
+
+def next_seq_for(folder, pic_name):
+    if not folder.is_dir():
+        return 1
+    used = set()
+    for f in folder.iterdir():
+        m = re.match(rf"^{re.escape(pic_name)}_(\d{{2}})(?:_thumb)?\.jpe?g$",
+                     f.name, re.IGNORECASE)
+        if m:
+            used.add(int(m.group(1)))
+    n = 1
+    while n in used:
+        n += 1
+    return n
+
+
+def open_in_explorer(path: Path):
+    """在资源管理器/Finder 中打开。"""
+    try:
+        if sys.platform == "win32":
+            os.startfile(str(path))
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", str(path)])
+        else:
+            subprocess.Popen(["xdg-open", str(path)])
+    except Exception as e:
+        messagebox.showerror("打不开", str(e))
+
+
+def detect_fonts(root):
+    """在已安装字体中按优先级选一个开源 CJK 字体。都没装就用 Tk 默认。"""
+    global FONT_FAMILY_UI, FONT_FAMILY_MONO
+    available = set(tkfont.families(root))
+    for name in FONT_CANDIDATES_UI:
+        if name in available:
+            FONT_FAMILY_UI = name
+            break
+    for name in FONT_CANDIDATES_MONO:
+        if name in available:
+            FONT_FAMILY_MONO = name
+            break
+
+    # 同时调高 Tk 默认字体的字号，让高 DPI 下不糊
+    default = tkfont.nametofont("TkDefaultFont")
+    if FONT_FAMILY_UI:
+        default.configure(family=FONT_FAMILY_UI, size=10)
+    else:
+        default.configure(size=10)
+    text_font = tkfont.nametofont("TkTextFont")
+    if FONT_FAMILY_UI:
+        text_font.configure(family=FONT_FAMILY_UI, size=10)
+    fixed = tkfont.nametofont("TkFixedFont")
+    if FONT_FAMILY_MONO:
+        fixed.configure(family=FONT_FAMILY_MONO, size=10)
+
+
+def ui_font(size=FS_BODY, weight="normal"):
+    """生成一个 UI 字体元组；FONT_FAMILY_UI 为 None 时交给 Tk 默认字体。"""
+    if FONT_FAMILY_UI:
+        return (FONT_FAMILY_UI, size, weight)
+    return ("TkDefaultFont", size, weight)
+
+
+def mono_font(size=FS_SMALL):
+    if FONT_FAMILY_MONO:
+        return (FONT_FAMILY_MONO, size)
+    return ("TkFixedFont", size)
+
+
+# ============================================================
+# 缩略图裁剪器
+# ============================================================
+class ThumbEditor(tk.Toplevel):
+    def __init__(self, master, original_path, on_done=None):
+        super().__init__(master)
+        self.title(f"编辑缩略图 - {original_path.name}")
+        self.geometry("1000x720")
+        self.configure(bg=COLOR_BG)
+        self.transient(master)
+        self.grab_set()
+
+        self.original_path = original_path
+        self.on_done = on_done
+        self.original_image = Image.open(original_path)
+        self.tk_image = None
+        self.crop_box = None
+        self.display_crop_box = None
+        self.display_scale = 1.0
+        self.img_x = 0; self.img_y = 0
+        self.dragging = False; self.resizing = False
+        self.resize_corner = None
+        self.offset_x = 0; self.offset_y = 0
+        self.crop_w = 0; self.crop_h = 0
+        self.min_crop_size = 100
+        self.output_size = THUMB_OUTPUT_SIZE
+
+        self._build_ui()
+        self._init_crop_box()
+        self.after(80, self._display)
+        self.bind("<Configure>", self._on_resize)
+
+    def _build_ui(self):
+        toolbar = tk.Frame(self, bg=COLOR_ACCENT, height=56)
+        toolbar.pack(fill=tk.X); toolbar.pack_propagate(False)
+        tk.Label(toolbar, text=f"✏️  编辑缩略图：{self.original_path.name}",
+                 font=ui_font(FS_BODY+2, "bold"), bg=COLOR_ACCENT, fg="white"
+                 ).pack(side=tk.LEFT, padx=18)
+        tk.Button(toolbar, text="💾 保存覆盖", command=self._save,
+                  font=ui_font(FS_BODY, "bold"), bg=COLOR_WARN, fg="white",
+                  padx=18, pady=6, relief=tk.FLAT, cursor="hand2", borderwidth=0
+                  ).pack(side=tk.RIGHT, padx=10, pady=10)
+        tk.Button(toolbar, text="↺ 重置", command=self._reset,
+                  font=ui_font(FS_BODY), bg="#fff8d6", fg=COLOR_TEXT,
+                  padx=14, pady=6, relief=tk.FLAT, cursor="hand2", borderwidth=0
+                  ).pack(side=tk.RIGHT, padx=4, pady=10)
+        tk.Button(toolbar, text="🎯 居中", command=self._center,
+                  font=ui_font(FS_BODY), bg="#e3f2fd", fg=COLOR_TEXT,
+                  padx=14, pady=6, relief=tk.FLAT, cursor="hand2", borderwidth=0
+                  ).pack(side=tk.RIGHT, padx=4, pady=10)
+
+        info_bar = tk.Frame(self, bg=COLOR_DIVIDER, height=32)
+        info_bar.pack(fill=tk.X); info_bar.pack_propagate(False)
+        self.info_label = tk.Label(info_bar, text="拖动方框移动，拖角调整大小（保持 1:1）",
+                                   bg=COLOR_DIVIDER, fg=COLOR_SUBTEXT, font=ui_font(FS_SMALL))
+        self.info_label.pack(side=tk.LEFT, padx=14)
+
+        self.canvas = tk.Canvas(self, bg="#f0f0f0", highlightthickness=0)
+        self.canvas.pack(fill=tk.BOTH, expand=True)
+        self.canvas.bind("<ButtonPress-1>", self._on_down)
+        self.canvas.bind("<B1-Motion>", self._on_drag)
+        self.canvas.bind("<ButtonRelease-1>", self._on_up)
+
+    def _init_crop_box(self):
+        w, h = self.original_image.size
+        side = max(100, int(min(w, h) * 0.6))
+        x1 = (w - side) // 2; y1 = (h - side) // 2
+        self.crop_box = (x1, y1, x1 + side, y1 + side)
+
+    def _display(self):
+        cw = self.canvas.winfo_width() or 800
+        ch = self.canvas.winfo_height() or 580
+        iw, ih = self.original_image.size
+        self.display_scale = min(cw / iw, ch / ih, 1.0)
+        dw, dh = int(iw * self.display_scale), int(ih * self.display_scale)
+        disp = self.original_image.resize((dw, dh), Image.LANCZOS)
+        self.tk_image = ImageTk.PhotoImage(disp)
+        self.canvas.delete("all")
+        self.img_x = (cw - dw) // 2
+        self.img_y = (ch - dh) // 2
+        self.canvas.create_image(self.img_x, self.img_y, anchor=tk.NW, image=self.tk_image)
+        self._draw_box()
+
+    def _draw_box(self):
+        if not self.crop_box:
+            return
+        x1, y1, x2, y2 = self.crop_box
+        s = self.display_scale
+        dx1 = self.img_x + int(x1 * s); dy1 = self.img_y + int(y1 * s)
+        dx2 = self.img_x + int(x2 * s); dy2 = self.img_y + int(y2 * s)
+        self.display_crop_box = (dx1, dy1, dx2, dy2)
+        cw = self.canvas.winfo_width(); ch = self.canvas.winfo_height()
+        self.canvas.delete("box")
+        for rect in [(0, 0, dx1, ch), (dx2, 0, cw, ch),
+                     (dx1, 0, dx2, dy1), (dx1, dy2, dx2, ch)]:
+            self.canvas.create_rectangle(*rect, fill="#000", stipple="gray50",
+                                         outline="", tags="box")
+        self.canvas.create_rectangle(dx1, dy1, dx2, dy2,
+                                     outline=COLOR_INFO, width=3, tags="box")
+        for hx, hy in [(dx1, dy1), (dx2, dy1), (dx1, dy2), (dx2, dy2)]:
+            self.canvas.create_oval(hx - 7, hy - 7, hx + 7, hy + 7,
+                                    fill="#FF7043", outline="white", width=2, tags="box")
+        side = x2 - x1
+        self.info_label.config(text=f"裁剪 {side}×{side}  ▸  输出 {self.output_size}×{self.output_size}")
+
+    def _on_down(self, e):
+        if not self.display_crop_box: return
+        dx1, dy1, dx2, dy2 = self.display_crop_box
+        for name, (cx, cy) in [("nw", (dx1, dy1)), ("ne", (dx2, dy1)),
+                                ("sw", (dx1, dy2)), ("se", (dx2, dy2))]:
+            if abs(e.x - cx) < 12 and abs(e.y - cy) < 12:
+                self.resizing = True; self.resize_corner = name
+                self.offset_x, self.offset_y = e.x, e.y
+                return
+        if dx1 <= e.x <= dx2 and dy1 <= e.y <= dy2:
+            self.dragging = True
+            self.offset_x = e.x - dx1; self.offset_y = e.y - dy1
+            self.crop_w = self.crop_box[2] - self.crop_box[0]
+            self.crop_h = self.crop_box[3] - self.crop_box[1]
+
+    def _on_drag(self, e):
+        if self.dragging: self._move(e)
+        elif self.resizing: self._resize(e)
+
+    def _on_up(self, _):
+        self.dragging = False; self.resizing = False; self.resize_corner = None
+
+    def _move(self, e):
+        s = self.display_scale
+        new_dx1 = e.x - self.offset_x; new_dy1 = e.y - self.offset_y
+        x1f = (new_dx1 - self.img_x) / s; y1f = (new_dy1 - self.img_y) / s
+        iw, ih = self.original_image.size
+        x1 = max(0, min(int(x1f), iw - self.crop_w))
+        y1 = max(0, min(int(y1f), ih - self.crop_h))
+        self.crop_box = (x1, y1, x1 + self.crop_w, y1 + self.crop_h)
+        self._draw_box()
+
+    def _resize(self, e):
+        x1, y1, x2, y2 = self.crop_box
+        iw, ih = self.original_image.size
+        s = self.display_scale
+        dxr = (e.x - self.offset_x) / s; dyr = (e.y - self.offset_y) / s
+        if self.resize_corner == "nw": x1 += dxr; y1 += dyr
+        elif self.resize_corner == "ne": x2 += dxr; y1 += dyr
+        elif self.resize_corner == "sw": x1 += dxr; y2 += dyr
+        elif self.resize_corner == "se": x2 += dxr; y2 += dyr
+        x1 = max(0, x1); y1 = max(0, y1)
+        x2 = min(iw, x2); y2 = min(ih, y2)
+        if self.resize_corner == "se": fx, fy = x1, y1
+        elif self.resize_corner == "sw": fx, fy = x2, y1
+        elif self.resize_corner == "ne": fx, fy = x1, y2
+        else: fx, fy = x2, y2
+        side = max(min(x2 - x1, y2 - y1), self.min_crop_size / s)
+        if self.resize_corner == "se":
+            x1, y1 = fx, fy; x2, y2 = x1 + side, y1 + side
+        elif self.resize_corner == "sw":
+            x2, y1 = fx, fy; x1, y2 = x2 - side, y1 + side
+        elif self.resize_corner == "ne":
+            x1, y2 = fx, fy; x2, y1 = x1 + side, y2 - side
+        else:
+            x2, y2 = fx, fy; x1, y1 = x2 - side, y2 - side
+        x1 = max(0, x1); y1 = max(0, y1)
+        x2 = min(iw, x2); y2 = min(ih, y2)
+        self.crop_box = (int(x1), int(y1), int(x2), int(y2))
+        self._draw_box()
+        self.offset_x, self.offset_y = e.x, e.y
+
+    def _on_resize(self, _e):
+        if self.original_image and self.tk_image:
+            self._display()
+
+    def _reset(self):
+        self._init_crop_box(); self._display()
+
+    def _center(self):
+        x1, y1, x2, y2 = self.crop_box
+        size = x2 - x1
+        iw, ih = self.original_image.size
+        nx = (iw - size) // 2; ny = (ih - size) // 2
+        self.crop_box = (nx, ny, nx + size, ny + size)
+        self._display()
+
+    def _save(self):
+        try:
+            cropped = self.original_image.crop(self.crop_box)
+            thumb = cropped.resize((self.output_size, self.output_size), Image.LANCZOS)
+            stem = self.original_path.stem
+            ext = self.original_path.suffix
+            out_path = self.original_path.with_name(f"{stem}{THUMB_SUFFIX}{ext}")
+            thumb.save(out_path, "JPEG", quality=THUMB_QUALITY, optimize=True)
+            messagebox.showinfo("已保存", f"缩略图已写入：\n{out_path.name}")
+            if self.on_done:
+                self.on_done(out_path)
+            self.destroy()
+        except Exception as e:
+            messagebox.showerror("失败", f"{e}\n\n{traceback.format_exc()}")
+
+
+# ============================================================
+# CatEditor：全字段 + 图片预览 + 未保存提醒
+# ============================================================
+class CatEditor(tk.Toplevel):
+    def __init__(self, master, store, cat=None, on_saved=None):
+        super().__init__(master)
+        self.store = store
+        self.cat = cat
+        self.on_saved = on_saved
+        self.is_new = cat is None
+
+        title = "新增猫咪" if self.is_new else f"编辑 {cat['id']} {cat['name']}"
+        self.title(title)
+        self.geometry("1100x780")
+        self.configure(bg=COLOR_BG)
+        self.transient(master)
+        self.grab_set()
+        self.protocol("WM_DELETE_WINDOW", self._on_close_request)
+
+        # 新增模式下收集的图片队列
+        self.new_photo_queue = []
+        # 修改标记
+        self._initial_snapshot = None
+        # 预览缓存
+        self._preview_image = None
+        self._original_for_preview = None
+
+        self._build()
+        self._load_values()
+        if not self.is_new:
+            self._refresh_existing_photos()
+        self._initial_snapshot = self._snapshot()
+
+    # ---------- 脘本（判断 dirty）----------
+    def _snapshot(self):
+        return (
+            self.var_id.get(), self.var_name.get(), self.var_pic.get(),
+            self.var_gender.get(), self.var_status.get(),
+            int(self.var_affection.get() or 0), self.var_desc.get(),
+            self.txt_story.get("1.0", tk.END),
+            tuple((str(p["src"]), p["seq"], p["edit"]) for p in self.new_photo_queue),
+        )
+
+    def _is_dirty(self):
+        if self._initial_snapshot is None:
+            return False
+        return self._snapshot() != self._initial_snapshot
+
+    def _on_close_request(self):
+        if not self._is_dirty():
+            self.destroy(); return
+        ans = messagebox.askyesnocancel(
+            "未保存的修改",
+            "你有未保存的修改。\n\n是 ＝ 保存并退出\n否 ＝ 丢弃并退出\n取消 ＝ 继续编辑"
+        )
+        if ans is None:
+            return
+        if ans:
+            self._save()
+        else:
+            self.destroy()
+
+    # ---------- UI ----------
+    def _build(self):
+        # 顶部标题栏
+        head = tk.Frame(self, bg=COLOR_ACCENT, height=58)
+        head.pack(fill=tk.X); head.pack_propagate(False)
+        title = "➕ 新增一只猫咪" if self.is_new else f"✏️ {self.cat['id']} {self.cat['name']}"
+        tk.Label(head, text=title, font=ui_font(FS_BODY+4, "bold"),
+                 bg=COLOR_ACCENT, fg="white").pack(side=tk.LEFT, padx=22, pady=14)
+        tk.Label(head,
+                 text="所有字段都可修改・保存后同步 Excel 与 cats.json",
+                 font=ui_font(FS_SMALL), bg=COLOR_ACCENT, fg="#cccccc"
+                 ).pack(side=tk.LEFT, padx=8, pady=18)
+
+        outer = tk.Frame(self, bg=COLOR_BG)
+        outer.pack(fill=tk.BOTH, expand=True, padx=20, pady=14)
+
+        # 左侧：字段 + 故事
+        left = tk.Frame(outer, bg=COLOR_BG, width=560)
+        left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        # 右侧：图片区（列表 + 预览）
+        right = tk.Frame(outer, bg=COLOR_BG, width=460)
+        right.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(14, 0))
+        right.pack_propagate(False)
+
+        # ===== 字段卡片 =====
+        fields = self._make_card(left, "基本信息")
+        fields.pack(fill=tk.X, pady=(0, 12))
+
+        self.var_id = tk.StringVar()
+        self.var_name = tk.StringVar()
+        self.var_pic = tk.StringVar()
+        self.var_gender = tk.StringVar(value="unknown")
+        self.var_status = tk.StringVar(value="normal")
+        self.var_affection = tk.IntVar(value=3)
+        self.var_desc = tk.StringVar()
+
+        body = tk.Frame(fields, bg=COLOR_CARD)
+        body.pack(fill=tk.X, padx=18, pady=12)
+        body.columnconfigure(1, weight=1); body.columnconfigure(3, weight=1)
+
+        def label(parent, text, r, c):
+            tk.Label(parent, text=text, bg=COLOR_CARD, fg=COLOR_SUBTEXT,
+                     font=ui_font(FS_SMALL)
+                     ).grid(row=r, column=c, sticky="w", padx=4, pady=6)
+
+        def entry(parent, var, r, c, **kw):
+            e = tk.Entry(parent, textvariable=var,
+                         font=ui_font(FS_BODY), relief=tk.FLAT,
+                         bg="#fafafa", highlightthickness=1,
+                         highlightbackground=COLOR_DIVIDER,
+                         highlightcolor=COLOR_INFO, **kw)
+            e.grid(row=r, column=c, sticky="we", padx=4, pady=6, ipady=4)
+            return e
+
+        label(body, "编号", 0, 0)
+        e_id = entry(body, self.var_id, 0, 1, width=10)
+        if not self.is_new:
+            e_id.config(state="disabled")
+
+        label(body, "姓名", 0, 2)
+        entry(body, self.var_name, 0, 3)
+
+        label(body, "图名", 1, 0)
+        e_pic = entry(body, self.var_pic, 1, 1)
+        if not self.is_new:
+            e_pic.config(state="disabled")
+
+        label(body, "概要", 1, 2)
+        entry(body, self.var_desc, 1, 3)
+
+        label(body, "性别", 2, 0)
+        cb_g = ttk.Combobox(body, textvariable=self.var_gender,
+                            values=GENDER_OPTIONS, state="readonly",
+                            font=ui_font(FS_BODY))
+        cb_g.grid(row=2, column=1, sticky="we", padx=4, pady=6, ipady=2)
+
+        label(body, "状态", 2, 2)
+        cb_s = ttk.Combobox(body, textvariable=self.var_status,
+                            values=STATUS_OPTIONS, state="readonly",
+                            font=ui_font(FS_BODY))
+        cb_s.grid(row=2, column=3, sticky="we", padx=4, pady=6, ipady=2)
+
+        label(body, "亲人指数", 3, 0)
+        aff = tk.Frame(body, bg=COLOR_CARD)
+        aff.grid(row=3, column=1, columnspan=3, sticky="w", padx=4, pady=6)
+        tk.Spinbox(aff, from_=1, to=5, textvariable=self.var_affection,
+                   font=ui_font(FS_BODY), width=5, relief=tk.FLAT,
+                   bg="#fafafa", highlightthickness=1,
+                   highlightbackground=COLOR_DIVIDER
+                   ).pack(side=tk.LEFT, ipady=2)
+        self.aff_preview = tk.Label(aff, bg=COLOR_CARD, fg=COLOR_PAW,
+                                    font=ui_font(FS_BODY+2))
+        self.aff_preview.pack(side=tk.LEFT, padx=10)
+        self.var_affection.trace_add("write", lambda *_: self._update_paw_preview())
+        self._update_paw_preview()
+
+        # 提示说明
+        if self.is_new:
+            tk.Label(body,
+                     text="提示：图名与编号保存后不可修改。图名只能包含 英文/数字/下划线。",
+                     bg=COLOR_CARD, fg=COLOR_SUBTEXT, font=ui_font(FS_TINY),
+                     wraplength=520, justify="left"
+                     ).grid(row=4, column=0, columnspan=4, sticky="w", padx=4, pady=(8, 0))
+
+        # ===== 故事卡片 =====
+        story_card = self._make_card(left, "故事")
+        story_card.pack(fill=tk.BOTH, expand=True, pady=(0, 0))
+        story_inner = tk.Frame(story_card, bg=COLOR_CARD)
+        story_inner.pack(fill=tk.BOTH, expand=True, padx=18, pady=12)
+        self.txt_story = tk.Text(story_inner, height=8, font=ui_font(FS_BODY),
+                                  wrap="word", relief=tk.FLAT,
+                                  bg="#fafafa", padx=10, pady=10,
+                                  highlightthickness=1,
+                                  highlightbackground=COLOR_DIVIDER,
+                                  highlightcolor=COLOR_INFO)
+        self.txt_story.pack(fill=tk.BOTH, expand=True)
+        tk.Label(story_inner,
+                 text="空行会在前端被识别为段落分隔",
+                 bg=COLOR_CARD, fg=COLOR_SUBTEXT, font=ui_font(FS_TINY)
+                 ).pack(anchor="e", pady=(4, 0))
+
+        # ===== 右侧图片区 =====
+        photo_card = self._make_card(right, "图片")
+        photo_card.pack(fill=tk.BOTH, expand=True)
+        photo_inner = tk.Frame(photo_card, bg=COLOR_CARD)
+        photo_inner.pack(fill=tk.BOTH, expand=True, padx=14, pady=12)
+
+        # 预览区域
+        preview_box = tk.Frame(photo_inner, bg="#fafafa",
+                                highlightthickness=1,
+                                highlightbackground=COLOR_DIVIDER,
+                                width=PREVIEW_SIZE, height=PREVIEW_SIZE)
+        preview_box.pack(pady=(0, 8))
+        preview_box.pack_propagate(False)
+        self.preview_label = tk.Label(preview_box, bg="#fafafa",
+                                       fg=COLOR_SUBTEXT,
+                                       text="列表单击查看大图",
+                                       font=ui_font(FS_SMALL))
+        self.preview_label.pack(fill=tk.BOTH, expand=True)
+        self.preview_label.bind("<Button-1>", self._open_preview_external)
+
+        # 按钮栏
+        btn_bar = tk.Frame(photo_inner, bg=COLOR_CARD)
+        btn_bar.pack(fill=tk.X, pady=(2, 6))
+
+        def pill(parent, text, color, cmd):
+            return tk.Button(parent, text=text, command=cmd,
+                             font=ui_font(FS_SMALL, "bold"),
+                             bg=color, fg="white",
+                             relief=tk.FLAT, borderwidth=0,
+                             padx=10, pady=5, cursor="hand2")
+
+        if self.is_new:
+            pill(btn_bar, "📷 选主图", COLOR_OK,
+                 lambda: self._queue_photo(seq=1)).pack(side=tk.LEFT, padx=2)
+            pill(btn_bar, "➕ 加补充", COLOR_INFO,
+                 lambda: self._queue_photo(seq=None)).pack(side=tk.LEFT, padx=2)
+            pill(btn_bar, "✏️ 手动裁", COLOR_WARN,
+                 self._manual_thumb_queued).pack(side=tk.LEFT, padx=2)
+            pill(btn_bar, "🗑 移除", COLOR_DANGER,
+                 self._remove_queued).pack(side=tk.LEFT, padx=2)
+        else:
+            pill(btn_bar, "✏️ 重裁缩略", COLOR_WARN,
+                 self._edit_existing_thumb).pack(side=tk.LEFT, padx=2)
+            pill(btn_bar, "➕ 补充图", COLOR_INFO,
+                 self._add_extra_existing).pack(side=tk.LEFT, padx=2)
+            pill(btn_bar, "🗑 删除", COLOR_DANGER,
+                 self._delete_existing_photo).pack(side=tk.LEFT, padx=2)
+            pill(btn_bar, "📁 文件夹", COLOR_ACCENT_LIGHT,
+                 lambda: open_in_explorer(self._folder())).pack(side=tk.LEFT, padx=2)
+
+        # 图片列表
+        list_holder = tk.Frame(photo_inner, bg="white",
+                                highlightthickness=1,
+                                highlightbackground=COLOR_DIVIDER)
+        list_holder.pack(fill=tk.BOTH, expand=True, pady=(4, 0))
+        self.photo_list = tk.Listbox(list_holder, font=mono_font(FS_SMALL),
+                                      activestyle="dotbox", relief=tk.FLAT,
+                                      bg="white", borderwidth=0,
+                                      highlightthickness=0,
+                                      selectbackground=COLOR_HOVER,
+                                      selectforeground=COLOR_TEXT)
+        self.photo_list.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        sb = ttk.Scrollbar(list_holder, command=self.photo_list.yview)
+        sb.pack(side=tk.RIGHT, fill=tk.Y)
+        self.photo_list.config(yscrollcommand=sb.set)
+        self.photo_list.bind("<<ListboxSelect>>", lambda _e: self._on_photo_select())
+        self.photo_list.bind("<Double-Button-1>", lambda _e: self._open_preview_external())
+
+        # ===== 底部按钮栏 =====
+        bottom = tk.Frame(self, bg=COLOR_BG)
+        bottom.pack(fill=tk.X, padx=20, pady=(0, 16))
+        tk.Button(bottom, text="取消", command=self._on_close_request,
+                  font=ui_font(FS_BODY), bg="#eaeaea", fg=COLOR_TEXT,
+                  relief=tk.FLAT, borderwidth=0,
+                  padx=22, pady=8, cursor="hand2"
+                  ).pack(side=tk.RIGHT, padx=4)
+        tk.Button(bottom, text="💾 保存并同步", command=self._save,
+                  font=ui_font(FS_BODY, "bold"), bg=COLOR_ACCENT, fg="white",
+                  relief=tk.FLAT, borderwidth=0,
+                  padx=24, pady=8, cursor="hand2"
+                  ).pack(side=tk.RIGHT, padx=4)
+
+    # ---------- helper ----------
+    def _make_card(self, parent, title):
+        """返回一个仿 html 阶样式的卡片 Frame。"""
+        card = tk.Frame(parent, bg=COLOR_CARD,
+                        highlightthickness=1,
+                        highlightbackground=COLOR_CARD_BORDER)
+        title_bar = tk.Frame(card, bg=COLOR_CARD)
+        title_bar.pack(fill=tk.X, padx=18, pady=(12, 4))
+        tk.Label(title_bar, text=title, bg=COLOR_CARD, fg=COLOR_ACCENT,
+                 font=ui_font(FS_BODY+1, "bold")).pack(side=tk.LEFT)
+        sep = tk.Frame(card, bg=COLOR_DIVIDER, height=1)
+        sep.pack(fill=tk.X, padx=18)
+        return card
+
+    def _update_paw_preview(self):
+        try:
+            n = int(self.var_affection.get())
+        except Exception:
+            n = 0
+        n = max(0, min(5, n))
+        self.aff_preview.config(text="🐾" * n + "·" * (5 - n))
+
+    def _load_values(self):
+        if self.is_new:
+            self.var_id.set(self.store.next_id())
+            return
+        c = self.cat
+        self.var_id.set(c["id"])
+        self.var_name.set(c["name"])
+        self.var_pic.set(c["pic_name"])
+        self.var_gender.set(c["gender"] or "unknown")
+        self.var_status.set(c["status"] or "normal")
+        self.var_affection.set(c["affection"] or 1)
+        self.var_desc.set(c["desc"])
+        self.txt_story.delete("1.0", tk.END)
+        self.txt_story.insert("1.0", c["story"])
+
+    # ---------- 预览 ----------
+    def _show_preview_path(self, path):
+        if path is None or not Path(path).is_file():
+            self.preview_label.config(image="", text="(图片不存在)")
+            self._preview_image = None
+            self._original_for_preview = None
+            return
+        try:
+            img = Image.open(path).convert("RGB")
+            img.thumbnail((PREVIEW_SIZE - 8, PREVIEW_SIZE - 8), Image.LANCZOS)
+            ph = ImageTk.PhotoImage(img)
+            self._preview_image = ph
+            self._original_for_preview = Path(path)
+            self.preview_label.config(image=ph, text="")
+        except Exception as e:
+            self.preview_label.config(image="", text=f"(预览失败 {e})")
+            self._preview_image = None
+            self._original_for_preview = None
+
+    def _open_preview_external(self, _e=None):
+        """在系统看图器中打开当前预览的原图。"""
+        if self._original_for_preview and self._original_for_preview.is_file():
+            try:
+                if sys.platform == "win32":
+                    os.startfile(str(self._original_for_preview))
+                elif sys.platform == "darwin":
+                    subprocess.Popen(["open", str(self._original_for_preview)])
+                else:
+                    subprocess.Popen(["xdg-open", str(self._original_for_preview)])
+            except Exception as e:
+                messagebox.showerror("打不开", str(e))
+
+    def _on_photo_select(self):
+        idx = self._selected_idx()
+        if idx is None:
+            return
+        if self.is_new:
+            if 0 <= idx < len(self.new_photo_queue):
+                self._show_preview_path(self.new_photo_queue[idx]["src"])
+        else:
+            seq = self._selected_existing_seq()
+            if seq is None:
+                return
+            folder = self._folder()
+            self._show_preview_path(folder / f"{self.cat['pic_name']}_{seq:02d}.jpg")
+
+    def _selected_idx(self):
+        sel = self.photo_list.curselection()
+        return sel[0] if sel else None
+
+    # ---------- 新增模式 ----------
+    def _queue_photo(self, seq):
+        files = filedialog.askopenfilenames(
+            title="选择图片",
+            filetypes=[("图片", "*.jpg *.jpeg *.png"), ("所有", "*.*")]
+        )
+        if not files:
+            return
+        if seq == 1:
+            self.new_photo_queue = [p for p in self.new_photo_queue if p["seq"] != 1]
+            self.new_photo_queue.insert(0, {"src": Path(files[0]), "seq": 1, "edit": False})
+        else:
+            for f in files:
+                self.new_photo_queue.append({"src": Path(f), "seq": None, "edit": False})
+        self._refresh_queue_list()
+
+    def _refresh_queue_list(self):
+        self.photo_list.delete(0, tk.END)
+        for p in self.new_photo_queue:
+            tag = "主图" if p["seq"] == 1 else "补充"
+            edit_tag = "  ✏️手动裁" if p["edit"] else ""
+            self.photo_list.insert(tk.END, f"[{tag}] {p['src'].name}{edit_tag}")
+
+    def _manual_thumb_queued(self):
+        idx = self._selected_idx()
+        if idx is None:
+            messagebox.showwarning("提示", "请先选中一张图片")
+            return
+        self.new_photo_queue[idx]["edit"] = not self.new_photo_queue[idx]["edit"]
+        self._refresh_queue_list()
+
+    def _remove_queued(self):
+        idx = self._selected_idx()
+        if idx is None:
+            return
+        del self.new_photo_queue[idx]
+        self._refresh_queue_list()
+
+    # ---------- 编辑模式 ----------
+    def _folder(self):
+        return CLASSIFIED_DIR / f"{self.cat['id']} {self.cat['name']}"
+
+    def _refresh_existing_photos(self):
+        self.photo_list.delete(0, tk.END)
+        folder = self._folder()
+        if not folder.is_dir():
+            self.photo_list.insert(tk.END, "(文件夹不存在)")
+            return
+        pic = self.cat["pic_name"]
+        seqs = []
+        for f in folder.iterdir():
+            m = re.match(rf"^{re.escape(pic)}_(\d{{2}})\.jpg$", f.name, re.IGNORECASE)
+            if m:
+                seqs.append(int(m.group(1)))
+        for seq in sorted(set(seqs)):
+            tag = "主图" if seq == 1 else "补充"
+            thumb_ok = (folder / f"{pic}_{seq:02d}_thumb.jpg").is_file()
+            mark = "" if thumb_ok else "  [缺缩略图]"
+            self.photo_list.insert(tk.END, f"[{tag}] {pic}_{seq:02d}.jpg{mark}")
+        # 默认选中第一项
+        if self.photo_list.size() > 0:
+            self.photo_list.selection_set(0)
+            self._on_photo_select()
+
+    def _selected_existing_seq(self):
+        idx = self._selected_idx()
+        if idx is None:
+            return None
+        line = self.photo_list.get(idx)
+        m = re.search(r"_(\d{2})\.jpg", line)
+        return int(m.group(1)) if m else None
+
+    def _edit_existing_thumb(self):
+        seq = self._selected_existing_seq()
+        if seq is None:
+            messagebox.showwarning("提示", "请先选中一张原图")
+            return
+        folder = self._folder()
+        original = folder / f"{self.cat['pic_name']}_{seq:02d}.jpg"
+        if not original.is_file():
+            messagebox.showerror("失败", f"原图不存在: {original.name}")
+            return
+        ThumbEditor(self, original, on_done=lambda _p: self._refresh_existing_photos())
+
+    def _add_extra_existing(self):
+        files = filedialog.askopenfilenames(
+            title="选择补充原图",
+            filetypes=[("图片", "*.jpg *.jpeg *.png"), ("所有", "*.*")]
+        )
+        if not files:
+            return
+        folder = self._folder()
+        folder.mkdir(parents=True, exist_ok=True)
+        pic = self.cat["pic_name"]
+        added = []
+        for src in files:
+            seq = next_seq_for(folder, pic)
+            if seq < 2:
+                seq = 2
+                while (folder / f"{pic}_{seq:02d}.jpg").exists():
+                    seq += 1
+            dst = folder / f"{pic}_{seq:02d}.jpg"
+            try:
+                Image.open(src).convert("RGB").save(dst, "JPEG", quality=95)
+                thumb_dst = folder / f"{pic}_{seq:02d}_thumb.jpg"
+                auto_thumbnail(dst, thumb_dst)
+                added.append(dst.name)
+            except Exception as e:
+                messagebox.showerror("复制失败", f"{src}: {e}")
+        self._refresh_existing_photos()
+        if added:
+            messagebox.showinfo("已添加", "复制并生成缩略图：\n" + "\n".join(added))
+
+    def _delete_existing_photo(self):
+        seq = self._selected_existing_seq()
+        if seq is None:
+            messagebox.showwarning("提示", "请先选中一张")
+            return
+        if seq == 1:
+            messagebox.showwarning("拒绝", "主图 (_01) 不能在这里删除")
+            return
+        if not messagebox.askyesno("确认", f"删除 _{seq:02d} 原图与缩略图？"):
+            return
+        folder = self._folder()
+        pic = self.cat["pic_name"]
+        targets = [folder / f"{pic}_{seq:02d}.jpg",
+                   folder / f"{pic}_{seq:02d}_thumb.jpg"]
+        deleted = []
+        for t in targets:
+            if t.is_file():
+                try:
+                    t.unlink(); deleted.append(t.name)
+                except Exception as e:
+                    messagebox.showerror("删除失败", f"{t}: {e}")
+        self._refresh_existing_photos()
+        messagebox.showinfo("已删除", "\n".join(deleted) or "无变化")
+
+    # ---------- 保存 ----------
+    def _save(self):
+        try:
+            cat_id = self.var_id.get().strip().zfill(2)
+            name = self.var_name.get().strip()
+            pic = self.var_pic.get().strip()
+            gender = (self.var_gender.get().strip() or "unknown")
+            status = (self.var_status.get().strip() or "normal")
+            try:
+                affection = int(self.var_affection.get())
+            except Exception:
+                affection = 1
+            desc = self.var_desc.get().strip()
+            story = self.txt_story.get("1.0", tk.END).strip()
+
+            if not name:
+                messagebox.showwarning("提示", "姓名不能为空")
+                return
+            if not pic:
+                messagebox.showwarning("提示", "图名不能为空")
+                return
+            if not re.match(r"^[A-Za-z0-9_]+$", pic):
+                messagebox.showwarning("提示", "图名只能含 英文/数字/下划线")
+                return
+
+            actions = []
+            folder = CLASSIFIED_DIR / f"{cat_id} {name}"
+
+            if self.is_new:
+                if folder.exists():
+                    messagebox.showerror("失败", f"文件夹已存在：{folder.name}")
+                    return
+                if not any(p["seq"] == 1 for p in self.new_photo_queue):
+                    messagebox.showwarning("提示", "请先选主图")
+                    return
+                folder.mkdir(parents=True, exist_ok=True)
+                actions.append(f"创建文件夹: {folder.name}")
+
+                main_item = next(p for p in self.new_photo_queue if p["seq"] == 1)
+                others = [p for p in self.new_photo_queue if p["seq"] != 1]
+                self._copy_one(main_item, folder, pic, 1, actions)
+                seq = 2
+                for it in others:
+                    while (folder / f"{pic}_{seq:02d}.jpg").exists():
+                        seq += 1
+                    self._copy_one(it, folder, pic, seq, actions)
+                    seq += 1
+
+                self.store.append_row({
+                    "id": int(cat_id),
+                    "name": name, "gender": gender, "affection": affection,
+                    "status": status, "desc": desc, "story": story, "pic": pic,
+                })
+                actions.append(f"追加 Excel 行 编号={cat_id}")
+            else:
+                old_folder = self._folder()
+                if name != self.cat["name"] and old_folder.is_dir():
+                    if folder.exists():
+                        messagebox.showerror("失败", f"目标文件夹已存在：{folder.name}")
+                        return
+                    old_folder.rename(folder)
+                    actions.append(f"重命名文件夹: {old_folder.name} → {folder.name}")
+                row_idx = self.store.find_row_by_id(cat_id)
+                if row_idx is None:
+                    messagebox.showerror("失败", f"Excel 中找不到编号 {cat_id}")
+                    return
+                self.store.update_row(row_idx, {
+                    "name": name, "gender": gender, "affection": affection,
+                    "status": status, "desc": desc, "story": story,
+                })
+                actions.append(f"更新 Excel 行 编号={cat_id}")
+
+            self.result_actions = actions
+            # 保存后认为不再 dirty
+            self._initial_snapshot = self._snapshot()
+            if self.on_saved:
+                self.on_saved(actions)
+            self.destroy()
+        except Exception as e:
+            messagebox.showerror("保存失败", f"{e}\n\n{traceback.format_exc()}")
+
+    def _copy_one(self, item, folder, pic, seq, actions):
+        src = item["src"]
+        dst = folder / f"{pic}_{seq:02d}.jpg"
+        Image.open(src).convert("RGB").save(dst, "JPEG", quality=95)
+        actions.append(f"复制原图 → {dst.name}")
+        thumb = folder / f"{pic}_{seq:02d}_thumb.jpg"
+        if item.get("edit"):
+            auto_thumbnail(dst, thumb)
+            actions.append(f"预生成缩略图 → {thumb.name}（即将弹出手动裁选）")
+            ed = ThumbEditor(self.master, dst)
+            self.master.wait_window(ed)
+        else:
+            auto_thumbnail(dst, thumb)
+            actions.append(f"自动生成缩略图 → {thumb.name}")
+
+
+# ============================================================
+# 主窗口
+# ============================================================
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("🐱 SUAT-cats 管理器")
+        self.geometry("1280x820")
+        self.minsize(960, 640)
+        self.configure(bg=COLOR_BG)
+
+        # 先探测开源字体再建 UI
+        detect_fonts(self)
+        self._configure_ttk_styles()
+
+        self.store = ExcelStore(EXCEL_PATH)
+        self.store.load()
+        self.rows = []
+        self.thumb_cache = {}
+        self.current_filter = "all"
+        self.search_term = ""
+
+        self._build_menu()
+        self._build()
+        self._reload_from_excel()
+        # 窗口 resize 后重组列
+        self.bind("<Configure>", self._on_window_configure)
+        self._last_canvas_w = 0
+
+    def _configure_ttk_styles(self):
+        style = ttk.Style(self)
+        try:
+            style.theme_use("clam")
+        except Exception:
+            pass
+        style.configure("TCombobox",
+                        font=ui_font(FS_BODY),
+                        padding=4)
+        style.configure("Vertical.TScrollbar", background=COLOR_BG,
+                        troughcolor=COLOR_BG, arrowcolor=COLOR_SUBTEXT)
+
+    def _build_menu(self):
+        bar = tk.Menu(self)
+        # 文件菜单
+        m_file = tk.Menu(bar, tearoff=False)
+        m_file.add_command(label="刷新数据", command=self._reload_from_excel)
+        m_file.add_command(label="手动同步前端 (cats.json)",
+                           command=self._apply_changes)
+        m_file.add_separator()
+        m_file.add_command(label="打开 Excel 表格",
+                           command=lambda: open_in_explorer(EXCEL_PATH))
+        m_file.add_command(label="打开 cats.json",
+                           command=lambda: open_in_explorer(JSON_PATH))
+        m_file.add_command(label="打开 classified 文件夹",
+                           command=lambda: open_in_explorer(CLASSIFIED_DIR))
+        m_file.add_command(label="打开 index.html",
+                           command=lambda: open_in_explorer(INDEX_HTML))
+        m_file.add_separator()
+        m_file.add_command(label="退出", command=self.destroy)
+        bar.add_cascade(label="文件", menu=m_file)
+
+        # 工具菜单
+        m_tools = tk.Menu(bar, tearoff=False)
+        m_tools.add_command(label="重生成所有缺失的缩略图",
+                            command=self._batch_regen_missing_thumbs)
+        m_tools.add_command(label="重生成全部缩略图（谨慎）",
+                            command=self._batch_regen_all_thumbs)
+        m_tools.add_separator()
+        m_tools.add_command(label="检测表格与文件一致性",
+                            command=self._check_consistency)
+        bar.add_cascade(label="工具", menu=m_tools)
+
+        # 帮助菜单
+        m_help = tk.Menu(bar, tearoff=False)
+        m_help.add_command(label="关于", command=self._show_about)
+        bar.add_cascade(label="帮助", menu=m_help)
+
+        self.config(menu=bar)
+
+    def _show_about(self):
+        info = (
+            "SUAT-cats 管理器\n\n"
+            "一站式管理你的猫咪档案。\n"
+            "数据源：统计信息.xlsx → cats.json → index.html\n\n"
+            "依赖：Pillow、openpyxl\n"
+            "字体：仅使用开源字体 (Noto Sans SC / LXGW WenKai 等)\n\n"
+            f"当前使用字体：{FONT_FAMILY_UI or 'Tk 默认'}"
+        )
+        messagebox.showinfo("关于", info)
+
+    # ---------- 主体 UI ----------
+    def _build(self):
+        head = tk.Frame(self, bg=COLOR_BG)
+        head.pack(fill=tk.X, pady=(20, 4))
+        tk.Label(head, text="🐾 SUAT 🐱",
+                 font=ui_font(FS_TITLE, "bold"),
+                 bg=COLOR_BG, fg=COLOR_ACCENT).pack()
+        tk.Label(head, text="记录每一个相遇与告别",
+                 font=ui_font(FS_SUBTITLE),
+                 bg=COLOR_BG, fg=COLOR_SUBTEXT).pack(pady=(2, 10))
+
+        # 工具栏 + 筛选
+        bar = tk.Frame(self, bg=COLOR_BG)
+        bar.pack(fill=tk.X, padx=24, pady=(0, 6))
+
+        def primary(parent, text, color, cmd):
+            return tk.Button(parent, text=text, command=cmd,
+                             font=ui_font(FS_BODY, "bold"),
+                             bg=color, fg="white",
+                             relief=tk.FLAT, borderwidth=0,
+                             padx=14, pady=7, cursor="hand2")
+
+        primary(bar, "➕ 新增猫咪", COLOR_ACCENT,
+                self._add_cat).pack(side=tk.LEFT, padx=(0, 6))
+        primary(bar, "🔄 刷新", COLOR_INFO,
+                self._reload_from_excel).pack(side=tk.LEFT, padx=4)
+        primary(bar, "💾 应用变更", COLOR_WARN,
+                self._apply_changes).pack(side=tk.LEFT, padx=4)
+        primary(bar, "🌐 预览前端", COLOR_OK,
+                lambda: open_in_explorer(INDEX_HTML)).pack(side=tk.LEFT, padx=4)
+
+        # 搜索框
+        right = tk.Frame(bar, bg=COLOR_BG)
+        right.pack(side=tk.RIGHT)
+        self.var_search = tk.StringVar()
+        e = tk.Entry(right, textvariable=self.var_search,
+                     font=ui_font(FS_BODY), width=22, relief=tk.FLAT,
+                     bg="white", highlightthickness=1,
+                     highlightbackground=COLOR_DIVIDER,
+                     highlightcolor=COLOR_INFO)
+        e.pack(side=tk.RIGHT, ipady=5, padx=(4, 0))
+        e.bind("<KeyRelease>", lambda _e: self._on_search())
+        tk.Label(right, text="🔍", bg=COLOR_BG, fg=COLOR_SUBTEXT,
+                 font=ui_font(FS_BODY)).pack(side=tk.RIGHT)
+
+        # 筛选胶囊
+        filter_bar = tk.Frame(self, bg=COLOR_BG)
+        filter_bar.pack(fill=tk.X, padx=24, pady=(2, 6))
+        self.filter_buttons = {}
+        for label, key in [("全部猫咪", "all"),
+                            ("♂ 男孩", "male"),
+                            ("♀ 女孩", "female"),
+                            ("❓ 未知", "unknown"),
+                            ("⭐ 喇星", "star"),
+                            ("🔍 失踪", "lost"),
+                            ("🏡 被领养", "adopted")]:
+            b = tk.Button(filter_bar, text=label,
+                          font=ui_font(FS_SMALL, "bold"),
+                          bg="white", fg=COLOR_SUBTEXT,
+                          relief=tk.FLAT, borderwidth=0,
+                          padx=14, pady=6, cursor="hand2",
+                          command=lambda k=key: self._set_filter(k))
+            b.pack(side=tk.LEFT, padx=3)
+            self.filter_buttons[key] = b
+        self._update_filter_buttons()
+
+        # 状态栏
+        self.status_var = tk.StringVar(value="就绪")
+        status = tk.Label(self, textvariable=self.status_var,
+                          bg=COLOR_DIVIDER, fg=COLOR_ACCENT_LIGHT,
+                          font=ui_font(FS_SMALL),
+                          anchor="w", padx=18, pady=4)
+        status.pack(fill=tk.X, side=tk.BOTTOM)
+
+        # 卡片网格区
+        outer = tk.Frame(self, bg=COLOR_BG)
+        outer.pack(fill=tk.BOTH, expand=True, padx=20, pady=(8, 14))
+        self.canvas = tk.Canvas(outer, bg=COLOR_BG, highlightthickness=0)
+        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        sb = ttk.Scrollbar(outer, orient="vertical", command=self.canvas.yview)
+        sb.pack(side=tk.RIGHT, fill=tk.Y)
+        self.canvas.configure(yscrollcommand=sb.set)
+        self.grid_frame = tk.Frame(self.canvas, bg=COLOR_BG)
+        self._grid_window_id = self.canvas.create_window((0, 0), window=self.grid_frame, anchor="nw")
+        self.grid_frame.bind("<Configure>",
+                              lambda _e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.canvas.bind("<Configure>",
+                          lambda e: self.canvas.itemconfig(self._grid_window_id, width=e.width))
+        self.canvas.bind_all("<MouseWheel>",
+                              lambda e: self.canvas.yview_scroll(int(-e.delta / 120), "units"))
+
+    # ---------- 交互 ----------
+    def _on_window_configure(self, e):
+        if e.widget is not self:
+            return
+        cw = self.canvas.winfo_width()
+        if abs(cw - self._last_canvas_w) > 30:
+            self._last_canvas_w = cw
+            self._render()
+
+    def _set_filter(self, key):
+        self.current_filter = key
+        self._update_filter_buttons()
+        self._render()
+
+    def _update_filter_buttons(self):
+        for k, b in self.filter_buttons.items():
+            if k == self.current_filter:
+                b.config(bg=COLOR_ACCENT, fg="white")
+            else:
+                b.config(bg="white", fg=COLOR_SUBTEXT)
+
+    def _on_search(self):
+        self.search_term = self.var_search.get().strip().lower()
+        self._render()
+
+    def _add_cat(self):
+        editor = CatEditor(self, self.store, cat=None,
+                            on_saved=self._on_editor_saved)
+        self.wait_window(editor)
+
+    def _edit_cat(self, cat):
+        editor = CatEditor(self, self.store, cat=cat,
+                            on_saved=self._on_editor_saved)
+        self.wait_window(editor)
+
+    def _on_editor_saved(self, actions):
+        try:
+            self.store.save()
+            actions.append(f"保存 Excel: {EXCEL_PATH.name}")
+            self._reload_from_excel()
+            count, warns = regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH)
+            actions.append(f"重生成 cats.json，共 {count} 只猫")
+            msg = "\n".join("• " + a for a in actions)
+            if warns:
+                msg += "\n\n⚠️ 警告：\n" + "\n".join("  - " + w for w in warns[:10])
+                if len(warns) > 10:
+                    msg += f"\n  …以及其他 {len(warns) - 10} 条"
+            messagebox.showinfo("应用成功", msg)
+            self.status_var.set("已同步 Excel 与 cats.json")
+        except Exception as e:
+            messagebox.showerror("同步失败", f"{e}\n\n{traceback.format_exc()}")
+
+    def _apply_changes(self):
+        try:
+            self.store.save()
+            self._reload_from_excel()
+            count, warns = regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH)
+            msg = f"已重生成 cats.json，共 {count} 只猫。"
+            if warns:
+                msg += "\n\n⚠️ 警告：\n" + "\n".join("  - " + w for w in warns[:10])
+                if len(warns) > 10:
+                    msg += f"\n  …以及其他 {len(warns) - 10} 条"
+            messagebox.showinfo("应用完成", msg)
+            self.status_var.set("手动同步完成")
+        except Exception as e:
+            messagebox.showerror("应用失败", f"{e}\n\n{traceback.format_exc()}")
+
+    def _reload_from_excel(self):
+        try:
+            self.store.load()
+            self.rows = self.store.all_rows()
+            self.thumb_cache.clear()
+            self._render()
+            self.status_var.set(f"已加载 {len(self.rows)} 只猫咪")
+        except Exception as e:
+            messagebox.showerror("加载失败", f"{e}\n\n{traceback.format_exc()}")
+
+    # ---------- 渲染 ----------
+    def _filtered(self):
+        rs = list(self.rows)
+        f = self.current_filter
+        if f in GENDER_OPTIONS:
+            rs = [r for r in rs if r["gender"] == f]
+        elif f in ("star", "lost", "adopted"):
+            rs = [r for r in rs if r["status"] == f]
+        if self.search_term:
+            t = self.search_term
+            rs = [r for r in rs
+                   if t in r["name"].lower()
+                   or t in r["pic_name"].lower()
+                   or t in r["desc"].lower()
+                   or t in r["id"]]
+        return rs
+
+    def _load_thumb(self, cat):
+        path = (CLASSIFIED_DIR / f"{cat['id']} {cat['name']}"
+                / f"{cat['pic_name']}_01_thumb.jpg")
+        if path in self.thumb_cache:
+            return self.thumb_cache[path]
+        try:
+            if path.is_file():
+                img = Image.open(path).convert("RGB")
+            else:
+                img = Image.new("RGB", (CARD_THUMB_SIZE, CARD_THUMB_SIZE), "#dddddd")
+            img.thumbnail((CARD_THUMB_SIZE, CARD_THUMB_SIZE), Image.LANCZOS)
+            ph = ImageTk.PhotoImage(img)
+        except Exception:
+            img = Image.new("RGB", (CARD_THUMB_SIZE, CARD_THUMB_SIZE), "#dddddd")
+            ph = ImageTk.PhotoImage(img)
+        self.thumb_cache[path] = ph
+        return ph
+
+    def _render(self):
+        for w in self.grid_frame.winfo_children():
+            w.destroy()
+        items = self._filtered()
+        if not items:
+            tk.Label(self.grid_frame, text="没有符合条件的猫咪",
+                     bg=COLOR_BG, fg=COLOR_SUBTEXT,
+                     font=ui_font(FS_BODY+1), pady=60).pack()
+            return
+        self.grid_frame.update_idletasks()
+        cw = self.canvas.winfo_width() or 1100
+        col_w = 240
+        cols = max(1, (cw - 20) // col_w)
+        for i, cat in enumerate(items):
+            r, c = divmod(i, cols)
+            self._make_card(self.grid_frame, cat, r, c, cols)
+        for c in range(cols):
+            self.grid_frame.columnconfigure(c, weight=1, uniform="col")
+
+    def _make_card(self, parent, cat, r, c, cols):
+        wrapper = tk.Frame(parent, bg=COLOR_BG)
+        wrapper.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
+
+        card = tk.Frame(wrapper, bg=COLOR_CARD,
+                         highlightthickness=1,
+                         highlightbackground=COLOR_CARD_BORDER)
+        card.pack(fill=tk.BOTH, expand=True, ipadx=12, ipady=12)
+
+        if cat["status"] == "star":
+            card.config(highlightbackground="#dcdcdc")
+        elif cat["status"] == "lost":
+            card.config(highlightbackground="#cfcfcf")
+
+        avatar_frame = tk.Frame(card, bg=COLOR_CARD)
+        avatar_frame.pack(pady=(8, 6))
+        thumb = self._load_thumb(cat)
+        avatar = tk.Label(avatar_frame, image=thumb, bg=COLOR_CARD,
+                           relief=tk.FLAT, borderwidth=0, cursor="hand2")
+        avatar.image = thumb
+        avatar.pack()
+        avatar.bind("<Button-1>", lambda _e, c=cat: self._edit_cat(c))
+
+        badge = STATUS_BADGE.get(cat["status"], "")
+        if badge:
+            tk.Label(avatar_frame, text=badge, bg=COLOR_CARD,
+                     font=ui_font(FS_BODY+4)).place(
+                relx=1.0, rely=1.0, anchor="se", x=-2, y=-2)
+
+        name_row = tk.Frame(card, bg=COLOR_CARD)
+        name_row.pack(pady=(4, 2))
+        tk.Label(name_row, text=f"{cat['id']} {cat['name']}",
+                 bg=COLOR_CARD, fg=COLOR_TEXT,
+                 font=ui_font(FS_CARD_NAME, "bold")).pack(side=tk.LEFT)
+        gender_color = GENDER_COLOR.get(cat["gender"], COLOR_UNKNOWN)
+        gender_char = {"male": "♂", "female": "♀", "unknown": "?"}.get(cat["gender"], "?")
+        tk.Label(name_row, text=" " + gender_char,
+                 bg=COLOR_CARD, fg=gender_color,
+                 font=ui_font(FS_CARD_NAME+1, "bold")).pack(side=tk.LEFT)
+
+        n = cat["affection"]
+        paws = "🐾" * n + "·" * (5 - n)
+        tk.Label(card, text=paws, bg=COLOR_CARD, fg=COLOR_PAW,
+                 font=ui_font(FS_CARD_NAME, "bold")).pack(pady=(0, 4))
+
+        tk.Frame(card, bg=COLOR_DIVIDER, height=1).pack(fill=tk.X, padx=18, pady=(2, 6))
+
+        desc = cat["desc"] or "···"
+        tk.Label(card, text=desc, bg=COLOR_CARD, fg=COLOR_SUBTEXT,
+                 font=ui_font(FS_CARD_DESC), wraplength=200,
+                 justify="center").pack(padx=10, pady=(0, 8))
+
+        tk.Button(card, text="✏️ 编辑",
+                   font=ui_font(FS_SMALL, "bold"),
+                   bg=COLOR_HOVER, fg=COLOR_ACCENT,
+                   relief=tk.FLAT, borderwidth=0, padx=14, pady=5,
+                   cursor="hand2",
+                   command=lambda c=cat: self._edit_cat(c)
+                   ).pack(pady=(0, 4))
+
+    # ---------- 工具菜单：批量操作 ----------
+    def _batch_regen_missing_thumbs(self):
+        if not messagebox.askyesno("确认",
+                                    "扫描所有原图，给缺失缩略图的生成一份。继续？"):
+            return
+        ok, fail = 0, []
+        for cat in self.rows:
+            folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}"
+            if not folder.is_dir():
+                continue
+            pic = cat["pic_name"]
+            for f in folder.iterdir():
+                m = re.match(rf"^{re.escape(pic)}_(\d{{2}})\.jpg$", f.name, re.IGNORECASE)
+                if not m:
+                    continue
+                seq = int(m.group(1))
+                thumb = folder / f"{pic}_{seq:02d}_thumb.jpg"
+                if thumb.is_file():
+                    continue
+                try:
+                    auto_thumbnail(f, thumb)
+                    ok += 1
+                except Exception as e:
+                    fail.append(f"{f.name}: {e}")
+        msg = f"生成成功 {ok} 张。"
+        if fail:
+            msg += "\n\n失败：\n" + "\n".join(fail[:10])
+        messagebox.showinfo("完成", msg)
+        self._reload_from_excel()
+
+    def _batch_regen_all_thumbs(self):
+        if not messagebox.askyesno(
+                "谨慎",
+                "会重裁所有原图的缩略图（居中裁剪 60%），\n"
+                "覆盖你之前用 thumb_maker 手动裁过的缩略图。\n确认继续？"):
+            return
+        ok, fail = 0, []
+        for cat in self.rows:
+            folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}"
+            if not folder.is_dir():
+                continue
+            pic = cat["pic_name"]
+            for f in folder.iterdir():
+                m = re.match(rf"^{re.escape(pic)}_(\d{{2}})\.jpg$", f.name, re.IGNORECASE)
+                if not m:
+                    continue
+                seq = int(m.group(1))
+                thumb = folder / f"{pic}_{seq:02d}_thumb.jpg"
+                try:
+                    auto_thumbnail(f, thumb)
+                    ok += 1
+                except Exception as e:
+                    fail.append(f"{f.name}: {e}")
+        msg = f"重生成 {ok} 张。"
+        if fail:
+            msg += "\n\n失败：\n" + "\n".join(fail[:10])
+        messagebox.showinfo("完成", msg)
+        self._reload_from_excel()
+
+    def _check_consistency(self):
+        try:
+            count, warns = regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH)
+            if not warns:
+                messagebox.showinfo(
+                    "一致性检查",
+                    f"检查通过，共 {count} 只猫咪，未发现问题。\n\n"
+                    "cats.json 已同步。")
+            else:
+                msg = f"警告 {len(warns)} 条：\n\n" + "\n".join("  - " + w for w in warns[:30])
+                if len(warns) > 30:
+                    msg += f"\n  …以及其他 {len(warns) - 30} 条"
+                messagebox.showwarning("一致性检查", msg)
+        except Exception as e:
+            messagebox.showerror("检查失败", f"{e}\n\n{traceback.format_exc()}")
+
+
+# ============================================================
+# 入口
+# ============================================================
+def main():
+    if not EXCEL_PATH.exists():
+        print(f"找不到 {EXCEL_PATH}")
+        sys.exit(1)
+    if not CLASSIFIED_DIR.exists():
+        CLASSIFIED_DIR.mkdir(parents=True, exist_ok=True)
+    app = App()
+    app.mainloop()
+
+
+if __name__ == "__main__":
+    main()
