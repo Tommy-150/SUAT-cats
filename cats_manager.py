@@ -595,8 +595,16 @@ class CatEditor(tk.Toplevel):
 
         title = "新增猫咪" if self.is_new else f"编辑 {cat['id']} {cat['name']}"
         self.title(title)
-        self.geometry("1200x860")
-        self.minsize(900, 700)
+
+        # ===== 自适应屏幕大小 =====
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        target_w = max(1100, min(int(sw * 0.8), 1600))
+        target_h = max(750, min(int(sh * 0.8), 1000))
+        self.geometry(f"{target_w}x{target_h}")
+        self.minsize(max(900, int(sw * 0.55)), max(700, int(sh * 0.55)))
+        # ==========================
+
         self.configure(bg=COLOR_BG)
         self.transient(master)
         self.grab_set()
@@ -670,8 +678,8 @@ class CatEditor(tk.Toplevel):
         # 左侧：字段 + 故事
         left = tk.Frame(outer, bg=COLOR_BG)
         left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        # 右侧：图片区（列表 + 预览），不再固定宽度
-        right = tk.Frame(outer, bg=COLOR_BG, width=500)
+        # 右侧：图片区（列表 + 预览）
+        right = tk.Frame(outer, bg=COLOR_BG)   # ← 去掉 width=500
         right.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(14, 0))
 
         # ===== 字段卡片 =====
@@ -806,10 +814,7 @@ class CatEditor(tk.Toplevel):
         self.preview_thumb_label.bind("<Button-1>",
             lambda _e: self._open_preview_external(thumb=True))
 
-        # 按钮栏
-        btn_bar = tk.Frame(photo_inner, bg=COLOR_CARD)
-        btn_bar.pack(fill=tk.X, pady=(2, 6))
-
+        # ===== 按钮栏（根据模式不同）=====
         def pill(parent, text, color, cmd):
             return tk.Button(parent, text=text, command=cmd,
                              font=ui_font(FS_SMALL, "bold"),
@@ -818,13 +823,19 @@ class CatEditor(tk.Toplevel):
                              padx=10, pady=5, cursor="hand2")
 
         if self.is_new:
-            pill(btn_bar, "📷 选主图", COLOR_OK,
+            # 拆成两行，防止拥挤
+            row1 = tk.Frame(photo_inner, bg=COLOR_CARD)
+            row1.pack(fill=tk.X, pady=(2, 2))
+            pill(row1, "📷 选主图", COLOR_OK,
                  lambda: self._queue_photo(seq=1)).pack(side=tk.LEFT, padx=2)
-            pill(btn_bar, "➕ 加补充", COLOR_INFO,
+            pill(row1, "➕ 加补充", COLOR_INFO,
                  lambda: self._queue_photo(seq=None)).pack(side=tk.LEFT, padx=2)
-            pill(btn_bar, "✏️ 手动裁", COLOR_WARN,
+
+            row2 = tk.Frame(photo_inner, bg=COLOR_CARD)
+            row2.pack(fill=tk.X, pady=(0, 4))
+            pill(row2, "✏️ 手动裁", COLOR_WARN,
                  self._manual_thumb_queued).pack(side=tk.LEFT, padx=2)
-            pill(btn_bar, "🗑 移除", COLOR_DANGER,
+            pill(row2, "🗑 移除", COLOR_DANGER,
                  self._remove_queued).pack(side=tk.LEFT, padx=2)
         else:
             # 第一行：编辑操作

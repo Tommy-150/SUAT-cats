@@ -22,7 +22,8 @@
         .header { text-align: center; margin-bottom: 40px; }
         .header h1 { font-size: 2.5rem; font-weight: 800; color: #4A4A4A; letter-spacing: 2px; }
         .header p { color: #888; margin-top: 8px; font-size: 1.1rem; }
-        .filters { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 50px; }
+        .filters { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 50px; }
+        .filter-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
         .filter-btn {
             padding: 10px 24px; border: none; border-radius: 50px;
             background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px);
@@ -69,6 +70,9 @@
         .card.status-lost .avatar { filter: sepia(60%) saturate(60%); opacity: 0.7; }
         .card.status-lost .status-icon { opacity: 1; transform: scale(1); }
         .card.status-lost .name { color: #999; }
+        .card.status-adopted { border: 1px solid #a0d2a0; }
+        .card.status-adopted .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-adopted .name { color: #2d6a2d; }
 
         .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -171,12 +175,21 @@
     </div>
 
     <div class="filters">
-        <button class="filter-btn active" data-filter="all">全部猫咪</button>
-        <button class="filter-btn" data-filter="male">♂ 男孩</button>
-        <button class="filter-btn" data-filter="female">♀ 女孩</button>
-        <button class="filter-btn" data-filter="unknown">❓ 未知性别</button>
-        <button class="filter-btn" data-filter="star">⭐ 喵星</button>
-        <button class="filter-btn" data-filter="lost">🔍 失踪</button>
+        <div class="filter-row">
+            <button class="filter-btn active" id="resetFilters">全部猫咪</button>
+        </div>
+        <div class="filter-row" id="genderRow">
+            <button class="filter-btn gender-btn active" data-gender="all">全部性别</button>
+            <button class="filter-btn gender-btn" data-gender="male">♂ 男孩</button>
+            <button class="filter-btn gender-btn" data-gender="female">♀ 女孩</button>
+            <button class="filter-btn gender-btn" data-gender="unknown">❓ 未知性别</button>
+        </div>
+        <div class="filter-row" id="statusRow">
+            <button class="filter-btn status-btn active" data-status="all">全部状态</button>
+            <button class="filter-btn status-btn" data-status="star">⭐ 喵星</button>
+            <button class="filter-btn status-btn" data-status="lost">🔍 失踪</button>
+            <button class="filter-btn status-btn" data-status="adopted">🏠 已领养</button>
+        </div>
     </div>
 
     <div class="grid" id="catGrid">
@@ -230,8 +243,9 @@
         const galleryScroll = document.getElementById('galleryScroll');
 
         let catsData = [];
+        let currentGenderFilter = 'all';
+        let currentStatusFilter = 'all';
         let currentHDUrl = '';
-        let currentFilter = 'all';
 
         function getPaws(level) {
             let paws = '';
@@ -242,6 +256,7 @@
         function getStatusIcon(status) {
             if (status === 'star') return '⭐';
             if (status === 'lost') return '🔍';
+            if (status === 'adopted') return '🏠';
             return '';
         }
 
@@ -261,11 +276,12 @@
             grid.innerHTML = '';
             let filteredCats = catsData;
             
-            if (currentFilter === 'male') filteredCats = catsData.filter(c => c.gender === 'male');
-            else if (currentFilter === 'female') filteredCats = catsData.filter(c => c.gender === 'female');
-            else if (currentFilter === 'unknown') filteredCats = catsData.filter(c => c.gender === 'unknown');
-            else if (currentFilter === 'star') filteredCats = catsData.filter(c => c.status === 'star');
-            else if (currentFilter === 'lost') filteredCats = catsData.filter(c => c.status === 'lost');
+            if (currentGenderFilter !== 'all') {
+                filteredCats = filteredCats.filter(c => c.gender === currentGenderFilter);
+            }
+            if (currentStatusFilter !== 'all') {
+                filteredCats = filteredCats.filter(c => c.status === currentStatusFilter);
+            }
 
             if (filteredCats.length === 0) {
                 grid.innerHTML = '<p class="loading-text">没有找到符合条件的猫咪</p>';
@@ -274,7 +290,7 @@
 
             filteredCats.forEach((cat, index) => {
                 const card = document.createElement('div');
-                card.className = `card status-${cat.status} fade-in`;
+                card.className = `card status-${cat.status || ''} fade-in`;
                 card.style.animationDelay = `${index * 0.1}s`; 
                 card.innerHTML = `
                     <div class="avatar-wrapper">
@@ -323,7 +339,7 @@
             } else {
                 gallerySection.classList.add('hidden'); 
             }
-            modalContent.className = `modal-content status-${cat.status}`;
+            modalContent.className = `modal-content status-${cat.status || ''}`;
             modal.classList.add('active');
             document.body.classList.add('modal-open');
             currentHDUrl = cat.avatar_hd;
@@ -374,12 +390,39 @@
         lightboxClose.addEventListener('click', closeLightbox);
         lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
 
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        filterBtns.forEach(btn => {
+        // 筛选事件绑定
+        const resetBtn = document.getElementById('resetFilters');
+        const genderBtns = document.querySelectorAll('.gender-btn');
+        const statusBtns = document.querySelectorAll('.status-btn');
+
+        function setActive(buttons, activeButton) {
+            buttons.forEach(b => b.classList.remove('active'));
+            if (activeButton) activeButton.classList.add('active');
+        }
+
+        resetBtn.addEventListener('click', function() {
+            currentGenderFilter = 'all';
+            currentStatusFilter = 'all';
+            setActive(genderBtns, document.querySelector('.gender-btn[data-gender="all"]'));
+            setActive(statusBtns, document.querySelector('.status-btn[data-status="all"]'));
+            resetBtn.classList.add('active');
+            renderCats();
+        });
+
+        genderBtns.forEach(btn => {
             btn.addEventListener('click', function() {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                currentFilter = this.dataset.filter;
+                currentGenderFilter = this.dataset.gender;
+                setActive(genderBtns, this);
+                resetBtn.classList.remove('active');
+                renderCats();
+            });
+        });
+
+        statusBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentStatusFilter = this.dataset.status;
+                setActive(statusBtns, this);
+                resetBtn.classList.remove('active');
                 renderCats();
             });
         });
