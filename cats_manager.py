@@ -595,7 +595,8 @@ class CatEditor(tk.Toplevel):
 
         title = "新增猫咪" if self.is_new else f"编辑 {cat['id']} {cat['name']}"
         self.title(title)
-        self.geometry("1100x780")
+        self.geometry("1200x860")
+        self.minsize(900, 700)
         self.configure(bg=COLOR_BG)
         self.transient(master)
         self.grab_set()
@@ -605,15 +606,18 @@ class CatEditor(tk.Toplevel):
         self.new_photo_queue = []
         # 修改标记
         self._initial_snapshot = None
-        # 预览缓存
-        self._preview_image = None
-        self._original_for_preview = None
+        # 双图预览
+        self._preview_original_img = None
+        self._preview_thumb_img = None
+        self._last_original = None
+        self._last_thumb = None
 
         self._build()
         self._load_values()
         if not self.is_new:
             self._refresh_existing_photos()
         self._initial_snapshot = self._snapshot()
+        self._made_fs_changes = False  # 编辑模式下增删图/切换主图标记
 
     # ---------- 脘本（判断 dirty）----------
     def _snapshot(self):
@@ -628,7 +632,10 @@ class CatEditor(tk.Toplevel):
     def _is_dirty(self):
         if self._initial_snapshot is None:
             return False
-        return self._snapshot() != self._initial_snapshot
+        return self._snapshot() != self._initial_snapshot or self._made_fs_changes
+
+    def _mark_dirty(self):
+        self._made_fs_changes = True
 
     def _on_close_request(self):
         if not self._is_dirty():
@@ -661,12 +668,11 @@ class CatEditor(tk.Toplevel):
         outer.pack(fill=tk.BOTH, expand=True, padx=20, pady=14)
 
         # 左侧：字段 + 故事
-        left = tk.Frame(outer, bg=COLOR_BG, width=560)
+        left = tk.Frame(outer, bg=COLOR_BG)
         left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        # 右侧：图片区（列表 + 预览）
-        right = tk.Frame(outer, bg=COLOR_BG, width=460)
-        right.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(14, 0))
-        right.pack_propagate(False)
+        # 右侧：图片区（列表 + 预览），不再固定宽度
+        right = tk.Frame(outer, bg=COLOR_BG, width=500)
+        right.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(14, 0))
 
         # ===== 字段卡片 =====
         fields = self._make_card(left, "基本信息")
@@ -771,19 +777,34 @@ class CatEditor(tk.Toplevel):
         photo_inner = tk.Frame(photo_card, bg=COLOR_CARD)
         photo_inner.pack(fill=tk.BOTH, expand=True, padx=14, pady=12)
 
-        # 预览区域
-        preview_box = tk.Frame(photo_inner, bg="#fafafa",
-                                highlightthickness=1,
-                                highlightbackground=COLOR_DIVIDER,
-                                width=PREVIEW_SIZE, height=PREVIEW_SIZE)
-        preview_box.pack(pady=(0, 8))
-        preview_box.pack_propagate(False)
-        self.preview_label = tk.Label(preview_box, bg="#fafafa",
-                                       fg=COLOR_SUBTEXT,
-                                       text="列表单击查看大图",
-                                       font=ui_font(FS_SMALL))
-        self.preview_label.pack(fill=tk.BOTH, expand=True)
-        self.preview_label.bind("<Button-1>", self._open_preview_external)
+        # 双图预览区：原图（左）| 缩略图（右）
+        preview_frame = tk.Frame(photo_inner, bg=COLOR_CARD)
+        preview_frame.pack(fill=tk.X, pady=(0, 8))
+        preview_frame.columnconfigure(0, weight=1)
+        preview_frame.columnconfigure(1, weight=1)
+
+        def make_preview_box(parent, column, label_text):
+            """创建一个固定大小的预览框。"""
+            box = tk.Frame(parent, bg="#fafafa",
+                           highlightthickness=1,
+                           highlightbackground=COLOR_DIVIDER,
+                           width=240, height=240)
+            box.grid(row=0, column=column, padx=2, pady=4, sticky="n")
+            box.pack_propagate(False)
+            lbl = tk.Label(box, bg="#fafafa", fg=COLOR_SUBTEXT,
+                           text=label_text, font=ui_font(FS_SMALL))
+            lbl.pack(fill=tk.BOTH, expand=True)
+            return box, lbl
+
+        self.preview_original_box, self.preview_original_label = make_preview_box(
+            preview_frame, 0, "原图预览")
+        self.preview_thumb_box, self.preview_thumb_label = make_preview_box(
+            preview_frame, 1, "缩略图预览")
+
+        # 点击预览可打开大图
+        self.preview_original_label.bind("<Button-1>", self._open_preview_external)
+        self.preview_thumb_label.bind("<Button-1>",
+            lambda _e: self._open_preview_external(thumb=True))
 
         # 按钮栏
         btn_bar = tk.Frame(photo_inner, bg=COLOR_CARD)
@@ -806,13 +827,21 @@ class CatEditor(tk.Toplevel):
             pill(btn_bar, "🗑 移除", COLOR_DANGER,
                  self._remove_queued).pack(side=tk.LEFT, padx=2)
         else:
-            pill(btn_bar, "✏️ 重裁缩略", COLOR_WARN,
+            # 第一行：编辑操作
+            row1 = tk.Frame(photo_inner, bg=COLOR_CARD)
+            row1.pack(fill=tk.X, pady=(2, 2))
+            pill(row1, "✏️ 重裁缩略", COLOR_WARN,
                  self._edit_existing_thumb).pack(side=tk.LEFT, padx=2)
-            pill(btn_bar, "➕ 补充图", COLOR_INFO,
+            pill(row1, "➕ 补充图", COLOR_INFO,
                  self._add_extra_existing).pack(side=tk.LEFT, padx=2)
-            pill(btn_bar, "🗑 删除", COLOR_DANGER,
+            pill(row1, "🗑 删除", COLOR_DANGER,
                  self._delete_existing_photo).pack(side=tk.LEFT, padx=2)
-            pill(btn_bar, "📁 文件夹", COLOR_ACCENT_LIGHT,
+            # 第二行：工具按钮
+            row2 = tk.Frame(photo_inner, bg=COLOR_CARD)
+            row2.pack(fill=tk.X, pady=(0, 4))
+            pill(row2, "🔄 设为主图", "#7E57C2",
+                 self._swap_to_main).pack(side=tk.LEFT, padx=2)
+            pill(row2, "📁 打开文件夹", COLOR_ACCENT_LIGHT,
                  lambda: open_in_explorer(self._folder())).pack(side=tk.LEFT, padx=2)
 
         # 图片列表
@@ -884,35 +913,52 @@ class CatEditor(tk.Toplevel):
         self.txt_story.delete("1.0", tk.END)
         self.txt_story.insert("1.0", c["story"])
 
-    # ---------- 预览 ----------
-    def _show_preview_path(self, path):
-        if path is None or not Path(path).is_file():
-            self.preview_label.config(image="", text="(图片不存在)")
-            self._preview_image = None
-            self._original_for_preview = None
-            return
-        try:
-            img = Image.open(path).convert("RGB")
-            img.thumbnail((PREVIEW_SIZE - 8, PREVIEW_SIZE - 8), Image.LANCZOS)
-            ph = ImageTk.PhotoImage(img)
-            self._preview_image = ph
-            self._original_for_preview = Path(path)
-            self.preview_label.config(image=ph, text="")
-        except Exception as e:
-            self.preview_label.config(image="", text=f"(预览失败 {e})")
-            self._preview_image = None
-            self._original_for_preview = None
+    # ---------- 双图预览：原图 + 缩略图 ----------
+    def _show_preview_both(self, original_path, thumb_path=None):
+        """同时显示原图（左）和缩略图（右）。thumb_path 为 None 则显示占位文字。"""
+        # 更新原图
+        if original_path and Path(original_path).is_file():
+            try:
+                img = Image.open(original_path).convert("RGB")
+                img.thumbnail((220, 220), Image.LANCZOS)
+                self._preview_original_img = ImageTk.PhotoImage(img)
+                self.preview_original_label.config(image=self._preview_original_img, text="")
+            except Exception as e:
+                self._preview_original_img = None
+                self.preview_original_label.config(image="", text=f"(无法加载)")
+        else:
+            self._preview_original_img = None
+            self.preview_original_label.config(image="", text="(无原图)")
 
-    def _open_preview_external(self, _e=None):
-        """在系统看图器中打开当前预览的原图。"""
-        if self._original_for_preview and self._original_for_preview.is_file():
+        # 更新缩略图
+        if thumb_path and Path(thumb_path).is_file():
+            try:
+                img = Image.open(thumb_path).convert("RGB")
+                img.thumbnail((220, 220), Image.LANCZOS)
+                self._preview_thumb_img = ImageTk.PhotoImage(img)
+                self.preview_thumb_label.config(image=self._preview_thumb_img, text="")
+            except Exception:
+                self._preview_thumb_img = None
+                self.preview_thumb_label.config(image="", text="(无法加载)")
+        else:
+            self._preview_thumb_img = None
+            self.preview_thumb_label.config(image="", text="选中图片后显示")
+
+        # 记住当前路径，用于外部打开
+        self._last_original = original_path
+        self._last_thumb = thumb_path
+
+    def _open_preview_external(self, _e=None, thumb=False):
+        """在系统看图器中打开原图或缩略图。"""
+        path = (self._last_thumb if thumb else self._last_original)
+        if path and Path(path).is_file():
             try:
                 if sys.platform == "win32":
-                    os.startfile(str(self._original_for_preview))
+                    os.startfile(str(path))
                 elif sys.platform == "darwin":
-                    subprocess.Popen(["open", str(self._original_for_preview)])
+                    subprocess.Popen(["open", str(path)])
                 else:
-                    subprocess.Popen(["xdg-open", str(self._original_for_preview)])
+                    subprocess.Popen(["xdg-open", str(path)])
             except Exception as e:
                 messagebox.showerror("打不开", str(e))
 
@@ -922,13 +968,20 @@ class CatEditor(tk.Toplevel):
             return
         if self.is_new:
             if 0 <= idx < len(self.new_photo_queue):
-                self._show_preview_path(self.new_photo_queue[idx]["src"])
+                src = self.new_photo_queue[idx]["src"]
+                self._show_preview_both(src, None)
         else:
             seq = self._selected_existing_seq()
             if seq is None:
                 return
             folder = self._folder()
-            self._show_preview_path(folder / f"{self.cat['pic_name']}_{seq:02d}.jpg")
+            pic = self.cat["pic_name"]
+            original = folder / f"{pic}_{seq:02d}.jpg"
+            thumb = folder / f"{pic}_{seq:02d}_thumb.jpg" if seq else None
+            self._show_preview_both(
+                str(original) if original.is_file() else None,
+                str(thumb) if (thumb and thumb.is_file()) else None
+            )
 
     def _selected_idx(self):
         sel = self.photo_list.curselection()
@@ -1016,7 +1069,7 @@ class CatEditor(tk.Toplevel):
         if not original.is_file():
             messagebox.showerror("失败", f"原图不存在: {original.name}")
             return
-        ThumbEditor(self, original, on_done=lambda _p: self._refresh_existing_photos())
+        ThumbEditor(self, original, on_done=lambda _p: (self._refresh_existing_photos(), self._mark_dirty()))
 
     def _add_extra_existing(self):
         files = filedialog.askopenfilenames(
@@ -1046,6 +1099,7 @@ class CatEditor(tk.Toplevel):
         self._refresh_existing_photos()
         if added:
             messagebox.showinfo("已添加", "复制并生成缩略图：\n" + "\n".join(added))
+        self._mark_dirty()
 
     def _delete_existing_photo(self):
         seq = self._selected_existing_seq()
@@ -1070,6 +1124,48 @@ class CatEditor(tk.Toplevel):
                     messagebox.showerror("删除失败", f"{t}: {e}")
         self._refresh_existing_photos()
         messagebox.showinfo("已删除", "\n".join(deleted) or "无变化")
+        self._mark_dirty()
+
+    def _swap_to_main(self):
+        """将选中的补充照片（_NN, N>=2）与主图（_01）文件名对调。"""
+        seq = self._selected_existing_seq()
+        if seq is None:
+            messagebox.showwarning("提示", "请先选中一张补充照片")
+            return
+        if seq == 1:
+            messagebox.showwarning("提示", "这已经是主图了")
+            return
+        folder = self._folder()
+        pic = self.cat["pic_name"]
+        # 确认
+        if not messagebox.askyesno("确认切换",
+            f"将 {pic}_{seq:02d} 设为主图，\n并与原主图 {pic}_01 交换文件名？"):
+            return
+        # 涉及 4 个文件（或更少）：每个序号有 .jpg 和 _thumb.jpg
+        renamed = []
+        def swap_pair(a_seq, b_seq):
+            # 把 a_seq 的文件临时移走，b_seq → a_seq，临时 → b_seq
+            for suffix in [".jpg", "_thumb.jpg"]:
+                a_file = folder / f"{pic}_{a_seq:02d}{suffix}"
+                b_file = folder / f"{pic}_{b_seq:02d}{suffix}"
+                tmp_file = folder / f"{pic}_{a_seq:02d}{suffix}.tmpswap"
+                if a_file.is_file():
+                    a_file.rename(tmp_file)
+                if b_file.is_file():
+                    b_file.rename(a_file)
+                if tmp_file.is_file():
+                    tmp_file.rename(b_file)
+        try:
+            swap_pair(1, seq)
+            self._refresh_existing_photos()
+            self._on_photo_select()
+            messagebox.showinfo("已切换",
+                f"主图已切换：{pic}_{seq:02d} ↔ {pic}_01\n\n"
+                "前端需点击「应用变更」刷新。")
+        except Exception as e:
+            messagebox.showerror("切换失败", str(e))
+            self._refresh_existing_photos()
+        self._mark_dirty()
 
     # ---------- 保存 ----------
     def _save(self):
