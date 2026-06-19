@@ -54,6 +54,7 @@
         .gender { font-size: 1.2rem; }
         .gender.male { color: #5B8DEF; }
         .gender.female { color: #FF7E93; }
+        .gender.unknown { color: #AAA; }
         .affection { font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 10px; }
         .paw-empty { opacity: 0.2; }
         .desc { font-size: 0.9rem; color: #888; line-height: 1.6; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
@@ -173,6 +174,7 @@
         <button class="filter-btn active" data-filter="all">全部猫咪</button>
         <button class="filter-btn" data-filter="male">♂ 男孩</button>
         <button class="filter-btn" data-filter="female">♀ 女孩</button>
+        <button class="filter-btn" data-filter="unknown">❓ 未知性别</button>
         <button class="filter-btn" data-filter="star">⭐ 喵星</button>
         <button class="filter-btn" data-filter="lost">🔍 失踪</button>
     </div>
@@ -243,12 +245,25 @@
             return '';
         }
 
+        function getGenderDisplay(gender) {
+            if (gender === 'male') return '♂';
+            if (gender === 'female') return '♀';
+            return '❓';
+        }
+
+        function getGenderText(gender) {
+            if (gender === 'male') return '♂ 男孩';
+            if (gender === 'female') return '♀ 女孩';
+            return '❓ 未知性别';
+        }
+
         function renderCats() {
             grid.innerHTML = '';
             let filteredCats = catsData;
             
             if (currentFilter === 'male') filteredCats = catsData.filter(c => c.gender === 'male');
             else if (currentFilter === 'female') filteredCats = catsData.filter(c => c.gender === 'female');
+            else if (currentFilter === 'unknown') filteredCats = catsData.filter(c => c.gender === 'unknown');
             else if (currentFilter === 'star') filteredCats = catsData.filter(c => c.status === 'star');
             else if (currentFilter === 'lost') filteredCats = catsData.filter(c => c.status === 'lost');
 
@@ -259,7 +274,6 @@
 
             filteredCats.forEach((cat, index) => {
                 const card = document.createElement('div');
-                // 修复了这里的反引号
                 card.className = `card status-${cat.status} fade-in`;
                 card.style.animationDelay = `${index * 0.1}s`; 
                 card.innerHTML = `
@@ -269,7 +283,7 @@
                     </div>
                     <div class="name-row">
                         <span class="name">${cat.name}</span>
-                        <span class="gender ${cat.gender}">${cat.gender === 'male' ? '♂' : '♀'}</span>
+                        <span class="gender ${cat.gender}">${getGenderDisplay(cat.gender)}</span>
                     </div>
                     <div class="affection">${getPaws(cat.affection)}</div>
                     <div class="desc">${cat.desc}</div>
@@ -283,11 +297,9 @@
         function openModal(cat) {
             document.getElementById('modalAvatar').src = cat.avatar;
             document.getElementById('modalName').innerText = cat.name;
-            // 修复了这里的反引号
-            document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${cat.gender === 'male' ? '♂ 男孩' : '♀ 女孩'}</span>`;
+            document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
             document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
             
-            // 修复了换行符的解析
             const paragraphs = cat.story.split('\n\n');
             const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
             document.getElementById('modalStoryText').innerHTML = storyHTML;
@@ -380,7 +392,6 @@
             })
             .then(data => {
                 catsData = data;
-                // 移除 loading 提示
                 if(loadingText) loadingText.remove();
                 renderCats();
             })
