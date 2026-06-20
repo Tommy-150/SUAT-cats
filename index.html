@@ -22,8 +22,78 @@
         .header { text-align: center; margin-bottom: 40px; }
         .header h1 { font-size: 2.5rem; font-weight: 800; color: #4A4A4A; letter-spacing: 2px; }
         .header p { color: #888; margin-top: 8px; font-size: 1.1rem; }
-        .filters { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 50px; }
-        .filter-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+
+        /* 筛选区域新样式 */
+        .filters {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 50px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+        }
+        .filter-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+            padding: 8px 0;
+        }
+        .filter-toggle span {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #555;
+        }
+        .toggle-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(10px);
+            font-size: 1.5rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .toggle-btn:hover {
+            border-color: #999;
+            color: #333;
+            transform: scale(1.05);
+        }
+        .toggle-btn.open {
+            transform: rotate(45deg);
+            border-color: #4A4A4A;
+            color: #4A4A4A;
+        }
+        .filter-options {
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 12px;
+            padding: 12px 0;
+            animation: fadeDown 0.3s ease;
+        }
+        .filter-options.show {
+            display: flex;
+        }
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         .filter-btn {
             padding: 10px 24px; border: none; border-radius: 50px;
             background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px);
@@ -66,10 +136,13 @@
         .card.status-star .avatar { filter: grayscale(100%); opacity: 0.8; }
         .card.status-star .status-icon { opacity: 1; transform: scale(1); }
         .card.status-star .name { color: #888; }
+
+        /* 失踪状态：仅保留状态图标，不改变头像颜色和透明度 */
         .card.status-lost { border: 1px dashed #d0d0d0; }
-        .card.status-lost .avatar { filter: sepia(60%) saturate(60%); opacity: 0.7; }
         .card.status-lost .status-icon { opacity: 1; transform: scale(1); }
         .card.status-lost .name { color: #999; }
+        /* 已移除原本对 .card.status-lost .avatar 的滤镜和透明度设置 */
+
         .card.status-adopted { border: 1px solid #a0d2a0; }
         .card.status-adopted .status-icon { opacity: 1; transform: scale(1); }
         .card.status-adopted .name { color: #2d6a2d; }
@@ -174,21 +247,34 @@
         <p>记录每一个相遇与告别</p>
     </div>
 
+    <!-- 新筛选区域：去掉“全部猫咪”，改为折叠面板 -->
     <div class="filters">
-        <div class="filter-row">
-            <button class="filter-btn active" id="resetFilters">全部猫咪</button>
+        <!-- 性别筛选 -->
+        <div class="filter-group">
+            <div class="filter-toggle" id="genderToggle">
+                <span>性别</span>
+                <button class="toggle-btn" id="genderToggleBtn">+</button>
+            </div>
+            <div class="filter-options" id="genderOptions">
+                <button class="filter-btn gender-btn active" data-gender="all">全部性别</button>
+                <button class="filter-btn gender-btn" data-gender="male">♂ 男孩</button>
+                <button class="filter-btn gender-btn" data-gender="female">♀ 女孩</button>
+                <button class="filter-btn gender-btn" data-gender="unknown">❓ 未知性别</button>
+            </div>
         </div>
-        <div class="filter-row" id="genderRow">
-            <button class="filter-btn gender-btn active" data-gender="all">全部性别</button>
-            <button class="filter-btn gender-btn" data-gender="male">♂ 男孩</button>
-            <button class="filter-btn gender-btn" data-gender="female">♀ 女孩</button>
-            <button class="filter-btn gender-btn" data-gender="unknown">❓ 未知性别</button>
-        </div>
-        <div class="filter-row" id="statusRow">
-            <button class="filter-btn status-btn active" data-status="all">全部状态</button>
-            <button class="filter-btn status-btn" data-status="star">⭐ 喵星</button>
-            <button class="filter-btn status-btn" data-status="lost">🔍 失踪</button>
-            <button class="filter-btn status-btn" data-status="adopted">🏠 已领养</button>
+
+        <!-- 状态筛选 -->
+        <div class="filter-group">
+            <div class="filter-toggle" id="statusToggle">
+                <span>状态</span>
+                <button class="toggle-btn" id="statusToggleBtn">+</button>
+            </div>
+            <div class="filter-options" id="statusOptions">
+                <button class="filter-btn status-btn active" data-status="all">全部状态</button>
+                <button class="filter-btn status-btn" data-status="star">⭐ 喵星</button>
+                <button class="filter-btn status-btn" data-status="lost">🔍 失踪</button>
+                <button class="filter-btn status-btn" data-status="adopted">🏠 已领养</button>
+            </div>
         </div>
     </div>
 
@@ -390,44 +476,54 @@
         lightboxClose.addEventListener('click', closeLightbox);
         lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
 
-        // 筛选事件绑定
-        const resetBtn = document.getElementById('resetFilters');
+        // ---------- 新筛选交互 ----------
+        const genderToggleBtn = document.getElementById('genderToggleBtn');
+        const genderOptions = document.getElementById('genderOptions');
+        const statusToggleBtn = document.getElementById('statusToggleBtn');
+        const statusOptions = document.getElementById('statusOptions');
+
         const genderBtns = document.querySelectorAll('.gender-btn');
         const statusBtns = document.querySelectorAll('.status-btn');
 
+        // 辅助：设置按钮高亮
         function setActive(buttons, activeButton) {
             buttons.forEach(b => b.classList.remove('active'));
             if (activeButton) activeButton.classList.add('active');
         }
 
-        resetBtn.addEventListener('click', function() {
-            currentGenderFilter = 'all';
-            currentStatusFilter = 'all';
-            setActive(genderBtns, document.querySelector('.gender-btn[data-gender="all"]'));
-            setActive(statusBtns, document.querySelector('.status-btn[data-status="all"]'));
-            resetBtn.classList.add('active');
-            renderCats();
+        // 切换面板显示
+        genderToggleBtn.addEventListener('click', () => {
+            const isOpen = genderOptions.classList.toggle('show');
+            genderToggleBtn.classList.toggle('open', isOpen);
+            genderToggleBtn.textContent = isOpen ? '−' : '+';
         });
 
+        statusToggleBtn.addEventListener('click', () => {
+            const isOpen = statusOptions.classList.toggle('show');
+            statusToggleBtn.classList.toggle('open', isOpen);
+            statusToggleBtn.textContent = isOpen ? '−' : '+';
+        });
+
+        // 性别筛选事件
         genderBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 currentGenderFilter = this.dataset.gender;
                 setActive(genderBtns, this);
-                resetBtn.classList.remove('active');
                 renderCats();
+                // 可选：选择后自动收起面板（如果需要可以保留打开，这里为了体验保持打开）
             });
         });
 
+        // 状态筛选事件
         statusBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 currentStatusFilter = this.dataset.status;
                 setActive(statusBtns, this);
-                resetBtn.classList.remove('active');
                 renderCats();
             });
         });
 
-        // 核心：读取 cats.json
+        // 加载数据
         fetch('cats.json')
             .then(response => {
                 if (!response.ok) throw new Error('找不到 cats.json 文件');

@@ -100,7 +100,7 @@
     "affection": 5,
     "status": "star",
     "desc": "三小只里最亲人的",
-    "story": "三小只里最亲人的橘，从小胆子最大，可以偷偷地摸，从国家中心被救下来以后，更加的亲人。于2026.3.21凌晨在马路上回到喵星。",
+    "story": "三小只里最亲人的橘，从小胆子最大，可以偷偷地摸，从国交中心被救下来以后，更加的亲人。于2026.3.21凌晨在马路上回到喵星。",
     "otherPhotos": [
       {
         "thumb": "classified/06 橘头/orange_head_02_thumb.jpg",
@@ -160,26 +160,26 @@
   },
   {
     "id": "09",
-    "name": "大橘1号(暂用名)",
+    "name": "老橘",
     "gender": "male",
-    "avatar": "classified/09 大橘1号(暂用名)/big_orange_one_01_thumb.jpg",
-    "avatar_hd": "classified/09 大橘1号(暂用名)/big_orange_one_01.jpg",
+    "avatar": "classified/09 老橘/big_orange_one_01_thumb.jpg",
+    "avatar_hd": "classified/09 老橘/big_orange_one_01.jpg",
     "affection": 1,
     "status": "normal",
     "desc": "战斗力最强的大橘",
     "story": "每天晚上都会从校外游荡过来，抢猫妈的饭吃、欺负三小只、和猫猫打架，只对古典纹好，罪大恶极。",
     "otherPhotos": [
       {
-        "thumb": "classified/09 大橘1号(暂用名)/big_orange_one_02_thumb.jpg",
-        "hd": "classified/09 大橘1号(暂用名)/big_orange_one_02.jpg"
+        "thumb": "classified/09 老橘/big_orange_one_02_thumb.jpg",
+        "hd": "classified/09 老橘/big_orange_one_02.jpg"
       },
       {
-        "thumb": "classified/09 大橘1号(暂用名)/big_orange_one_03_thumb.jpg",
-        "hd": "classified/09 大橘1号(暂用名)/big_orange_one_03.jpg"
+        "thumb": "classified/09 老橘/big_orange_one_03_thumb.jpg",
+        "hd": "classified/09 老橘/big_orange_one_03.jpg"
       },
       {
-        "thumb": "classified/09 大橘1号(暂用名)/big_orange_one_04_thumb.jpg",
-        "hd": "classified/09 大橘1号(暂用名)/big_orange_one_04.jpg"
+        "thumb": "classified/09 老橘/big_orange_one_04_thumb.jpg",
+        "hd": "classified/09 老橘/big_orange_one_04.jpg"
       }
     ]
   },
@@ -192,7 +192,7 @@
     "affection": 2,
     "status": "normal",
     "desc": "怕人的古典纹狸花",
-    "story": "在校园里四处游荡的古典纹，特别瘦小，人一靠近就哈气，很难养熟。",
+    "story": "狸花帮的一员，在校园里四处游荡的古典纹，特别瘦小，对大多数猫不错，但是人一靠近就哈气，养熟需要耐心。",
     "otherPhotos": [
       {
         "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_02_thumb.jpg",
@@ -284,7 +284,7 @@
     "affection": 3,
     "status": "normal",
     "desc": "五小只里胆子最大的",
-    "story": "五小只里胆子最大的",
+    "story": "奶牛猫妈生的五小只里胆子最大的。",
     "otherPhotos": [
       {
         "thumb": "classified/14 白手套口水巾(暂用名)/white_glove_bib_02_thumb.jpg",
@@ -301,7 +301,7 @@
     "affection": 3,
     "status": "normal",
     "desc": "五小只里最霸道的",
-    "story": "五小只里最霸道的，和他妈一样喜欢哈气，胸前有一个黑色的领结，特别霸道，特别护食。",
+    "story": "奶牛猫妈生的五小只里最霸道的，和他妈一样喜欢哈气，胸前有一个黑色的领结，特别霸道，特别护食。",
     "otherPhotos": [
       {
         "thumb": "classified/15 黑老大/black_boss_02_thumb.jpg",
@@ -317,8 +317,8 @@
     "avatar_hd": "classified/16 五月/May_01.jpg",
     "affection": 3,
     "status": "normal",
-    "desc": "好可爱的宝宝",
-    "story": "五小只里面最好看的一只，年纪轻轻就已怀孕，已饮茶绝育。",
+    "desc": "五小只里最好看的",
+    "story": "奶牛猫妈生的五小只里面最好看的一只，年纪轻轻就已怀孕，已绝育。",
     "otherPhotos": [
       {
         "thumb": "classified/16 五月/May_02_thumb.jpg",
@@ -339,7 +339,7 @@
     "affection": 2,
     "status": "normal",
     "desc": "五小只里胆子最小的",
-    "story": "五小只里胆子最小的，别人都在吃东西，就他在最后面。",
+    "story": "奶牛猫妈生的五小只里胆子最小的，别人都在吃东西，就他在最后面。",
     "otherPhotos": [
       {
         "thumb": "classified/17 六月/June_02_thumb.jpg",
@@ -410,7 +410,7 @@
     "affection": 4,
     "status": "normal",
     "desc": "哈气就是喵喵",
-    "story": "千里迢迢跟着他的干父亲头3来学校蹭饭",
+    "story": "千里迢迢跟着他的“干父亲”头3来学校蹭饭，因为他是头三的“干宝宝”，所以叫头孢（宝）。比较亲人，可以偷偷地摸，但是哈气和喵喵的代码写到了一起，哈气就是喵喵，喵喵就是哈气。",
     "otherPhotos": [
       {
         "thumb": "classified/21 头孢/tou_baby_02_thumb.jpg",
@@ -420,10 +420,10 @@
   },
   {
     "id": "22",
-    "name": "细条条",
+    "name": "细细条",
     "gender": "male",
-    "avatar": "classified/22 细条条/thin_stripe_01_thumb.jpg",
-    "avatar_hd": "classified/22 细条条/thin_stripe_01.jpg",
+    "avatar": "classified/22 细细条/thin_stripe_01_thumb.jpg",
+    "avatar_hd": "classified/22 细细条/thin_stripe_01.jpg",
     "affection": 2,
     "status": "normal",
     "desc": "渣猫",
@@ -439,7 +439,7 @@
     "affection": 1,
     "status": "lost",
     "desc": "普通的玄猫",
-    "story": "仅仅两次出过的黑猫",
+    "story": "仅仅两次出现过的黑猫",
     "otherPhotos": []
   },
   {
@@ -451,7 +451,7 @@
     "affection": 5,
     "status": "normal",
     "desc": "亲人的三花",
-    "story": "突然出现的一纸亲人的三花，不喜欢被人摸背和屁股。",
+    "story": "突然出现的一只亲人的三花，不喜欢被人摸背和屁股。",
     "otherPhotos": [
       {
         "thumb": "classified/24 袁小花/yuan_small_flower_02_thumb.jpg",
@@ -485,7 +485,7 @@
     "affection": 5,
     "status": "normal",
     "desc": "高精力和低精力并存",
-    "story": "突然出现的一只有橘色点点的小猫，的时候特别贪玩，但是主要还是在椅子上睡觉。",
+    "story": "突然出现的一只有橘色点点的小猫，高精力的时候特别贪玩，萎靡不振的时候在椅子上睁着眼睛睡觉。",
     "otherPhotos": []
   },
   {
@@ -606,6 +606,30 @@
     ]
   },
   {
+    "id": "35",
+    "name": "大橘1号(暂用名)",
+    "gender": "unknown",
+    "avatar": "classified/35 大橘1号(暂用名)/big_orange_two_01_thumb.jpg",
+    "avatar_hd": "classified/35 大橘1号(暂用名)/big_orange_two_01.jpg",
+    "affection": 1,
+    "status": "lost",
+    "desc": "普通的大橘",
+    "story": "喜欢小只古典纹，毛色偏橘，从未被古典纹喜欢过，只会被被古典纹哈气嫌弃，因为古典纹已经喜欢上了老橘，2026年年初失踪。",
+    "otherPhotos": []
+  },
+  {
+    "id": "36",
+    "name": "大橘2号（暂用名）",
+    "gender": "unknown",
+    "avatar": "classified/36 大橘2号（暂用名）/big_orange_three_01_thumb.jpg",
+    "avatar_hd": "classified/36 大橘2号（暂用名）/big_orange_three_01.jpg",
+    "affection": 1,
+    "status": "lost",
+    "desc": "普通的大橘",
+    "story": "有点偏奶油色，喜欢小只古典纹，古典纹也爱过，但是后来就被古典纹哈气嫌弃，因为古典纹已经喜欢上了老橘，2025年年末失踪。",
+    "otherPhotos": []
+  },
+  {
     "id": "33",
     "name": "白猫(暂用名)",
     "gender": "unknown",
@@ -627,30 +651,6 @@
     "status": "lost",
     "desc": "普通的狸花",
     "story": "大肚子怕人狸花，很像古典纹的放大版，只是左后腿多了一块纹，2026年年初失踪。",
-    "otherPhotos": []
-  },
-  {
-    "id": "35",
-    "name": "大橘2号(暂用名)",
-    "gender": "unknown",
-    "avatar": "classified/35 大橘2号(暂用名)/big_orange_two_01_thumb.jpg",
-    "avatar_hd": "classified/35 大橘2号(暂用名)/big_orange_two_01.jpg",
-    "affection": 1,
-    "status": "lost",
-    "desc": "普通的大橘",
-    "story": "喜欢小只古典纹，但是后来见面就被古典纹哈气嫌弃，因为古典纹已经喜欢上了大橘1号，2026年年初失踪。",
-    "otherPhotos": []
-  },
-  {
-    "id": "36",
-    "name": "大橘3号",
-    "gender": "unknown",
-    "avatar": "classified/36 大橘3号/big_orange_three_01_thumb.jpg",
-    "avatar_hd": "classified/36 大橘3号/big_orange_three_01.jpg",
-    "affection": 1,
-    "status": "lost",
-    "desc": "普通的大橘",
-    "story": "喜欢小只古典纹，但是后来见面就被古典纹哈气嫌弃，因为古典纹已经喜欢上了大橘1号，2026年年初失踪。",
     "otherPhotos": []
   }
 ]

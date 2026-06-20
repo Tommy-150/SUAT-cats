@@ -3,8 +3,8 @@
 """
 SUAT-cats 管理器
 ================
-仿 index.html 的卡片网格风格，集成：基本信息编辑、故事编辑、图片预览、
-缩略图编辑、新增猫咪、自动同步前端（Excel + cats.json）。
+可拖拽排序的猫咪列表视图。
+集成：基本信息编辑、故事编辑、图片预览、缩略图编辑、新增猫咪、自动同步前端（Excel + cats.json）。
 
 依赖：Pillow、openpyxl
 """
@@ -78,7 +78,6 @@ COLOR_WARN = "#E8A53A"
 COLOR_INFO = "#5B8DEF"
 
 # UI 字体：运行时探测开源字体，避免指定版权字体
-# 优先级是常见的 SIL OFL / Apache 2.0 开源中文字体；都没装就用 Tk 默认
 FONT_CANDIDATES_UI = [
     "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC",
     "Source Han Sans CN", "思源黑体", "思源黑体 CN",
@@ -92,11 +91,9 @@ FONT_CANDIDATES_MONO = [
     "DejaVu Sans Mono", "Liberation Mono",
 ]
 
-# 实际使用的字体名，在 main() 运行时探测后赋值
 FONT_FAMILY_UI = None
 FONT_FAMILY_MONO = None
 
-# 字号集中管理
 FS_TITLE = 22
 FS_SUBTITLE = 11
 FS_CARD_NAME = 13
@@ -118,7 +115,8 @@ INDEX_HTML = BASE_DIR / "index.html"
 THUMB_SUFFIX = "_thumb"
 THUMB_OUTPUT_SIZE = 300
 THUMB_QUALITY = 90
-CARD_THUMB_SIZE = 150
+CARD_THUMB_SIZE = 150    # 原卡片缩略图尺寸，行列表用更小的
+ROW_THUMB_SIZE = 48      # 行内头像尺寸
 PREVIEW_SIZE = 320
 
 GENDER_OPTIONS = ["male", "female", "unknown"]
@@ -240,6 +238,22 @@ class ExcelStore:
     def save(self):
         self.wb.save(self.path)
 
+    def rewrite_rows(self, rows):
+        """用给定的 rows 列表顺序重写数据行（保留表头）"""
+        # 清除第二行之后的所有行
+        while self.ws.max_row > 1:
+            self.ws.delete_rows(2)
+        # 按顺序写入
+        for idx, cat in enumerate(rows, start=2):
+            self.ws.cell(row=idx, column=self.col_idx["id"]).value = int(cat["id"])
+            self.ws.cell(row=idx, column=self.col_idx["name"]).value = cat["name"]
+            self.ws.cell(row=idx, column=self.col_idx["gender"]).value = cat["gender"]
+            self.ws.cell(row=idx, column=self.col_idx["affection"]).value = cat["affection"]
+            self.ws.cell(row=idx, column=self.col_idx["status"]).value = cat["status"]
+            self.ws.cell(row=idx, column=self.col_idx["desc"]).value = cat["desc"]
+            self.ws.cell(row=idx, column=self.col_idx["story"]).value = cat["story"]
+            self.ws.cell(row=idx, column=self.col_idx["pic"]).value = cat["pic_name"]
+
 
 # ============================================================
 # cats.json 重生成
@@ -332,7 +346,6 @@ def next_seq_for(folder, pic_name):
 
 
 def open_in_explorer(path: Path):
-    """在资源管理器/Finder 中打开。"""
     try:
         if sys.platform == "win32":
             os.startfile(str(path))
@@ -345,7 +358,6 @@ def open_in_explorer(path: Path):
 
 
 def detect_fonts(root):
-    """在已安装字体中按优先级选一个开源 CJK 字体。都没装就用 Tk 默认。"""
     global FONT_FAMILY_UI, FONT_FAMILY_MONO
     available = set(tkfont.families(root))
     for name in FONT_CANDIDATES_UI:
@@ -357,7 +369,6 @@ def detect_fonts(root):
             FONT_FAMILY_MONO = name
             break
 
-    # 同时调高 Tk 默认字体的字号，让高 DPI 下不糊
     default = tkfont.nametofont("TkDefaultFont")
     if FONT_FAMILY_UI:
         default.configure(family=FONT_FAMILY_UI, size=10)
@@ -372,7 +383,6 @@ def detect_fonts(root):
 
 
 def ui_font(size=FS_BODY, weight="normal"):
-    """生成一个 UI 字体元组；FONT_FAMILY_UI 为 None 时交给 Tk 默认字体。"""
     if FONT_FAMILY_UI:
         return (FONT_FAMILY_UI, size, weight)
     return ("TkDefaultFont", size, weight)
@@ -385,7 +395,7 @@ def mono_font(size=FS_SMALL):
 
 
 # ============================================================
-# 缩略图裁剪器
+# 缩略图裁剪器（保持不变）
 # ============================================================
 class ThumbEditor(tk.Toplevel):
     def __init__(self, master, original_path, on_done=None):
@@ -583,7 +593,7 @@ class ThumbEditor(tk.Toplevel):
 
 
 # ============================================================
-# CatEditor：全字段 + 图片预览 + 未保存提醒
+# CatEditor：全字段 + 图片预览 + 未保存提醒（保持不变）
 # ============================================================
 class CatEditor(tk.Toplevel):
     def __init__(self, master, store, cat=None, on_saved=None):
@@ -596,25 +606,20 @@ class CatEditor(tk.Toplevel):
         title = "新增猫咪" if self.is_new else f"编辑 {cat['id']} {cat['name']}"
         self.title(title)
 
-        # ===== 自适应屏幕大小 =====
         sw = self.winfo_screenwidth()
         sh = self.winfo_screenheight()
         target_w = max(1100, min(int(sw * 0.8), 1600))
         target_h = max(750, min(int(sh * 0.8), 1000))
         self.geometry(f"{target_w}x{target_h}")
         self.minsize(max(900, int(sw * 0.55)), max(700, int(sh * 0.55)))
-        # ==========================
 
         self.configure(bg=COLOR_BG)
         self.transient(master)
         self.grab_set()
         self.protocol("WM_DELETE_WINDOW", self._on_close_request)
 
-        # 新增模式下收集的图片队列
         self.new_photo_queue = []
-        # 修改标记
         self._initial_snapshot = None
-        # 双图预览
         self._preview_original_img = None
         self._preview_thumb_img = None
         self._last_original = None
@@ -625,9 +630,8 @@ class CatEditor(tk.Toplevel):
         if not self.is_new:
             self._refresh_existing_photos()
         self._initial_snapshot = self._snapshot()
-        self._made_fs_changes = False  # 编辑模式下增删图/切换主图标记
+        self._made_fs_changes = False
 
-    # ---------- 脘本（判断 dirty）----------
     def _snapshot(self):
         return (
             self.var_id.get(), self.var_name.get(), self.var_pic.get(),
@@ -659,9 +663,7 @@ class CatEditor(tk.Toplevel):
         else:
             self.destroy()
 
-    # ---------- UI ----------
     def _build(self):
-        # 顶部标题栏
         head = tk.Frame(self, bg=COLOR_ACCENT, height=58)
         head.pack(fill=tk.X); head.pack_propagate(False)
         title = "➕ 新增一只猫咪" if self.is_new else f"✏️ {self.cat['id']} {self.cat['name']}"
@@ -675,14 +677,11 @@ class CatEditor(tk.Toplevel):
         outer = tk.Frame(self, bg=COLOR_BG)
         outer.pack(fill=tk.BOTH, expand=True, padx=20, pady=14)
 
-        # 左侧：字段 + 故事
         left = tk.Frame(outer, bg=COLOR_BG)
         left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        # 右侧：图片区（列表 + 预览）
-        right = tk.Frame(outer, bg=COLOR_BG)   # ← 去掉 width=500
+        right = tk.Frame(outer, bg=COLOR_BG)
         right.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(14, 0))
 
-        # ===== 字段卡片 =====
         fields = self._make_card(left, "基本信息")
         fields.pack(fill=tk.X, pady=(0, 12))
 
@@ -754,7 +753,6 @@ class CatEditor(tk.Toplevel):
         self.var_affection.trace_add("write", lambda *_: self._update_paw_preview())
         self._update_paw_preview()
 
-        # 提示说明
         if self.is_new:
             tk.Label(body,
                      text="提示：图名与编号保存后不可修改。图名只能包含 英文/数字/下划线。",
@@ -762,7 +760,6 @@ class CatEditor(tk.Toplevel):
                      wraplength=520, justify="left"
                      ).grid(row=4, column=0, columnspan=4, sticky="w", padx=4, pady=(8, 0))
 
-        # ===== 故事卡片 =====
         story_card = self._make_card(left, "故事")
         story_card.pack(fill=tk.BOTH, expand=True, pady=(0, 0))
         story_inner = tk.Frame(story_card, bg=COLOR_CARD)
@@ -779,20 +776,17 @@ class CatEditor(tk.Toplevel):
                  bg=COLOR_CARD, fg=COLOR_SUBTEXT, font=ui_font(FS_TINY)
                  ).pack(anchor="e", pady=(4, 0))
 
-        # ===== 右侧图片区 =====
         photo_card = self._make_card(right, "图片")
         photo_card.pack(fill=tk.BOTH, expand=True)
         photo_inner = tk.Frame(photo_card, bg=COLOR_CARD)
         photo_inner.pack(fill=tk.BOTH, expand=True, padx=14, pady=12)
 
-        # 双图预览区：原图（左）| 缩略图（右）
         preview_frame = tk.Frame(photo_inner, bg=COLOR_CARD)
         preview_frame.pack(fill=tk.X, pady=(0, 8))
         preview_frame.columnconfigure(0, weight=1)
         preview_frame.columnconfigure(1, weight=1)
 
         def make_preview_box(parent, column, label_text):
-            """创建一个固定大小的预览框。"""
             box = tk.Frame(parent, bg="#fafafa",
                            highlightthickness=1,
                            highlightbackground=COLOR_DIVIDER,
@@ -809,12 +803,10 @@ class CatEditor(tk.Toplevel):
         self.preview_thumb_box, self.preview_thumb_label = make_preview_box(
             preview_frame, 1, "缩略图预览")
 
-        # 点击预览可打开大图
         self.preview_original_label.bind("<Button-1>", self._open_preview_external)
         self.preview_thumb_label.bind("<Button-1>",
             lambda _e: self._open_preview_external(thumb=True))
 
-        # ===== 按钮栏（根据模式不同）=====
         def pill(parent, text, color, cmd):
             return tk.Button(parent, text=text, command=cmd,
                              font=ui_font(FS_SMALL, "bold"),
@@ -823,7 +815,6 @@ class CatEditor(tk.Toplevel):
                              padx=10, pady=5, cursor="hand2")
 
         if self.is_new:
-            # 拆成两行，防止拥挤
             row1 = tk.Frame(photo_inner, bg=COLOR_CARD)
             row1.pack(fill=tk.X, pady=(2, 2))
             pill(row1, "📷 选主图", COLOR_OK,
@@ -838,7 +829,6 @@ class CatEditor(tk.Toplevel):
             pill(row2, "🗑 移除", COLOR_DANGER,
                  self._remove_queued).pack(side=tk.LEFT, padx=2)
         else:
-            # 第一行：编辑操作
             row1 = tk.Frame(photo_inner, bg=COLOR_CARD)
             row1.pack(fill=tk.X, pady=(2, 2))
             pill(row1, "✏️ 重裁缩略", COLOR_WARN,
@@ -847,7 +837,6 @@ class CatEditor(tk.Toplevel):
                  self._add_extra_existing).pack(side=tk.LEFT, padx=2)
             pill(row1, "🗑 删除", COLOR_DANGER,
                  self._delete_existing_photo).pack(side=tk.LEFT, padx=2)
-            # 第二行：工具按钮
             row2 = tk.Frame(photo_inner, bg=COLOR_CARD)
             row2.pack(fill=tk.X, pady=(0, 4))
             pill(row2, "🔄 设为主图", "#7E57C2",
@@ -855,7 +844,6 @@ class CatEditor(tk.Toplevel):
             pill(row2, "📁 打开文件夹", COLOR_ACCENT_LIGHT,
                  lambda: open_in_explorer(self._folder())).pack(side=tk.LEFT, padx=2)
 
-        # 图片列表
         list_holder = tk.Frame(photo_inner, bg="white",
                                 highlightthickness=1,
                                 highlightbackground=COLOR_DIVIDER)
@@ -873,7 +861,6 @@ class CatEditor(tk.Toplevel):
         self.photo_list.bind("<<ListboxSelect>>", lambda _e: self._on_photo_select())
         self.photo_list.bind("<Double-Button-1>", lambda _e: self._open_preview_external())
 
-        # ===== 底部按钮栏 =====
         bottom = tk.Frame(self, bg=COLOR_BG)
         bottom.pack(fill=tk.X, padx=20, pady=(0, 16))
         tk.Button(bottom, text="取消", command=self._on_close_request,
@@ -887,9 +874,7 @@ class CatEditor(tk.Toplevel):
                   padx=24, pady=8, cursor="hand2"
                   ).pack(side=tk.RIGHT, padx=4)
 
-    # ---------- helper ----------
     def _make_card(self, parent, title):
-        """返回一个仿 html 阶样式的卡片 Frame。"""
         card = tk.Frame(parent, bg=COLOR_CARD,
                         highlightthickness=1,
                         highlightbackground=COLOR_CARD_BORDER)
@@ -924,24 +909,20 @@ class CatEditor(tk.Toplevel):
         self.txt_story.delete("1.0", tk.END)
         self.txt_story.insert("1.0", c["story"])
 
-    # ---------- 双图预览：原图 + 缩略图 ----------
     def _show_preview_both(self, original_path, thumb_path=None):
-        """同时显示原图（左）和缩略图（右）。thumb_path 为 None 则显示占位文字。"""
-        # 更新原图
         if original_path and Path(original_path).is_file():
             try:
                 img = Image.open(original_path).convert("RGB")
                 img.thumbnail((220, 220), Image.LANCZOS)
                 self._preview_original_img = ImageTk.PhotoImage(img)
                 self.preview_original_label.config(image=self._preview_original_img, text="")
-            except Exception as e:
+            except Exception:
                 self._preview_original_img = None
-                self.preview_original_label.config(image="", text=f"(无法加载)")
+                self.preview_original_label.config(image="", text="(无法加载)")
         else:
             self._preview_original_img = None
             self.preview_original_label.config(image="", text="(无原图)")
 
-        # 更新缩略图
         if thumb_path and Path(thumb_path).is_file():
             try:
                 img = Image.open(thumb_path).convert("RGB")
@@ -955,12 +936,10 @@ class CatEditor(tk.Toplevel):
             self._preview_thumb_img = None
             self.preview_thumb_label.config(image="", text="选中图片后显示")
 
-        # 记住当前路径，用于外部打开
         self._last_original = original_path
         self._last_thumb = thumb_path
 
     def _open_preview_external(self, _e=None, thumb=False):
-        """在系统看图器中打开原图或缩略图。"""
         path = (self._last_thumb if thumb else self._last_original)
         if path and Path(path).is_file():
             try:
@@ -998,7 +977,6 @@ class CatEditor(tk.Toplevel):
         sel = self.photo_list.curselection()
         return sel[0] if sel else None
 
-    # ---------- 新增模式 ----------
     def _queue_photo(self, seq):
         files = filedialog.askopenfilenames(
             title="选择图片",
@@ -1036,7 +1014,6 @@ class CatEditor(tk.Toplevel):
         del self.new_photo_queue[idx]
         self._refresh_queue_list()
 
-    # ---------- 编辑模式 ----------
     def _folder(self):
         return CLASSIFIED_DIR / f"{self.cat['id']} {self.cat['name']}"
 
@@ -1057,7 +1034,6 @@ class CatEditor(tk.Toplevel):
             thumb_ok = (folder / f"{pic}_{seq:02d}_thumb.jpg").is_file()
             mark = "" if thumb_ok else "  [缺缩略图]"
             self.photo_list.insert(tk.END, f"[{tag}] {pic}_{seq:02d}.jpg{mark}")
-        # 默认选中第一项
         if self.photo_list.size() > 0:
             self.photo_list.selection_set(0)
             self._on_photo_select()
@@ -1138,7 +1114,6 @@ class CatEditor(tk.Toplevel):
         self._mark_dirty()
 
     def _swap_to_main(self):
-        """将选中的补充照片（_NN, N>=2）与主图（_01）文件名对调。"""
         seq = self._selected_existing_seq()
         if seq is None:
             messagebox.showwarning("提示", "请先选中一张补充照片")
@@ -1148,14 +1123,11 @@ class CatEditor(tk.Toplevel):
             return
         folder = self._folder()
         pic = self.cat["pic_name"]
-        # 确认
         if not messagebox.askyesno("确认切换",
             f"将 {pic}_{seq:02d} 设为主图，\n并与原主图 {pic}_01 交换文件名？"):
             return
-        # 涉及 4 个文件（或更少）：每个序号有 .jpg 和 _thumb.jpg
         renamed = []
         def swap_pair(a_seq, b_seq):
-            # 把 a_seq 的文件临时移走，b_seq → a_seq，临时 → b_seq
             for suffix in [".jpg", "_thumb.jpg"]:
                 a_file = folder / f"{pic}_{a_seq:02d}{suffix}"
                 b_file = folder / f"{pic}_{b_seq:02d}{suffix}"
@@ -1178,7 +1150,6 @@ class CatEditor(tk.Toplevel):
             self._refresh_existing_photos()
         self._mark_dirty()
 
-    # ---------- 保存 ----------
     def _save(self):
         try:
             cat_id = self.var_id.get().strip().zfill(2)
@@ -1251,7 +1222,6 @@ class CatEditor(tk.Toplevel):
                 actions.append(f"更新 Excel 行 编号={cat_id}")
 
             self.result_actions = actions
-            # 保存后认为不再 dirty
             self._initial_snapshot = self._snapshot()
             if self.on_saved:
                 self.on_saved(actions)
@@ -1276,7 +1246,7 @@ class CatEditor(tk.Toplevel):
 
 
 # ============================================================
-# 主窗口
+# 主窗口 —— 可拖拽排序的行列表视图
 # ============================================================
 class App(tk.Tk):
     def __init__(self):
@@ -1286,21 +1256,25 @@ class App(tk.Tk):
         self.minsize(960, 640)
         self.configure(bg=COLOR_BG)
 
-        # 先探测开源字体再建 UI
         detect_fonts(self)
         self._configure_ttk_styles()
 
         self.store = ExcelStore(EXCEL_PATH)
         self.store.load()
         self.rows = []
-        self.thumb_cache = {}
+        self.thumb_cache = {}       # 缓存行内小头像
         self.current_filter = "all"
         self.search_term = ""
+
+        # 排序模式状态
+        self.sort_mode = False
+
+        # 拖拽相关
+        self.drag_data = {"widget": None, "index": None, "y": 0, "start_y": 0}
 
         self._build_menu()
         self._build()
         self._reload_from_excel()
-        # 窗口 resize 后重组列
         self.bind("<Configure>", self._on_window_configure)
         self._last_canvas_w = 0
 
@@ -1318,7 +1292,6 @@ class App(tk.Tk):
 
     def _build_menu(self):
         bar = tk.Menu(self)
-        # 文件菜单
         m_file = tk.Menu(bar, tearoff=False)
         m_file.add_command(label="刷新数据", command=self._reload_from_excel)
         m_file.add_command(label="手动同步前端 (cats.json)",
@@ -1336,7 +1309,6 @@ class App(tk.Tk):
         m_file.add_command(label="退出", command=self.destroy)
         bar.add_cascade(label="文件", menu=m_file)
 
-        # 工具菜单
         m_tools = tk.Menu(bar, tearoff=False)
         m_tools.add_command(label="重生成所有缺失的缩略图",
                             command=self._batch_regen_missing_thumbs)
@@ -1347,7 +1319,6 @@ class App(tk.Tk):
                             command=self._check_consistency)
         bar.add_cascade(label="工具", menu=m_tools)
 
-        # 帮助菜单
         m_help = tk.Menu(bar, tearoff=False)
         m_help.add_command(label="关于", command=self._show_about)
         bar.add_cascade(label="帮助", menu=m_help)
@@ -1376,7 +1347,7 @@ class App(tk.Tk):
                  font=ui_font(FS_SUBTITLE),
                  bg=COLOR_BG, fg=COLOR_SUBTEXT).pack(pady=(2, 10))
 
-        # 工具栏 + 筛选
+        # 工具栏
         bar = tk.Frame(self, bg=COLOR_BG)
         bar.pack(fill=tk.X, padx=24, pady=(0, 6))
 
@@ -1395,6 +1366,15 @@ class App(tk.Tk):
                 self._apply_changes).pack(side=tk.LEFT, padx=4)
         primary(bar, "🌐 预览前端", COLOR_OK,
                 lambda: open_in_explorer(INDEX_HTML)).pack(side=tk.LEFT, padx=4)
+
+        # 排序模式按钮
+        self.sort_btn = tk.Button(bar, text="🔀 编辑顺序",
+                                  font=ui_font(FS_BODY, "bold"),
+                                  bg="#7E57C2", fg="white",
+                                  relief=tk.FLAT, borderwidth=0,
+                                  padx=14, pady=7, cursor="hand2",
+                                  command=self._toggle_sort_mode)
+        self.sort_btn.pack(side=tk.LEFT, padx=10)
 
         # 搜索框
         right = tk.Frame(bar, bg=COLOR_BG)
@@ -1439,7 +1419,7 @@ class App(tk.Tk):
                           anchor="w", padx=18, pady=4)
         status.pack(fill=tk.X, side=tk.BOTTOM)
 
-        # 卡片网格区
+        # 列表区（可滚动 Canvas）
         outer = tk.Frame(self, bg=COLOR_BG)
         outer.pack(fill=tk.BOTH, expand=True, padx=20, pady=(8, 14))
         self.canvas = tk.Canvas(outer, bg=COLOR_BG, highlightthickness=0)
@@ -1447,14 +1427,14 @@ class App(tk.Tk):
         sb = ttk.Scrollbar(outer, orient="vertical", command=self.canvas.yview)
         sb.pack(side=tk.RIGHT, fill=tk.Y)
         self.canvas.configure(yscrollcommand=sb.set)
-        self.grid_frame = tk.Frame(self.canvas, bg=COLOR_BG)
-        self._grid_window_id = self.canvas.create_window((0, 0), window=self.grid_frame, anchor="nw")
-        self.grid_frame.bind("<Configure>",
-                              lambda _e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.list_frame = tk.Frame(self.canvas, bg=COLOR_BG)
+        self._list_window_id = self.canvas.create_window((0, 0), window=self.list_frame, anchor="nw")
+        self.list_frame.bind("<Configure>",
+                             lambda _e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind("<Configure>",
-                          lambda e: self.canvas.itemconfig(self._grid_window_id, width=e.width))
+                          lambda e: self.canvas.itemconfig(self._list_window_id, width=e.width))
         self.canvas.bind_all("<MouseWheel>",
-                              lambda e: self.canvas.yview_scroll(int(-e.delta / 120), "units"))
+                             lambda e: self.canvas.yview_scroll(int(-e.delta / 120), "units"))
 
     # ---------- 交互 ----------
     def _on_window_configure(self, e):
@@ -1479,6 +1459,16 @@ class App(tk.Tk):
 
     def _on_search(self):
         self.search_term = self.var_search.get().strip().lower()
+        self._render()
+
+    def _toggle_sort_mode(self):
+        self.sort_mode = not self.sort_mode
+        if self.sort_mode:
+            self.sort_btn.config(text="✅ 完成排序", bg="#66BB6A")
+            self.status_var.set("排序模式：拖动左侧 ≡ 把手调整顺序，完成后点击「完成排序」")
+        else:
+            self.sort_btn.config(text="🔀 编辑顺序", bg="#7E57C2")
+            self.status_var.set("排序模式已关闭")
         self._render()
 
     def _add_cat(self):
@@ -1510,10 +1500,12 @@ class App(tk.Tk):
 
     def _apply_changes(self):
         try:
+            # 按当前 rows 顺序重写 Excel 数据行
+            self.store.rewrite_rows(self.rows)
             self.store.save()
             self._reload_from_excel()
             count, warns = regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH)
-            msg = f"已重生成 cats.json，共 {count} 只猫。"
+            msg = f"已按当前顺序保存 Excel 并重生成 cats.json，共 {count} 只猫。"
             if warns:
                 msg += "\n\n⚠️ 警告：\n" + "\n".join("  - " + w for w in warns[:10])
                 if len(warns) > 10:
@@ -1533,7 +1525,7 @@ class App(tk.Tk):
         except Exception as e:
             messagebox.showerror("加载失败", f"{e}\n\n{traceback.format_exc()}")
 
-    # ---------- 渲染 ----------
+    # ---------- 过滤 ----------
     def _filtered(self):
         rs = list(self.rows)
         f = self.current_filter
@@ -1550,7 +1542,8 @@ class App(tk.Tk):
                    or t in r["id"]]
         return rs
 
-    def _load_thumb(self, cat):
+    # ---------- 缩略图加载 ----------
+    def _load_small_thumb(self, cat):
         path = (CLASSIFIED_DIR / f"{cat['id']} {cat['name']}"
                 / f"{cat['pic_name']}_01_thumb.jpg")
         if path in self.thumb_cache:
@@ -1559,95 +1552,159 @@ class App(tk.Tk):
             if path.is_file():
                 img = Image.open(path).convert("RGB")
             else:
-                img = Image.new("RGB", (CARD_THUMB_SIZE, CARD_THUMB_SIZE), "#dddddd")
-            img.thumbnail((CARD_THUMB_SIZE, CARD_THUMB_SIZE), Image.LANCZOS)
+                img = Image.new("RGB", (ROW_THUMB_SIZE, ROW_THUMB_SIZE), "#dddddd")
+            img.thumbnail((ROW_THUMB_SIZE, ROW_THUMB_SIZE), Image.LANCZOS)
             ph = ImageTk.PhotoImage(img)
         except Exception:
-            img = Image.new("RGB", (CARD_THUMB_SIZE, CARD_THUMB_SIZE), "#dddddd")
+            img = Image.new("RGB", (ROW_THUMB_SIZE, ROW_THUMB_SIZE), "#dddddd")
             ph = ImageTk.PhotoImage(img)
         self.thumb_cache[path] = ph
         return ph
 
+    # ---------- 渲染行列表 ----------
     def _render(self):
-        for w in self.grid_frame.winfo_children():
+        for w in self.list_frame.winfo_children():
             w.destroy()
         items = self._filtered()
         if not items:
-            tk.Label(self.grid_frame, text="没有符合条件的猫咪",
+            tk.Label(self.list_frame, text="没有符合条件的猫咪",
                      bg=COLOR_BG, fg=COLOR_SUBTEXT,
                      font=ui_font(FS_BODY+1), pady=60).pack()
             return
-        self.grid_frame.update_idletasks()
-        cw = self.canvas.winfo_width() or 1100
-        col_w = 240
-        cols = max(1, (cw - 20) // col_w)
+
         for i, cat in enumerate(items):
-            r, c = divmod(i, cols)
-            self._make_card(self.grid_frame, cat, r, c, cols)
-        for c in range(cols):
-            self.grid_frame.columnconfigure(c, weight=1, uniform="col")
+            row_bg = COLOR_CARD if i % 2 == 0 else "#fcfcf9"
+            row_frame = tk.Frame(self.list_frame, bg=row_bg, height=64,
+                                 highlightthickness=0, relief=tk.FLAT)
+            row_frame.pack(fill=tk.X, ipady=4, pady=1)
 
-    def _make_card(self, parent, cat, r, c, cols):
-        wrapper = tk.Frame(parent, bg=COLOR_BG)
-        wrapper.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
+            # 排序把手（仅在排序模式显示）
+            if self.sort_mode:
+                grip = tk.Label(row_frame, text="≡", bg=row_bg, fg=COLOR_SUBTEXT,
+                                font=ui_font(FS_BODY+4, "bold"), cursor="hand2")
+                grip.pack(side=tk.LEFT, padx=(6, 2))
+                # 绑定拖拽事件
+                grip.bind("<ButtonPress-1>",
+                          lambda e, idx=i, w=row_frame: self._start_drag(e, idx, w))
+                grip.bind("<B1-Motion>", self._on_drag)
+                grip.bind("<ButtonRelease-1>", self._on_drop)
 
-        card = tk.Frame(wrapper, bg=COLOR_CARD,
-                         highlightthickness=1,
-                         highlightbackground=COLOR_CARD_BORDER)
-        card.pack(fill=tk.BOTH, expand=True, ipadx=12, ipady=12)
+            # 头像缩略图
+            thumb = self._load_small_thumb(cat)
+            avatar = tk.Label(row_frame, image=thumb, bg=row_bg,
+                              borderwidth=0, cursor="hand2")
+            avatar.image = thumb
+            avatar.pack(side=tk.LEFT, padx=(8, 12))
+            avatar.bind("<Double-Button-1>", lambda _e, c=cat: self._edit_cat(c))
 
-        if cat["status"] == "star":
-            card.config(highlightbackground="#dcdcdc")
-        elif cat["status"] == "lost":
-            card.config(highlightbackground="#cfcfcf")
+            # 信息区
+            info_frame = tk.Frame(row_frame, bg=row_bg)
+            info_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        avatar_frame = tk.Frame(card, bg=COLOR_CARD)
-        avatar_frame.pack(pady=(8, 6))
-        thumb = self._load_thumb(cat)
-        avatar = tk.Label(avatar_frame, image=thumb, bg=COLOR_CARD,
-                           relief=tk.FLAT, borderwidth=0, cursor="hand2")
-        avatar.image = thumb
-        avatar.pack()
-        avatar.bind("<Button-1>", lambda _e, c=cat: self._edit_cat(c))
+            # 第一行：编号 + 姓名 + 性别 + 状态
+            line1 = tk.Frame(info_frame, bg=row_bg)
+            line1.pack(fill=tk.X, anchor="w")
+            tk.Label(line1, text=f"{cat['id']} {cat['name']}",
+                     bg=row_bg, fg=COLOR_TEXT,
+                     font=ui_font(FS_BODY, "bold")).pack(side=tk.LEFT)
+            gender_char = {"male": "♂", "female": "♀", "unknown": "?"}.get(cat["gender"], "?")
+            gender_color = GENDER_COLOR.get(cat["gender"], COLOR_UNKNOWN)
+            tk.Label(line1, text=" " + gender_char,
+                     bg=row_bg, fg=gender_color,
+                     font=ui_font(FS_BODY, "bold")).pack(side=tk.LEFT)
+            status_label = STATUS_LABEL.get(cat["status"], "")
+            if status_label:
+                tk.Label(line1, text=" " + status_label,
+                         bg=row_bg, fg=COLOR_SUBTEXT,
+                         font=ui_font(FS_SMALL)).pack(side=tk.LEFT, padx=4)
 
-        badge = STATUS_BADGE.get(cat["status"], "")
-        if badge:
-            tk.Label(avatar_frame, text=badge, bg=COLOR_CARD,
-                     font=ui_font(FS_BODY+4)).place(
-                relx=1.0, rely=1.0, anchor="se", x=-2, y=-2)
+            # 第二行：亲人指数 + 概要
+            line2 = tk.Frame(info_frame, bg=row_bg)
+            line2.pack(fill=tk.X, anchor="w")
+            n = cat["affection"]
+            paws = "🐾" * n + "·" * (5 - n)
+            tk.Label(line2, text=paws, bg=row_bg, fg=COLOR_PAW,
+                     font=ui_font(FS_SMALL)).pack(side=tk.LEFT)
+            desc = (cat["desc"] or "···")[:30]
+            tk.Label(line2, text=" " + desc, bg=row_bg, fg=COLOR_SUBTEXT,
+                     font=ui_font(FS_SMALL)).pack(side=tk.LEFT)
 
-        name_row = tk.Frame(card, bg=COLOR_CARD)
-        name_row.pack(pady=(4, 2))
-        tk.Label(name_row, text=f"{cat['id']} {cat['name']}",
-                 bg=COLOR_CARD, fg=COLOR_TEXT,
-                 font=ui_font(FS_CARD_NAME, "bold")).pack(side=tk.LEFT)
-        gender_color = GENDER_COLOR.get(cat["gender"], COLOR_UNKNOWN)
-        gender_char = {"male": "♂", "female": "♀", "unknown": "?"}.get(cat["gender"], "?")
-        tk.Label(name_row, text=" " + gender_char,
-                 bg=COLOR_CARD, fg=gender_color,
-                 font=ui_font(FS_CARD_NAME+1, "bold")).pack(side=tk.LEFT)
+            # 操作按钮（排序模式下隐藏编辑，避免误点）
+            if not self.sort_mode:
+                edit_btn = tk.Button(row_frame, text="✏️ 编辑",
+                                     font=ui_font(FS_SMALL, "bold"),
+                                     bg=COLOR_HOVER, fg=COLOR_ACCENT,
+                                     relief=tk.FLAT, borderwidth=0, padx=10,
+                                     cursor="hand2",
+                                     command=lambda c=cat: self._edit_cat(c))
+                edit_btn.pack(side=tk.RIGHT, padx=8)
 
-        n = cat["affection"]
-        paws = "🐾" * n + "·" * (5 - n)
-        tk.Label(card, text=paws, bg=COLOR_CARD, fg=COLOR_PAW,
-                 font=ui_font(FS_CARD_NAME, "bold")).pack(pady=(0, 4))
+            # 分隔线（除最后一行）
+            tk.Frame(self.list_frame, bg=COLOR_DIVIDER, height=1).pack(fill=tk.X)
 
-        tk.Frame(card, bg=COLOR_DIVIDER, height=1).pack(fill=tk.X, padx=18, pady=(2, 6))
+    # ---------- 拖拽排序实现 ----------
+    def _start_drag(self, event, index, widget):
+        """记录拖拽起始信息，把当前行抬高半透明效果"""
+        if not self.sort_mode:
+            return
+        self.drag_data["widget"] = widget
+        self.drag_data["index"] = index
+        self.drag_data["start_y"] = event.y_root
+        # 让当前行升高以示拖动中（改变透明度）
+        widget.configure(bg="#e0e0e0")
 
-        desc = cat["desc"] or "···"
-        tk.Label(card, text=desc, bg=COLOR_CARD, fg=COLOR_SUBTEXT,
-                 font=ui_font(FS_CARD_DESC), wraplength=200,
-                 justify="center").pack(padx=10, pady=(0, 8))
+    def _on_drag(self, event):
+        if not self.sort_mode or self.drag_data["widget"] is None:
+            return
+        # 计算移动距离，并高亮插入位置
+        delta_y = event.y_root - self.drag_data["start_y"]
+        # 简单实现：拖拽时直接上下移动整个列表（在释放时重新排列）
+        # 这里不用复杂的插入指示线，只移动被拖拽行（需要pack_forget再pack动态调整）
+        # 由于pack管理顺序，这里采用临时重pack的方式会较复杂，我们只在释放时一次性重组
+        # 为了视觉反馈，我们可以让被拖拽行跟随鼠标移动（通过place覆盖），但保持简单，拖拽时不改变布局，仅高亮。
+        # 实际释放时执行重排。为了更好体验，此处仅存储状态。
+        pass
 
-        tk.Button(card, text="✏️ 编辑",
-                   font=ui_font(FS_SMALL, "bold"),
-                   bg=COLOR_HOVER, fg=COLOR_ACCENT,
-                   relief=tk.FLAT, borderwidth=0, padx=14, pady=5,
-                   cursor="hand2",
-                   command=lambda c=cat: self._edit_cat(c)
-                   ).pack(pady=(0, 4))
+    def _on_drop(self, event):
+        if not self.sort_mode or self.drag_data["widget"] is None:
+            return
+        from_idx = self.drag_data["index"]
+        w = self.drag_data["widget"]
+        w.configure(bg=COLOR_CARD)  # 恢复背景
 
-    # ---------- 工具菜单：批量操作 ----------
+        # 找到当前鼠标位置对应的行索引
+        target_idx = self._get_drop_index(event.y_root)
+        if target_idx is not None and target_idx != from_idx:
+            # 调整 rows 列表顺序
+            filtered = self._filtered()  # 注意：当前显示的是过滤后的列表
+            # 注意：我们是对过滤后的列表排序，需要映射回全局 rows 的顺序
+            # 这里简化：假设用户只在全视图下排序（过滤或搜索时排序按钮应提示不可用）
+            if self.current_filter != "all" or self.search_term:
+                messagebox.showwarning("提示", "请先清除筛选条件再调整顺序")
+                self.drag_data = {"widget": None, "index": None}
+                self._render()
+                return
+            # 在全视图下，filtered 就是 self.rows 的引用顺序
+            item = self.rows.pop(from_idx)
+            self.rows.insert(target_idx, item)
+            self.status_var.set(f"顺序已调整（{item['id']} {item['name']}），点击「应用变更」保存到 Excel")
+
+        self.drag_data = {"widget": None, "index": None}
+        self._render()
+
+    def _get_drop_index(self, y_root):
+        """根据鼠标的绝对 Y 坐标估算目标行索引"""
+        if not self.list_frame.winfo_children():
+            return None
+        # 遍历当前 list_frame 的子组件（行 frame），找到鼠标落在哪一行
+        for idx, child in enumerate(self.list_frame.winfo_children()):
+            # 跳过分隔线（可能为 Frame height=1）
+            if isinstance(child, tk.Frame) and child.winfo_height() > 10:
+                if child.winfo_rooty() <= y_root <= child.winfo_rooty() + child.winfo_height():
+                    return idx
+        return None
+
+    # ---------- 工具菜单：批量操作（未改动）----------
     def _batch_regen_missing_thumbs(self):
         if not messagebox.askyesno("确认",
                                     "扫描所有原图，给缺失缩略图的生成一份。继续？"):
