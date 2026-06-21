@@ -6,7 +6,6 @@ SUAT-cats 管理器
 行列表视图，支持上移/下移步数调整顺序，内建预览服务器。
 集成：基本信息编辑、故事编辑、图片预览、缩略图编辑、新增猫咪、自动同步前端（Excel + cats.json）。
 关闭时若有未保存的顺序变更会提醒。
-
 依赖：Pillow、openpyxl
 """
 import os
@@ -114,6 +113,7 @@ EXCEL_PATH = BASE_DIR / "统计信息.xlsx"
 JSON_PATH = BASE_DIR / "cats.json"
 CLASSIFIED_DIR = BASE_DIR / "classified"
 INDEX_HTML = BASE_DIR / "index.html"
+TEMP_THUMB_DIR = BASE_DIR / ".tmp_thumbs"          # 新增：临时缩略图目录
 
 THUMB_SUFFIX = "_thumb"
 THUMB_OUTPUT_SIZE = 300
@@ -394,10 +394,10 @@ def mono_font(size=FS_SMALL):
 
 
 # ============================================================
-# 缩略图裁剪器（保持不变）
+# 缩略图裁剪器（增加 on_close 回调）
 # ============================================================
 class ThumbEditor(tk.Toplevel):
-    def __init__(self, master, original_path, on_done=None):
+    def __init__(self, master, original_path, on_done=None, on_close=None):
         super().__init__(master)
         self.title(f"编辑缩略图 - {original_path.name}")
         self.geometry("1000x720")
@@ -407,6 +407,7 @@ class ThumbEditor(tk.Toplevel):
 
         self.original_path = original_path
         self.on_done = on_done
+        self.on_close = on_close          # 新增：关闭时回调（不论是否保存）
         self.original_image = Image.open(original_path)
         self.tk_image = None
         self.crop_box = None
@@ -424,6 +425,12 @@ class ThumbEditor(tk.Toplevel):
         self._init_crop_box()
         self.after(80, self._display)
         self.bind("<Configure>", self._on_resize)
+        self.protocol("WM_DELETE_WINDOW", self._on_window_close)
+
+    def _on_window_close(self):
+        if self.on_close:
+            self.on_close()
+        self.destroy()
 
     def _build_ui(self):
         toolbar = tk.Frame(self, bg=COLOR_ACCENT, height=56)
@@ -583,16 +590,17 @@ class ThumbEditor(tk.Toplevel):
             ext = self.original_path.suffix
             out_path = self.original_path.with_name(f"{stem}{THUMB_SUFFIX}{ext}")
             thumb.save(out_path, "JPEG", quality=THUMB_QUALITY, optimize=True)
-            messagebox.showinfo("已保存", f"缩略图已写入：\n{out_path.name}")
             if self.on_done:
                 self.on_done(out_path)
+            if self.on_close:
+                self.on_close()
             self.destroy()
         except Exception as e:
             messagebox.showerror("失败", f"{e}\n\n{traceback.format_exc()}")
 
 
 # ============================================================
-# CatEditor（保持不变）
+# CatEditor（修改了图片添加流程）
 # ============================================================
 class CatEditor(tk.Toplevel):
     def __init__(self, master, store, cat=None, on_saved=None):
@@ -624,6 +632,9 @@ class CatEditor(tk.Toplevel):
         self._last_original = None
         self._last_thumb = None
 
+        # 确保临时目录存在
+        TEMP_THUMB_DIR.mkdir(parents=True, exist_ok=True)
+
         self._build()
         self._load_values()
         if not self.is_new:
@@ -637,7 +648,7 @@ class CatEditor(tk.Toplevel):
             self.var_gender.get(), self.var_status.get(),
             int(self.var_affection.get() or 0), self.var_desc.get(),
             self.txt_story.get("1.0", tk.END),
-            tuple((str(p["src"]), p["seq"], p["edit"]) for p in self.new_photo_queue),
+            tuple((str(p["src"]), p["seq"], p.get("thumb_temp", None) and str(p["thumb_temp"])) for p in self.new_photo_queue),
         )
 
     def _is_dirty(self):
@@ -817,14 +828,14 @@ class CatEditor(tk.Toplevel):
             row1 = tk.Frame(photo_inner, bg=COLOR_CARD)
             row1.pack(fill=tk.X, pady=(2, 2))
             pill(row1, "📷 选主图", COLOR_OK,
-                 lambda: self._queue_photo(seq=1)).pack(side=tk.LEFT, padx=2)
+                 lambda: self._start_photo_selection(seq=1)).pack(side=tk.LEFT, padx=2)
             pill(row1, "➕ 加补充", COLOR_INFO,
-                 lambda: self._queue_photo(seq=None)).pack(side=tk.LEFT, padx=2)
+                 lambda: self._start_photo_selection(seq=None)).pack(side=tk.LEFT, padx=2)
 
             row2 = tk.Frame(photo_inner, bg=COLOR_CARD)
             row2.pack(fill=tk.X, pady=(0, 4))
-            pill(row2, "✏️ 手动裁", COLOR_WARN,
-                 self._manual_thumb_queued).pack(side=tk.LEFT, padx=2)
+            pill(row2, "✏️ 重裁缩略", COLOR_WARN,
+                 self._manual_rethumb_queued).pack(side=tk.LEFT, padx=2)
             pill(row2, "🗑 移除", COLOR_DANGER,
                  self._remove_queued).pack(side=tk.LEFT, padx=2)
         else:
@@ -957,8 +968,10 @@ class CatEditor(tk.Toplevel):
             return
         if self.is_new:
             if 0 <= idx < len(self.new_photo_queue):
-                src = self.new_photo_queue[idx]["src"]
-                self._show_preview_both(src, None)
+                item = self.new_photo_queue[idx]
+                src = item["src"]
+                thumb = item.get("thumb_temp", None)
+                self._show_preview_both(str(src), str(thumb) if thumb else None)
         else:
             seq = self._selected_existing_seq()
             if seq is None:
@@ -976,35 +989,104 @@ class CatEditor(tk.Toplevel):
         sel = self.photo_list.curselection()
         return sel[0] if sel else None
 
-    def _queue_photo(self, seq):
+    # -------------------------------------------------------
+    # 新增图片流程：选文件 → 逐个弹出裁剪窗口
+    # -------------------------------------------------------
+    def _start_photo_selection(self, seq):
         files = filedialog.askopenfilenames(
             title="选择图片",
             filetypes=[("图片", "*.jpg *.jpeg *.png"), ("所有", "*.*")]
         )
         if not files:
             return
+
         if seq == 1:
+            # 移除旧的主图
             self.new_photo_queue = [p for p in self.new_photo_queue if p["seq"] != 1]
-            self.new_photo_queue.insert(0, {"src": Path(files[0]), "seq": 1, "edit": False})
-        else:
-            for f in files:
-                self.new_photo_queue.append({"src": Path(f), "seq": None, "edit": False})
-        self._refresh_queue_list()
+
+        self._pending_files = list(files)
+        self._pending_seq = seq
+        self._process_next_file()
+
+    def _process_next_file(self):
+        if not self._pending_files:
+            self._refresh_queue_list()
+            return
+        file_path = self._pending_files.pop(0)
+        seq = self._pending_seq
+
+        # 创建裁剪窗口，绑定回调
+        def on_done(thumb_path):
+            # 将临时缩略图复制到我们的临时目录，避免原目录被污染
+            tmp_name = f"tmp_{os.path.basename(file_path)}_{os.urandom(4).hex()}.jpg"
+            dest = TEMP_THUMB_DIR / tmp_name
+            shutil.copyfile(thumb_path, dest)
+            self.new_photo_queue.append({
+                "src": Path(file_path),
+                "seq": seq,
+                "thumb_temp": dest
+            })
+
+        def on_close():
+            # 无论是否保存，继续处理下一个
+            self.after(50, self._process_next_file)
+
+        # 构建一个虚拟的 original_path，让 ThumbEditor 保存到临时位置
+        # 临时路径：在 TEMP_THUMB_DIR 下
+        tmp_original = TEMP_THUMB_DIR / ("orig_" + os.path.basename(file_path))
+        shutil.copyfile(file_path, tmp_original)
+
+        editor = ThumbEditor(
+            self,
+            original_path=tmp_original,
+            on_done=lambda p: on_done(p),
+            on_close=on_close
+        )
+        # 如果用户直接关闭窗口，不会调用 on_done，条目就不会被添加
+        # 但我们仍需要记录该文件（未裁剪）
+        # 解决方法：在 on_close 中也添加条目，thumb_temp 为 None
+        # 修改 on_close 来添加条目
+        def on_close_full():
+            if not any(p["src"] == Path(file_path) for p in self.new_photo_queue):
+                self.new_photo_queue.append({
+                    "src": Path(file_path),
+                    "seq": seq,
+                    "thumb_temp": None
+                })
+            self.after(50, self._process_next_file)
+
+        # 重新绑定关闭回调（上面已定义 on_close，这里覆盖）
+        editor.on_close = on_close_full
+        editor.protocol("WM_DELETE_WINDOW", editor._on_window_close)
 
     def _refresh_queue_list(self):
         self.photo_list.delete(0, tk.END)
         for p in self.new_photo_queue:
             tag = "主图" if p["seq"] == 1 else "补充"
-            edit_tag = "  ✏️手动裁" if p["edit"] else ""
-            self.photo_list.insert(tk.END, f"[{tag}] {p['src'].name}{edit_tag}")
+            status = "  [已裁剪]" if p.get("thumb_temp") else ""
+            self.photo_list.insert(tk.END, f"[{tag}] {p['src'].name}{status}")
 
-    def _manual_thumb_queued(self):
+    def _manual_rethumb_queued(self):
         idx = self._selected_idx()
         if idx is None:
             messagebox.showwarning("提示", "请先选中一张图片")
             return
-        self.new_photo_queue[idx]["edit"] = not self.new_photo_queue[idx]["edit"]
-        self._refresh_queue_list()
+        item = self.new_photo_queue[idx]
+        # 弹出裁剪窗口重新裁剪
+        tmp_original = TEMP_THUMB_DIR / ("orig_" + item["src"].name)
+        shutil.copyfile(str(item["src"]), tmp_original)
+
+        def on_done(thumb_path):
+            tmp_name = f"tmp_{item['src'].name}_{os.urandom(4).hex()}.jpg"
+            dest = TEMP_THUMB_DIR / tmp_name
+            shutil.copyfile(thumb_path, dest)
+            item["thumb_temp"] = dest
+            self._refresh_queue_list()
+
+        def on_close():
+            pass
+
+        editor = ThumbEditor(self, tmp_original, on_done=on_done, on_close=on_close)
 
     def _remove_queued(self):
         idx = self._selected_idx()
@@ -1013,6 +1095,9 @@ class CatEditor(tk.Toplevel):
         del self.new_photo_queue[idx]
         self._refresh_queue_list()
 
+    # -------------------------------------------------------
+    # 已有猫咪的图片管理（保持不变）
+    # -------------------------------------------------------
     def _folder(self):
         return CLASSIFIED_DIR / f"{self.cat['id']} {self.cat['name']}"
 
@@ -1220,6 +1305,14 @@ class CatEditor(tk.Toplevel):
                 })
                 actions.append(f"更新 Excel 行 编号={cat_id}")
 
+            # 清理临时缩略图文件
+            for item in self.new_photo_queue:
+                thumb_temp = item.get("thumb_temp")
+                if thumb_temp and thumb_temp.exists():
+                    try:
+                        thumb_temp.unlink()
+                    except Exception:
+                        pass
             self.result_actions = actions
             self._initial_snapshot = self._snapshot()
             if self.on_saved:
@@ -1233,15 +1326,15 @@ class CatEditor(tk.Toplevel):
         dst = folder / f"{pic}_{seq:02d}.jpg"
         Image.open(src).convert("RGB").save(dst, "JPEG", quality=95)
         actions.append(f"复制原图 → {dst.name}")
-        thumb = folder / f"{pic}_{seq:02d}_thumb.jpg"
-        if item.get("edit"):
-            auto_thumbnail(dst, thumb)
-            actions.append(f"预生成缩略图 → {thumb.name}（即将弹出手动裁选）")
-            ed = ThumbEditor(self.master, dst)
-            self.master.wait_window(ed)
+
+        thumb_dst = folder / f"{pic}_{seq:02d}_thumb.jpg"
+        if item.get("thumb_temp") and item["thumb_temp"].exists():
+            # 使用手动裁剪的结果
+            shutil.copyfile(str(item["thumb_temp"]), thumb_dst)
+            actions.append(f"使用手动裁剪缩略图 → {thumb_dst.name}")
         else:
-            auto_thumbnail(dst, thumb)
-            actions.append(f"自动生成缩略图 → {thumb.name}")
+            auto_thumbnail(dst, thumb_dst)
+            actions.append(f"自动生成缩略图 → {thumb_dst.name}")
 
 
 # ============================================================
@@ -1301,10 +1394,114 @@ class App(tk.Tk):
         self.destroy()
 
     def _apply_changes_silent(self):
-        """内部保存方法，不弹窗，用于关闭时自动保存"""
+        """内部保存方法，用于关闭时自动保存，与 _apply_changes 逻辑相同但不弹窗"""
+        if not self._order_dirty:
+            return
+        # 重新编号并重命名文件夹（与 _apply_changes 共享实现）
+        self._do_apply_changes(silent=True)
+
+    def _do_apply_changes(self, silent=False):
+        """执行顺序重编号与文件夹重命名的核心方法"""
+        if not self.rows:
+            return
+
+        # 1. 生成新旧 ID 映射
+        old_to_new = {}
+        new_to_old = {}
+        for idx, cat in enumerate(self.rows, start=1):
+            new_id = f"{idx:02d}"
+            old_id = cat["id"]
+            old_to_new[old_id] = new_id
+            new_to_old[new_id] = old_id
+
+        # 2. 检查文件夹冲突（新文件夹名是否已被其他猫占用）
+        conflicts = []
+        for idx, cat in enumerate(self.rows):
+            new_id = f"{idx+1:02d}"
+            new_folder_name = f"{new_id} {cat['name']}"
+            new_folder = CLASSIFIED_DIR / new_folder_name
+            old_folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}"
+            if new_folder.exists() and new_folder != old_folder:
+                conflicts.append(f"{new_folder_name} (已被 {cat['id']} {cat['name']} 占用)")
+        if conflicts:
+            messagebox.showerror("重命名冲突",
+                                 "以下文件夹名称与目标冲突，请手动处理后再试：\n" + "\n".join(conflicts))
+            return
+
+        # 3. 确认执行（仅非静默模式）
+        if not silent:
+            if not messagebox.askyesno("确认重新编号",
+                                       f"将按当前顺序给 {len(self.rows)} 只猫咪重新编号 (01~{len(self.rows):02d})，\n"
+                                       "同时重命名对应的文件夹。\n\n是否继续？"):
+                return
+
+        # 4. 先重命名所有文件夹到临时名称（避免冲突），记录操作
+        rename_ops = []  # [(old_path, new_path)]
+        temp_suffix = "_renaming"
+        for cat in self.rows:
+            old_folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}"
+            if not old_folder.is_dir():
+                continue
+            temp_folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}{temp_suffix}"
+            try:
+                old_folder.rename(temp_folder)
+                rename_ops.append((temp_folder, None))  # 待更新目标
+            except Exception as e:
+                # 回滚已重命名的
+                for t, _ in reversed(rename_ops):
+                    try:
+                        t.rename(CLASSIFIED_DIR / t.name.replace(temp_suffix, ""))
+                    except Exception:
+                        pass
+                messagebox.showerror("重命名失败", f"失败于 {old_folder.name}: {e}")
+                return
+
+        # 5. 从临时名称改为目标名称
+        final_errors = []
+        for idx, cat in enumerate(self.rows):
+            new_id = f"{idx+1:02d}"
+            temp_folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}{temp_suffix}"
+            new_folder = CLASSIFIED_DIR / f"{new_id} {cat['name']}"
+            if temp_folder.is_dir():
+                try:
+                    temp_folder.rename(new_folder)
+                except Exception as e:
+                    final_errors.append(f"{temp_folder.name} → {new_folder.name}: {e}")
+
+        if final_errors:
+            messagebox.showerror("部分重命名失败",
+                                 "以下文件夹未能成功重命名：\n" + "\n".join(final_errors))
+            return
+
+        # 6. 更新内存中的 id
+        for idx, cat in enumerate(self.rows):
+            cat["id"] = f"{idx+1:02d}"
+
+        # 7. 保存到 Excel
         self.store.rewrite_rows(self.rows)
         self.store.save()
+
+        # 8. 重新生成 cats.json
+        count, warns = regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH)
+
         self._order_dirty = False
+
+        if not silent:
+            msg = f"重新编号成功，共 {count} 只猫咪。"
+            if warns:
+                msg += "\n\n⚠️ 警告：\n" + "\n".join(warns[:10])
+                if len(warns) > 10:
+                    msg += f"\n  …以及其他 {len(warns) - 10} 条"
+            messagebox.showinfo("应用完成", msg)
+            self.status_var.set("顺序已应用，编号已同步")
+        else:
+            self.status_var.set("已自动保存顺序")
+
+        # 刷新界面
+        self._reload_from_excel()
+
+    def _apply_changes(self):
+        self._do_apply_changes(silent=False)
 
     def _configure_ttk_styles(self):
         style = ttk.Style(self)
@@ -1501,26 +1698,9 @@ class App(tk.Tk):
                     msg += f"\n  …以及其他 {len(warns) - 10} 条"
             messagebox.showinfo("应用成功", msg)
             self.status_var.set("已同步 Excel 与 cats.json")
-            self._order_dirty = False  # 编辑保存后认为顺序已一致
+            self._order_dirty = False
         except Exception as e:
             messagebox.showerror("同步失败", f"{e}\n\n{traceback.format_exc()}")
-
-    def _apply_changes(self):
-        try:
-            self.store.rewrite_rows(self.rows)
-            self.store.save()
-            self._reload_from_excel()
-            count, warns = regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH)
-            msg = f"已按当前顺序保存 Excel 并重生成 cats.json，共 {count} 只猫。"
-            if warns:
-                msg += "\n\n⚠️ 警告：\n" + "\n".join("  - " + w for w in warns[:10])
-                if len(warns) > 10:
-                    msg += f"\n  …以及其他 {len(warns) - 10} 条"
-            messagebox.showinfo("应用完成", msg)
-            self.status_var.set("手动同步完成")
-            self._order_dirty = False  # 保存后清除脏标记
-        except Exception as e:
-            messagebox.showerror("应用失败", f"{e}\n\n{traceback.format_exc()}")
 
     def _reload_from_excel(self):
         try:
@@ -1529,7 +1709,7 @@ class App(tk.Tk):
             self.thumb_cache.clear()
             self._render()
             self.status_var.set(f"已加载 {len(self.rows)} 只猫咪")
-            self._order_dirty = False  # 重新加载后顺序与 Excel 一致
+            self._order_dirty = False
         except Exception as e:
             messagebox.showerror("加载失败", f"{e}\n\n{traceback.format_exc()}")
 
@@ -1706,13 +1886,12 @@ class App(tk.Tk):
         self.status_var.set(
             f"已将 {cat['id']} {cat['name']} 从第 {real_index+1} 位移到第 {new_index+1} 位，点击「应用变更」保存"
         )
-        self._order_dirty = True  # 标记顺序已脏
+        self._order_dirty = True
 
         # 重新渲染
         self._render()
 
-        # 让视图滚动到新位置，使被移动的行大致居中
-        # 使用延时确保渲染完成后再计算
+        # 让视图滚动到新位置
         self.after(10, self._scroll_to_row, new_index)
 
     def _scroll_to_row(self, target_row_index):
@@ -1722,23 +1901,18 @@ class App(tk.Tk):
             if items_count == 0:
                 return
 
-            # 近似每行高度 (包含行高 + 间距 + 分隔线)
-            # 可从 list_frame 的子组件高度估算，这里用固定值 72
             row_height = 72
             canvas_height = self.canvas.winfo_height()
             total_height = items_count * row_height
 
             if total_height <= canvas_height:
-                return  # 内容没有超出，无需滚动
+                return
 
-            # 目标行顶部的 Y 坐标（在 list_frame 坐标系中）
             target_y = target_row_index * row_height
-            # 我们希望目标行的中心在画布中心
             target_center_y = target_y + row_height // 2
             ideal_top = target_center_y - canvas_height // 2
             ideal_top = max(0, min(ideal_top, total_height - canvas_height))
 
-            # 将像素位置转换为相对比例 (0.0~1.0)
             fraction = ideal_top / total_height
             self.canvas.yview_moveto(fraction)
         except Exception:
