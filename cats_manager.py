@@ -3,8 +3,9 @@
 """
 SUAT-cats 管理器
 ================
-可拖拽排序的猫咪列表视图。
+行列表视图，支持上移/下移步数调整顺序，内建预览服务器。
 集成：基本信息编辑、故事编辑、图片预览、缩略图编辑、新增猫咪、自动同步前端（Excel + cats.json）。
+关闭时若有未保存的顺序变更会提醒。
 
 依赖：Pillow、openpyxl
 """
@@ -16,7 +17,10 @@ import glob
 import shutil
 import traceback
 import subprocess
+import threading
+import webbrowser
 from pathlib import Path
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -35,7 +39,7 @@ except ImportError:
 
 
 # ============================================================
-# Windows 高 DPI 适配，避免界面糊
+# Windows 高 DPI 适配
 # ============================================================
 def _enable_dpi_awareness():
     if sys.platform != "win32":
@@ -43,7 +47,7 @@ def _enable_dpi_awareness():
     try:
         import ctypes
         try:
-            ctypes.windll.shcore.SetProcessDpiAwareness(2)  # Per-monitor v2
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
         except Exception:
             try:
                 ctypes.windll.user32.SetProcessDPIAware()
@@ -57,9 +61,9 @@ _enable_dpi_awareness()
 
 
 # ============================================================
-# 视觉常量（仿 index.html 的米色 + 白卡 + 蓝紫粉点缀）
+# 视觉常量
 # ============================================================
-COLOR_BG = "#F7F5F0"           # body 背景
+COLOR_BG = "#F7F5F0"
 COLOR_CARD = "#FFFFFF"
 COLOR_CARD_BORDER = "#ECE7DC"
 COLOR_TEXT = "#333333"
@@ -77,7 +81,6 @@ COLOR_OK = "#7CB87C"
 COLOR_WARN = "#E8A53A"
 COLOR_INFO = "#5B8DEF"
 
-# UI 字体：运行时探测开源字体，避免指定版权字体
 FONT_CANDIDATES_UI = [
     "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC",
     "Source Han Sans CN", "思源黑体", "思源黑体 CN",
@@ -115,8 +118,7 @@ INDEX_HTML = BASE_DIR / "index.html"
 THUMB_SUFFIX = "_thumb"
 THUMB_OUTPUT_SIZE = 300
 THUMB_QUALITY = 90
-CARD_THUMB_SIZE = 150    # 原卡片缩略图尺寸，行列表用更小的
-ROW_THUMB_SIZE = 48      # 行内头像尺寸
+ROW_THUMB_SIZE = 48
 PREVIEW_SIZE = 320
 
 GENDER_OPTIONS = ["male", "female", "unknown"]
@@ -239,11 +241,8 @@ class ExcelStore:
         self.wb.save(self.path)
 
     def rewrite_rows(self, rows):
-        """用给定的 rows 列表顺序重写数据行（保留表头）"""
-        # 清除第二行之后的所有行
         while self.ws.max_row > 1:
             self.ws.delete_rows(2)
-        # 按顺序写入
         for idx, cat in enumerate(rows, start=2):
             self.ws.cell(row=idx, column=self.col_idx["id"]).value = int(cat["id"])
             self.ws.cell(row=idx, column=self.col_idx["name"]).value = cat["name"]
@@ -593,7 +592,7 @@ class ThumbEditor(tk.Toplevel):
 
 
 # ============================================================
-# CatEditor：全字段 + 图片预览 + 未保存提醒（保持不变）
+# CatEditor（保持不变）
 # ============================================================
 class CatEditor(tk.Toplevel):
     def __init__(self, master, store, cat=None, on_saved=None):
@@ -1246,7 +1245,7 @@ class CatEditor(tk.Toplevel):
 
 
 # ============================================================
-# 主窗口 —— 可拖拽排序的行列表视图
+# 主窗口 —— 行列表 + 上下移步数 + 内建预览服务器 + 关闭提醒
 # ============================================================
 class App(tk.Tk):
     def __init__(self):
@@ -1262,21 +1261,50 @@ class App(tk.Tk):
         self.store = ExcelStore(EXCEL_PATH)
         self.store.load()
         self.rows = []
-        self.thumb_cache = {}       # 缓存行内小头像
+        self.thumb_cache = {}
         self.current_filter = "all"
         self.search_term = ""
 
-        # 排序模式状态
-        self.sort_mode = False
+        # 顺序变更脏标记
+        self._order_dirty = False
 
-        # 拖拽相关
-        self.drag_data = {"widget": None, "index": None, "y": 0, "start_y": 0}
+        # 内建预览服务器
+        self.http_server = None
+        self.http_server_thread = None
 
         self._build_menu()
         self._build()
         self._reload_from_excel()
-        self.bind("<Configure>", self._on_window_configure)
-        self._last_canvas_w = 0
+
+        # 退出时关闭服务器
+        self.protocol("WM_DELETE_WINDOW", self._on_close_app)
+
+    def _on_close_app(self):
+        # 如果有未保存的顺序变更，提醒用户
+        if self._order_dirty:
+            ans = messagebox.askyesnocancel(
+                "未保存的顺序变更",
+                "你移动过猫咪的顺序，但尚未点击「应用变更」保存到 Excel。\n\n"
+                "是 ＝ 保存并退出\n否 ＝ 丢弃变更并退出\n取消 ＝ 继续编辑"
+            )
+            if ans is None:  # 取消
+                return
+            if ans:  # 是 —— 保存
+                try:
+                    self._apply_changes_silent()
+                except Exception as e:
+                    messagebox.showerror("保存失败", f"自动保存顺序时出错：{e}\n\n{traceback.format_exc()}")
+                    return
+            # 如果 ans 为 False (否) 直接退出，不保存
+        if self.http_server:
+            self._stop_server()
+        self.destroy()
+
+    def _apply_changes_silent(self):
+        """内部保存方法，不弹窗，用于关闭时自动保存"""
+        self.store.rewrite_rows(self.rows)
+        self.store.save()
+        self._order_dirty = False
 
     def _configure_ttk_styles(self):
         style = ttk.Style(self)
@@ -1303,10 +1331,8 @@ class App(tk.Tk):
                            command=lambda: open_in_explorer(JSON_PATH))
         m_file.add_command(label="打开 classified 文件夹",
                            command=lambda: open_in_explorer(CLASSIFIED_DIR))
-        m_file.add_command(label="打开 index.html",
-                           command=lambda: open_in_explorer(INDEX_HTML))
         m_file.add_separator()
-        m_file.add_command(label="退出", command=self.destroy)
+        m_file.add_command(label="退出", command=self._on_close_app)
         bar.add_cascade(label="文件", menu=m_file)
 
         m_tools = tk.Menu(bar, tearoff=False)
@@ -1331,7 +1357,7 @@ class App(tk.Tk):
             "一站式管理你的猫咪档案。\n"
             "数据源：统计信息.xlsx → cats.json → index.html\n\n"
             "依赖：Pillow、openpyxl\n"
-            "字体：仅使用开源字体 (Noto Sans SC / LXGW WenKai 等)\n\n"
+            "字体：仅使用开源字体\n\n"
             f"当前使用字体：{FONT_FAMILY_UI or 'Tk 默认'}"
         )
         messagebox.showinfo("关于", info)
@@ -1364,17 +1390,15 @@ class App(tk.Tk):
                 self._reload_from_excel).pack(side=tk.LEFT, padx=4)
         primary(bar, "💾 应用变更", COLOR_WARN,
                 self._apply_changes).pack(side=tk.LEFT, padx=4)
-        primary(bar, "🌐 预览前端", COLOR_OK,
-                lambda: open_in_explorer(INDEX_HTML)).pack(side=tk.LEFT, padx=4)
 
-        # 排序模式按钮
-        self.sort_btn = tk.Button(bar, text="🔀 编辑顺序",
-                                  font=ui_font(FS_BODY, "bold"),
-                                  bg="#7E57C2", fg="white",
-                                  relief=tk.FLAT, borderwidth=0,
-                                  padx=14, pady=7, cursor="hand2",
-                                  command=self._toggle_sort_mode)
-        self.sort_btn.pack(side=tk.LEFT, padx=10)
+        # 预览服务器按钮
+        self.preview_btn = tk.Button(bar, text="🖥️ 预览前端",
+                                     font=ui_font(FS_BODY, "bold"),
+                                     bg=COLOR_OK, fg="white",
+                                     relief=tk.FLAT, borderwidth=0,
+                                     padx=14, pady=7, cursor="hand2",
+                                     command=self._toggle_server)
+        self.preview_btn.pack(side=tk.LEFT, padx=4)
 
         # 搜索框
         right = tk.Frame(bar, bg=COLOR_BG)
@@ -1398,7 +1422,7 @@ class App(tk.Tk):
                             ("♂ 男孩", "male"),
                             ("♀ 女孩", "female"),
                             ("❓ 未知", "unknown"),
-                            ("⭐ 喇星", "star"),
+                            ("⭐ 喵星", "star"),
                             ("🔍 失踪", "lost"),
                             ("🏡 被领养", "adopted")]:
             b = tk.Button(filter_bar, text=label,
@@ -1419,7 +1443,7 @@ class App(tk.Tk):
                           anchor="w", padx=18, pady=4)
         status.pack(fill=tk.X, side=tk.BOTTOM)
 
-        # 列表区（可滚动 Canvas）
+        # 列表区
         outer = tk.Frame(self, bg=COLOR_BG)
         outer.pack(fill=tk.BOTH, expand=True, padx=20, pady=(8, 14))
         self.canvas = tk.Canvas(outer, bg=COLOR_BG, highlightthickness=0)
@@ -1437,14 +1461,6 @@ class App(tk.Tk):
                              lambda e: self.canvas.yview_scroll(int(-e.delta / 120), "units"))
 
     # ---------- 交互 ----------
-    def _on_window_configure(self, e):
-        if e.widget is not self:
-            return
-        cw = self.canvas.winfo_width()
-        if abs(cw - self._last_canvas_w) > 30:
-            self._last_canvas_w = cw
-            self._render()
-
     def _set_filter(self, key):
         self.current_filter = key
         self._update_filter_buttons()
@@ -1459,16 +1475,6 @@ class App(tk.Tk):
 
     def _on_search(self):
         self.search_term = self.var_search.get().strip().lower()
-        self._render()
-
-    def _toggle_sort_mode(self):
-        self.sort_mode = not self.sort_mode
-        if self.sort_mode:
-            self.sort_btn.config(text="✅ 完成排序", bg="#66BB6A")
-            self.status_var.set("排序模式：拖动左侧 ≡ 把手调整顺序，完成后点击「完成排序」")
-        else:
-            self.sort_btn.config(text="🔀 编辑顺序", bg="#7E57C2")
-            self.status_var.set("排序模式已关闭")
         self._render()
 
     def _add_cat(self):
@@ -1495,12 +1501,12 @@ class App(tk.Tk):
                     msg += f"\n  …以及其他 {len(warns) - 10} 条"
             messagebox.showinfo("应用成功", msg)
             self.status_var.set("已同步 Excel 与 cats.json")
+            self._order_dirty = False  # 编辑保存后认为顺序已一致
         except Exception as e:
             messagebox.showerror("同步失败", f"{e}\n\n{traceback.format_exc()}")
 
     def _apply_changes(self):
         try:
-            # 按当前 rows 顺序重写 Excel 数据行
             self.store.rewrite_rows(self.rows)
             self.store.save()
             self._reload_from_excel()
@@ -1512,6 +1518,7 @@ class App(tk.Tk):
                     msg += f"\n  …以及其他 {len(warns) - 10} 条"
             messagebox.showinfo("应用完成", msg)
             self.status_var.set("手动同步完成")
+            self._order_dirty = False  # 保存后清除脏标记
         except Exception as e:
             messagebox.showerror("应用失败", f"{e}\n\n{traceback.format_exc()}")
 
@@ -1522,6 +1529,7 @@ class App(tk.Tk):
             self.thumb_cache.clear()
             self._render()
             self.status_var.set(f"已加载 {len(self.rows)} 只猫咪")
+            self._order_dirty = False  # 重新加载后顺序与 Excel 一致
         except Exception as e:
             messagebox.showerror("加载失败", f"{e}\n\n{traceback.format_exc()}")
 
@@ -1578,17 +1586,6 @@ class App(tk.Tk):
                                  highlightthickness=0, relief=tk.FLAT)
             row_frame.pack(fill=tk.X, ipady=4, pady=1)
 
-            # 排序把手（仅在排序模式显示）
-            if self.sort_mode:
-                grip = tk.Label(row_frame, text="≡", bg=row_bg, fg=COLOR_SUBTEXT,
-                                font=ui_font(FS_BODY+4, "bold"), cursor="hand2")
-                grip.pack(side=tk.LEFT, padx=(6, 2))
-                # 绑定拖拽事件
-                grip.bind("<ButtonPress-1>",
-                          lambda e, idx=i, w=row_frame: self._start_drag(e, idx, w))
-                grip.bind("<B1-Motion>", self._on_drag)
-                grip.bind("<ButtonRelease-1>", self._on_drop)
-
             # 头像缩略图
             thumb = self._load_small_thumb(cat)
             avatar = tk.Label(row_frame, image=thumb, bg=row_bg,
@@ -1629,82 +1626,168 @@ class App(tk.Tk):
             tk.Label(line2, text=" " + desc, bg=row_bg, fg=COLOR_SUBTEXT,
                      font=ui_font(FS_SMALL)).pack(side=tk.LEFT)
 
-            # 操作按钮（排序模式下隐藏编辑，避免误点）
-            if not self.sort_mode:
-                edit_btn = tk.Button(row_frame, text="✏️ 编辑",
-                                     font=ui_font(FS_SMALL, "bold"),
-                                     bg=COLOR_HOVER, fg=COLOR_ACCENT,
-                                     relief=tk.FLAT, borderwidth=0, padx=10,
-                                     cursor="hand2",
-                                     command=lambda c=cat: self._edit_cat(c))
-                edit_btn.pack(side=tk.RIGHT, padx=8)
+            # 操作按钮区
+            btn_frame = tk.Frame(row_frame, bg=row_bg)
+            btn_frame.pack(side=tk.RIGHT, padx=4)
 
-            # 分隔线（除最后一行）
+            # 移动步数输入框
+            move_var = tk.StringVar(value="1")
+            move_entry = tk.Entry(btn_frame, textvariable=move_var,
+                                  width=4, font=ui_font(FS_SMALL),
+                                  relief=tk.FLAT, bg="#f0f0f0",
+                                  justify="center",
+                                  highlightthickness=1,
+                                  highlightbackground=COLOR_DIVIDER,
+                                  highlightcolor=COLOR_INFO)
+            move_entry.pack(side=tk.LEFT, padx=(2, 0))
+
+            # ▲ 上移按钮
+            up_btn = tk.Button(btn_frame, text="▲",
+                               font=ui_font(FS_SMALL, "bold"),
+                               bg=COLOR_HOVER, fg=COLOR_ACCENT,
+                               relief=tk.FLAT, borderwidth=0, padx=6,
+                               cursor="hand2",
+                               command=lambda c=cat, v=move_var, idx=i: self._move_row(idx, v.get(), "up"))
+            up_btn.pack(side=tk.LEFT, padx=1)
+
+            # ▼ 下移按钮
+            down_btn = tk.Button(btn_frame, text="▼",
+                                 font=ui_font(FS_SMALL, "bold"),
+                                 bg=COLOR_HOVER, fg=COLOR_ACCENT,
+                                 relief=tk.FLAT, borderwidth=0, padx=6,
+                                 cursor="hand2",
+                                 command=lambda c=cat, v=move_var, idx=i: self._move_row(idx, v.get(), "down"))
+            down_btn.pack(side=tk.LEFT, padx=1)
+
+            # 编辑按钮
+            edit_btn = tk.Button(btn_frame, text="✏️ 编辑",
+                                 font=ui_font(FS_SMALL, "bold"),
+                                 bg=COLOR_HOVER, fg=COLOR_ACCENT,
+                                 relief=tk.FLAT, borderwidth=0, padx=8,
+                                 cursor="hand2",
+                                 command=lambda c=cat: self._edit_cat(c))
+            edit_btn.pack(side=tk.LEFT, padx=(4, 0))
+
+            # 分隔线
             tk.Frame(self.list_frame, bg=COLOR_DIVIDER, height=1).pack(fill=tk.X)
 
-    # ---------- 拖拽排序实现 ----------
-    def _start_drag(self, event, index, widget):
-        """记录拖拽起始信息，把当前行抬高半透明效果"""
-        if not self.sort_mode:
+    # ---------- 移动行逻辑（带滚动至移动后位置）----------
+    def _move_row(self, index, step_str, direction):
+        try:
+            step = int(step_str)
+        except ValueError:
+            messagebox.showwarning("输入错误", "请输入一个整数（如 1、2、-1）")
             return
-        self.drag_data["widget"] = widget
-        self.drag_data["index"] = index
-        self.drag_data["start_y"] = event.y_root
-        # 让当前行升高以示拖动中（改变透明度）
-        widget.configure(bg="#e0e0e0")
 
-    def _on_drag(self, event):
-        if not self.sort_mode or self.drag_data["widget"] is None:
+        if step < 0:
+            step = -step
+            direction = "down" if direction == "up" else "up"
+
+        filtered = self._filtered()
+        total = len(filtered)
+        if total <= 1:
             return
-        # 计算移动距离，并高亮插入位置
-        delta_y = event.y_root - self.drag_data["start_y"]
-        # 简单实现：拖拽时直接上下移动整个列表（在释放时重新排列）
-        # 这里不用复杂的插入指示线，只移动被拖拽行（需要pack_forget再pack动态调整）
-        # 由于pack管理顺序，这里采用临时重pack的方式会较复杂，我们只在释放时一次性重组
-        # 为了视觉反馈，我们可以让被拖拽行跟随鼠标移动（通过place覆盖），但保持简单，拖拽时不改变布局，仅高亮。
-        # 实际释放时执行重排。为了更好体验，此处仅存储状态。
-        pass
 
-    def _on_drop(self, event):
-        if not self.sort_mode or self.drag_data["widget"] is None:
+        cat = filtered[index]
+        real_index = self.rows.index(cat)
+
+        if direction == "up":
+            new_index = max(0, real_index - step)
+        else:
+            new_index = min(len(self.rows) - 1, real_index + step)
+
+        if new_index == real_index:
             return
-        from_idx = self.drag_data["index"]
-        w = self.drag_data["widget"]
-        w.configure(bg=COLOR_CARD)  # 恢复背景
 
-        # 找到当前鼠标位置对应的行索引
-        target_idx = self._get_drop_index(event.y_root)
-        if target_idx is not None and target_idx != from_idx:
-            # 调整 rows 列表顺序
-            filtered = self._filtered()  # 注意：当前显示的是过滤后的列表
-            # 注意：我们是对过滤后的列表排序，需要映射回全局 rows 的顺序
-            # 这里简化：假设用户只在全视图下排序（过滤或搜索时排序按钮应提示不可用）
-            if self.current_filter != "all" or self.search_term:
-                messagebox.showwarning("提示", "请先清除筛选条件再调整顺序")
-                self.drag_data = {"widget": None, "index": None}
-                self._render()
-                return
-            # 在全视图下，filtered 就是 self.rows 的引用顺序
-            item = self.rows.pop(from_idx)
-            self.rows.insert(target_idx, item)
-            self.status_var.set(f"顺序已调整（{item['id']} {item['name']}），点击「应用变更」保存到 Excel")
+        # 执行移动
+        item = self.rows.pop(real_index)
+        self.rows.insert(new_index, item)
 
-        self.drag_data = {"widget": None, "index": None}
+        self.status_var.set(
+            f"已将 {cat['id']} {cat['name']} 从第 {real_index+1} 位移到第 {new_index+1} 位，点击「应用变更」保存"
+        )
+        self._order_dirty = True  # 标记顺序已脏
+
+        # 重新渲染
         self._render()
 
-    def _get_drop_index(self, y_root):
-        """根据鼠标的绝对 Y 坐标估算目标行索引"""
-        if not self.list_frame.winfo_children():
-            return None
-        # 遍历当前 list_frame 的子组件（行 frame），找到鼠标落在哪一行
-        for idx, child in enumerate(self.list_frame.winfo_children()):
-            # 跳过分隔线（可能为 Frame height=1）
-            if isinstance(child, tk.Frame) and child.winfo_height() > 10:
-                if child.winfo_rooty() <= y_root <= child.winfo_rooty() + child.winfo_height():
-                    return idx
-        return None
+        # 让视图滚动到新位置，使被移动的行大致居中
+        # 使用延时确保渲染完成后再计算
+        self.after(10, self._scroll_to_row, new_index)
 
-    # ---------- 工具菜单：批量操作（未改动）----------
+    def _scroll_to_row(self, target_row_index):
+        """将画布滚动到目标行（在全局 rows 中的索引）大致居中的位置"""
+        try:
+            items_count = len(self.rows)
+            if items_count == 0:
+                return
+
+            # 近似每行高度 (包含行高 + 间距 + 分隔线)
+            # 可从 list_frame 的子组件高度估算，这里用固定值 72
+            row_height = 72
+            canvas_height = self.canvas.winfo_height()
+            total_height = items_count * row_height
+
+            if total_height <= canvas_height:
+                return  # 内容没有超出，无需滚动
+
+            # 目标行顶部的 Y 坐标（在 list_frame 坐标系中）
+            target_y = target_row_index * row_height
+            # 我们希望目标行的中心在画布中心
+            target_center_y = target_y + row_height // 2
+            ideal_top = target_center_y - canvas_height // 2
+            ideal_top = max(0, min(ideal_top, total_height - canvas_height))
+
+            # 将像素位置转换为相对比例 (0.0~1.0)
+            fraction = ideal_top / total_height
+            self.canvas.yview_moveto(fraction)
+        except Exception:
+            pass
+
+    # ======================== 内建预览服务器 ========================
+    def _toggle_server(self):
+        if self.http_server:
+            self._stop_server()
+        else:
+            self._start_server()
+
+    def _start_server(self):
+        try:
+            port = 8800
+            import socket
+            while True:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    if s.connect_ex(('localhost', port)) != 0:
+                        break
+                    port += 1
+
+            class QuietHandler(SimpleHTTPRequestHandler):
+                def __init__(self, *args, **kwargs):
+                    super().__init__(*args, directory=str(BASE_DIR), **kwargs)
+                def log_message(self, format, *args):
+                    pass
+
+            self.http_server = HTTPServer(('localhost', port), QuietHandler)
+            self.http_server_thread = threading.Thread(
+                target=self.http_server.serve_forever, daemon=True)
+            self.http_server_thread.start()
+
+            url = f"http://localhost:{port}/index.html"
+            webbrowser.open(url)
+            self.preview_btn.config(text="🛑 停止服务器", bg=COLOR_DANGER)
+            self.status_var.set(f"预览服务器运行中：{url}")
+        except Exception as e:
+            messagebox.showerror("启动失败", f"无法启动预览服务器：{e}")
+
+    def _stop_server(self):
+        if self.http_server:
+            self.http_server.shutdown()
+            self.http_server = None
+            self.http_server_thread = None
+            self.preview_btn.config(text="🖥️ 预览前端", bg=COLOR_OK)
+            self.status_var.set("预览服务器已停止")
+
+    # ---------- 工具菜单：批量操作 ----------
     def _batch_regen_missing_thumbs(self):
         if not messagebox.askyesno("确认",
                                     "扫描所有原图，给缺失缩略图的生成一份。继续？"):

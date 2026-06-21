@@ -606,30 +606,6 @@
     ]
   },
   {
-    "id": "35",
-    "name": "大橘1号(暂用名)",
-    "gender": "unknown",
-    "avatar": "classified/35 大橘1号(暂用名)/big_orange_two_01_thumb.jpg",
-    "avatar_hd": "classified/35 大橘1号(暂用名)/big_orange_two_01.jpg",
-    "affection": 1,
-    "status": "lost",
-    "desc": "普通的大橘",
-    "story": "喜欢小只古典纹，毛色偏橘，从未被古典纹喜欢过，只会被被古典纹哈气嫌弃，因为古典纹已经喜欢上了老橘，2026年年初失踪。",
-    "otherPhotos": []
-  },
-  {
-    "id": "36",
-    "name": "大橘2号（暂用名）",
-    "gender": "unknown",
-    "avatar": "classified/36 大橘2号（暂用名）/big_orange_three_01_thumb.jpg",
-    "avatar_hd": "classified/36 大橘2号（暂用名）/big_orange_three_01.jpg",
-    "affection": 1,
-    "status": "lost",
-    "desc": "普通的大橘",
-    "story": "有点偏奶油色，喜欢小只古典纹，古典纹也爱过，但是后来就被古典纹哈气嫌弃，因为古典纹已经喜欢上了老橘，2025年年末失踪。",
-    "otherPhotos": []
-  },
-  {
     "id": "33",
     "name": "白猫(暂用名)",
     "gender": "unknown",
@@ -651,6 +627,30 @@
     "status": "lost",
     "desc": "普通的狸花",
     "story": "大肚子怕人狸花，很像古典纹的放大版，只是左后腿多了一块纹，2026年年初失踪。",
+    "otherPhotos": []
+  },
+  {
+    "id": "35",
+    "name": "大橘1号(暂用名)",
+    "gender": "unknown",
+    "avatar": "classified/35 大橘1号(暂用名)/big_orange_two_01_thumb.jpg",
+    "avatar_hd": "classified/35 大橘1号(暂用名)/big_orange_two_01.jpg",
+    "affection": 1,
+    "status": "lost",
+    "desc": "普通的大橘",
+    "story": "喜欢小只古典纹，毛色偏橘，从未被古典纹喜欢过，只会被被古典纹哈气嫌弃，因为古典纹已经喜欢上了老橘，2026年年初失踪。",
+    "otherPhotos": []
+  },
+  {
+    "id": "36",
+    "name": "大橘2号（暂用名）",
+    "gender": "unknown",
+    "avatar": "classified/36 大橘2号（暂用名）/big_orange_three_01_thumb.jpg",
+    "avatar_hd": "classified/36 大橘2号（暂用名）/big_orange_three_01.jpg",
+    "affection": 1,
+    "status": "lost",
+    "desc": "普通的大橘",
+    "story": "有点偏奶油色，喜欢小只古典纹，古典纹也爱过，但是后来就被古典纹哈气嫌弃，因为古典纹已经喜欢上了老橘，2025年年末失踪。",
     "otherPhotos": []
   }
 ]

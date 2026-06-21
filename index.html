@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🐾 SUAT 🐱</title>
+    <title>SUAT 🐱</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Noto+Sans+SC:wght@400;700;800&family=LXGW+WenKai+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,7 +23,6 @@
         .header h1 { font-size: 2.5rem; font-weight: 800; color: #4A4A4A; letter-spacing: 2px; }
         .header p { color: #888; margin-top: 8px; font-size: 1.1rem; }
 
-        /* 筛选区域新样式 */
         .filters {
             display: flex;
             flex-direction: column;
@@ -31,6 +30,7 @@
             gap: 16px;
             margin-bottom: 50px;
         }
+
         .filter-group {
             display: flex;
             flex-direction: column;
@@ -38,62 +38,78 @@
             width: 100%;
             max-width: 600px;
         }
+
+        /* 胶囊按钮：文字 + 符号融为一体 */
         .filter-toggle {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 12px;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px 26px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
             cursor: pointer;
             user-select: none;
-            padding: 8px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.8);
         }
-        .filter-toggle span {
+
+        .filter-toggle:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
+
+        .filter-toggle span:first-child {
             font-size: 1.1rem;
             font-weight: 700;
             color: #555;
         }
-        .toggle-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 2px solid #ccc;
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(10px);
+
+        .toggle-symbol {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
             font-size: 1.5rem;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            line-height: 24px;
+            text-align: center;
+            font-weight: 700;
             color: #666;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            transition: transform 0.3s ease, color 0.3s ease;
         }
-        .toggle-btn:hover {
-            border-color: #999;
-            color: #333;
-            transform: scale(1.05);
+
+        /* 打开时胶囊背景微变，符号变成减号（水平） */
+        .filter-toggle.open {
+            background: rgba(74, 74, 74, 0.08);
+            border-color: #ccc;
         }
-        .toggle-btn.open {
-            transform: rotate(45deg);
-            border-color: #4A4A4A;
+
+        .filter-toggle.open .toggle-symbol {
             color: #4A4A4A;
+            /* 不旋转，直接切换文字内容为 −，保持水平 */
         }
+
+        /* 选项面板 */
         .filter-options {
             display: none;
             flex-wrap: wrap;
             justify-content: center;
             gap: 12px;
-            margin-top: 12px;
-            padding: 12px 0;
+            margin-top: 14px;
+            padding: 8px 0;
             animation: fadeDown 0.3s ease;
         }
+
         .filter-options.show {
             display: flex;
         }
+
         @keyframes fadeDown {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         .filter-btn {
             padding: 10px 24px; border: none; border-radius: 50px;
             background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px);
@@ -132,17 +148,19 @@
         .click-hint { margin-top: 15px; font-size: 0.8rem; color: #bbb; opacity: 0; transition: opacity 0.3s; }
         .card:hover .click-hint { opacity: 1; }
 
+        /* 喵星状态：头像变灰 */
         .card.status-star { border: 1px solid #e0e0e0; }
         .card.status-star .avatar { filter: grayscale(100%); opacity: 0.8; }
         .card.status-star .status-icon { opacity: 1; transform: scale(1); }
         .card.status-star .name { color: #888; }
 
-        /* 失踪状态：仅保留状态图标，不改变头像颜色和透明度 */
+        /* 失踪状态：仅保留状态图标，头像保持原色！ */
         .card.status-lost { border: 1px dashed #d0d0d0; }
         .card.status-lost .status-icon { opacity: 1; transform: scale(1); }
         .card.status-lost .name { color: #999; }
-        /* 已移除原本对 .card.status-lost .avatar 的滤镜和透明度设置 */
+        /* 注意：这里没有设置 avatar 的任何滤镜或透明度，因此显示正常色彩 */
 
+        /* 已领养状态 */
         .card.status-adopted { border: 1px solid #a0d2a0; }
         .card.status-adopted .status-icon { opacity: 1; transform: scale(1); }
         .card.status-adopted .name { color: #2d6a2d; }
@@ -243,17 +261,16 @@
 <body>
 
     <div class="header">
-        <h1>🐾 SUAT 🐱</h1>
-        <p>记录每一个相遇与告别</p>
+        <h1>SUAT 🐱</h1>
+        <p>记录每一次相遇与告别</p>
     </div>
 
-    <!-- 新筛选区域：去掉“全部猫咪”，改为折叠面板 -->
     <div class="filters">
-        <!-- 性别筛选 -->
+        <!-- 性别胶囊 -->
         <div class="filter-group">
             <div class="filter-toggle" id="genderToggle">
                 <span>性别</span>
-                <button class="toggle-btn" id="genderToggleBtn">+</button>
+                <span class="toggle-symbol" id="genderSymbol">+</span>
             </div>
             <div class="filter-options" id="genderOptions">
                 <button class="filter-btn gender-btn active" data-gender="all">全部性别</button>
@@ -263,11 +280,11 @@
             </div>
         </div>
 
-        <!-- 状态筛选 -->
+        <!-- 状态胶囊 -->
         <div class="filter-group">
             <div class="filter-toggle" id="statusToggle">
                 <span>状态</span>
-                <button class="toggle-btn" id="statusToggleBtn">+</button>
+                <span class="toggle-symbol" id="statusSymbol">+</span>
             </div>
             <div class="filter-options" id="statusOptions">
                 <button class="filter-btn status-btn active" data-status="all">全部状态</button>
@@ -476,45 +493,47 @@
         lightboxClose.addEventListener('click', closeLightbox);
         lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
 
-        // ---------- 新筛选交互 ----------
-        const genderToggleBtn = document.getElementById('genderToggleBtn');
+        // ---------- 筛选胶囊交互 ----------
+        const genderToggle = document.getElementById('genderToggle');
+        const genderSymbol = document.getElementById('genderSymbol');
         const genderOptions = document.getElementById('genderOptions');
-        const statusToggleBtn = document.getElementById('statusToggleBtn');
+
+        const statusToggle = document.getElementById('statusToggle');
+        const statusSymbol = document.getElementById('statusSymbol');
         const statusOptions = document.getElementById('statusOptions');
 
         const genderBtns = document.querySelectorAll('.gender-btn');
         const statusBtns = document.querySelectorAll('.status-btn');
 
-        // 辅助：设置按钮高亮
         function setActive(buttons, activeButton) {
             buttons.forEach(b => b.classList.remove('active'));
             if (activeButton) activeButton.classList.add('active');
         }
 
-        // 切换面板显示
-        genderToggleBtn.addEventListener('click', () => {
+        // 性别面板切换
+        genderToggle.addEventListener('click', () => {
             const isOpen = genderOptions.classList.toggle('show');
-            genderToggleBtn.classList.toggle('open', isOpen);
-            genderToggleBtn.textContent = isOpen ? '−' : '+';
+            genderToggle.classList.toggle('open', isOpen);
+            genderSymbol.textContent = isOpen ? '−' : '+';
         });
 
-        statusToggleBtn.addEventListener('click', () => {
+        // 状态面板切换
+        statusToggle.addEventListener('click', () => {
             const isOpen = statusOptions.classList.toggle('show');
-            statusToggleBtn.classList.toggle('open', isOpen);
-            statusToggleBtn.textContent = isOpen ? '−' : '+';
+            statusToggle.classList.toggle('open', isOpen);
+            statusSymbol.textContent = isOpen ? '−' : '+';
         });
 
-        // 性别筛选事件
+        // 性别筛选
         genderBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 currentGenderFilter = this.dataset.gender;
                 setActive(genderBtns, this);
                 renderCats();
-                // 可选：选择后自动收起面板（如果需要可以保留打开，这里为了体验保持打开）
             });
         });
 
-        // 状态筛选事件
+        // 状态筛选
         statusBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 currentStatusFilter = this.dataset.status;
