@@ -147,6 +147,35 @@
             box-shadow: 0 4px 12px rgba(74, 74, 74, 0.2);
         }
 
+        /* 排序专用 */
+        .filter-btn.sort-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sort-arrows {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 0.85rem;
+        }
+        .sort-arrows .arrow-up,
+        .sort-arrows .arrow-down {
+            transition: opacity 0.3s;
+        }
+        .filter-btn.sort-btn .arrow-up {
+            opacity: 0.3;
+        }
+        .filter-btn.sort-btn .arrow-down {
+            opacity: 1;
+        }
+        .filter-btn.sort-btn.asc .arrow-up {
+            opacity: 1;
+        }
+        .filter-btn.sort-btn.asc .arrow-down {
+            opacity: 0.3;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -590,6 +619,20 @@
                 <button class="filter-btn status-btn" data-status="adopted">🏠 已领养</button>
             </div>
         </div>
+
+        <!-- 排序控件 -->
+        <div class="filter-group">
+            <div class="filter-toggle" id="sortToggle">
+                <span>排序</span>
+                <span class="toggle-symbol" id="sortSymbol">+</span>
+            </div>
+            <div class="filter-options" id="sortOptions">
+                <button class="filter-btn sort-btn active" id="sortDefault">默认排序</button>
+                <button class="filter-btn sort-btn" id="sortAffection">
+                    按亲密度 <span class="sort-arrows"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <div class="grid" id="catGrid">
@@ -632,9 +675,6 @@
     <div class="toast" id="exitToast">再按一次返回键退出页面</div>
 
     <script>
-        // =============================================
-        //  DOM 引用
-        // =============================================
         const grid = document.getElementById('catGrid');
         const loadingText = document.getElementById('loadingText');
         const modal = document.getElementById('storyModal');
@@ -653,45 +693,17 @@
         let currentStatusFilter = 'all';
         let currentHDUrl = '';
 
-        // =============================================
-        //  🔧 全新的 Hash 历史记录管理系统
-        // =============================================
-        //
-        //  原理：
-        //  用 location.hash 代替 pushState 来管理历史记录。
-        //  hash 变化产生的历史记录是浏览器原生级别的，
-        //  所有手机浏览器（Chrome/WebView/微信/QQ/UC等）
-        //  的返回键都能可靠地回退 hash，触发 hashchange 事件。
-        //
-        //  Hash 状态定义：
-        //    无 hash（或 #home）= 首页
-        //    #modal              = 抽屉打开
-        //    #lightbox           = 大图查看器打开
-        //
-        //  返回键行为：
-        //    lightbox 打开时按返回 → hash 从 #lightbox 变为 #modal → 关闭大图
-        //    modal 打开时按返回   → hash 从 #modal 变为空     → 关闭抽屉
-        //    首页按返回          → hash 从空变为空（无变化）   → 需要特殊处理
-        //
-        //  首页退出防护：
-        //    初始化时在 URL 上加一个 #home，这样用户按返回时
-        //    hash 从 #home 变为空，hashchange 能捕获到，
-        //    此时显示 toast 并重新设回 #home 阻止退出。
-        //    2秒内再按一次 → 允许退出。
-        // =============================================
+        // 排序状态
+        let currentSort = 'default';
+        let sortDirection = 'desc';
 
-        // UI 状态
+        // Hash 管理
         let modalActive = false;
         let lightboxActive = false;
-
-        // 退出提示状态
         let exitHintShown = false;
         let exitToastTimer = null;
-
-        // 防止 hashchange 自身引起的连锁反应
         let ignoreHashChange = false;
 
-        // -------- 退出 Toast --------
         function showExitToast() {
             if (exitToastTimer) clearTimeout(exitToastTimer);
             exitToast.classList.add('show');
@@ -712,7 +724,6 @@
             exitHintShown = false;
         }
 
-        // -------- 纯 UI 开关函数（不操作 hash） --------
         function openModalUI() {
             modal.classList.add('active');
             document.body.classList.add('modal-open');
@@ -735,40 +746,22 @@
             lightboxActive = false;
         }
 
-        // -------- Hash 操作工具函数 --------
         function getCurrentHash() {
-            // 去掉 # 号，返回纯字符串
             return location.hash.replace(/^#/, '');
         }
 
-        // 设置 hash，同时标记 ignoreHashChange 防止死循环
         function setHash(hash) {
             ignoreHashChange = true;
             location.hash = hash;
-            // 用 setTimeout 确保 hashchange 事件触发后才重置标志
             setTimeout(() => { ignoreHashChange = false; }, 50);
         }
 
-        // 移除 hash（回到无 hash 状态），同时标记 ignore
-        function clearHash() {
-            ignoreHashChange = true;
-            history.replaceState(null, '', location.pathname + location.search);
-            setTimeout(() => { ignoreHashChange = false; }, 50);
-        }
-
-        // =============================================
-        //  核心：hashchange 事件处理器
-        // =============================================
         window.addEventListener('hashchange', function (e) {
             if (ignoreHashChange) return;
-
             const newHash = getCurrentHash();
 
-            // ---- Lightbox 应该关闭 ----
-            // 当前 lightbox 开着，但 hash 已经不是 #lightbox 了
             if (lightboxActive && newHash !== 'lightbox') {
                 closeLightboxUI();
-                // 如果 hash 也不是 #modal，说明 modal 也该关了
                 if (modalActive && newHash !== 'modal') {
                     closeModalUI();
                 }
@@ -776,23 +769,17 @@
                 return;
             }
 
-            // ---- Modal 应该关闭 ----
-            // 当前 modal 开着，但 hash 不是 #modal 也不是 #lightbox
             if (modalActive && newHash !== 'modal' && newHash !== 'lightbox') {
                 closeModalUI();
                 resetExitHint();
                 return;
             }
 
-            // ---- 首页状态：hash 被清空了（用户按了返回键把 #home 回退掉了） ----
             if (!lightboxActive && !modalActive) {
                 if (exitHintShown) {
-                    // 2秒内第二次返回 → 允许退出，不做任何拦截
                     resetExitHint();
-                    // 不调用 setHash，让浏览器自然后退
                     return;
                 } else {
-                    // 第一次返回 → 显示 toast，重新设回 #home 阻止退出
                     showExitToast();
                     setHash('home');
                     return;
@@ -800,110 +787,7 @@
             }
         });
 
-        // =============================================
-        //  打开/关闭 Modal（带 hash 管理）
-        // =============================================
-        function openModal(cat) {
-            // 填充 Modal 内容
-            document.getElementById('modalAvatar').src = cat.avatar;
-            document.getElementById('modalName').innerText = cat.name;
-            document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
-            document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
-            const paragraphs = cat.story.split('\n\n');
-            const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-            document.getElementById('modalStoryText').innerHTML = storyHTML;
-            galleryScroll.innerHTML = '';
-            if (cat.otherPhotos && cat.otherPhotos.length > 0) {
-                gallerySection.classList.remove('hidden');
-                cat.otherPhotos.forEach(photo => {
-                    const item = document.createElement('div');
-                    item.className = 'gallery-item';
-                    item.innerHTML = `<img src="${photo.thumb}" alt="Gallery photo">`;
-                    item.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        openLightbox(photo.hd);
-                    });
-                    galleryScroll.appendChild(item);
-                });
-            } else {
-                gallerySection.classList.add('hidden');
-            }
-            currentHDUrl = cat.avatar_hd;
-
-            // 打开 UI + 设置 hash
-            openModalUI();
-            setHash('modal');
-        }
-
-        function closeModal() {
-            if (!modalActive) return;
-            closeModalUI();
-            // hash 回到 #home（首页的守卫 hash）
-            setHash('home');
-        }
-
-        // =============================================
-        //  打开/关闭 Lightbox（带 hash 管理）
-        // =============================================
-        function openLightbox(hdUrl) {
-            lightboxSpinner.classList.remove('hidden');
-            lightboxImg.classList.remove('loaded');
-
-            openLightboxUI();
-            setHash('lightbox');
-
-            const img = new Image();
-            img.src = hdUrl;
-            img.onload = () => {
-                lightboxImg.src = hdUrl;
-                lightboxSpinner.classList.add('hidden');
-                setTimeout(() => lightboxImg.classList.add('loaded'), 50);
-            };
-            img.onerror = () => {
-                lightboxImg.src = document.getElementById('modalAvatar').src;
-                lightboxSpinner.classList.add('hidden');
-                lightboxImg.classList.add('loaded');
-            };
-        }
-
-        function closeLightbox() {
-            if (!lightboxActive) return;
-            closeLightboxUI();
-            // hash 回到 #modal（因为 lightbox 是在 modal 之上打开的）
-            setHash('modal');
-        }
-
-        // =============================================
-        //  事件绑定
-        // =============================================
-
-        // 关闭按钮 & 遮罩点击
-        closeBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-        lightboxClose.addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) closeLightbox();
-        });
-
-        // Modal 头像点击 → 打开大图
-        modalAvatarWrapper.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openLightbox(currentHDUrl);
-        });
-
-        // 键盘 Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (lightboxActive) closeLightbox();
-                else if (modalActive) closeModal();
-            }
-        });
-
-        // =============================================
-        //  渲染函数 & 筛选（与原代码一致）
-        // =============================================
+        // 排序函数
         function getPaws(level) {
             let paws = '';
             for (let i = 1; i <= 5; i++) paws += i <= level ? '🐾' : '<span class="paw-empty">🐾</span>';
@@ -926,11 +810,42 @@
             return '❓ 未知性别';
         }
 
+        function sortCats(cats) {
+            if (currentSort === 'affection') {
+                return [...cats].sort((a, b) => {
+                    if (sortDirection === 'desc') return b.affection - a.affection;
+                    else return a.affection - b.affection;
+                });
+            }
+            return cats;
+        }
+
+        function updateSortUI() {
+            const affectionBtn = document.getElementById('sortAffection');
+            const defaultBtn = document.getElementById('sortDefault');
+            if (!affectionBtn || !defaultBtn) return;
+            if (currentSort === 'affection') {
+                affectionBtn.classList.add('active');
+                defaultBtn.classList.remove('active');
+                if (sortDirection === 'asc') {
+                    affectionBtn.classList.add('asc');
+                } else {
+                    affectionBtn.classList.remove('asc');
+                }
+            } else {
+                affectionBtn.classList.remove('active', 'asc');
+                defaultBtn.classList.add('active');
+            }
+        }
+
         function renderCats() {
             grid.innerHTML = '';
-            let filteredCats = catsData;
+            let sortedCats = sortCats(catsData);
+            let filteredCats = sortedCats;
+
             if (currentGenderFilter !== 'all') filteredCats = filteredCats.filter(c => c.gender === currentGenderFilter);
             if (currentStatusFilter !== 'all') filteredCats = filteredCats.filter(c => c.status === currentStatusFilter);
+
             if (filteredCats.length === 0) {
                 grid.innerHTML = '<p class="loading-text">没有找到符合条件的猫咪</p>';
                 return;
@@ -957,7 +872,86 @@
             });
         }
 
-        // ---------- 筛选交互 ----------
+        function openModal(cat) {
+            document.getElementById('modalAvatar').src = cat.avatar;
+            document.getElementById('modalName').innerText = cat.name;
+            document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
+            document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
+            const paragraphs = cat.story.split('\n\n');
+            const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+            document.getElementById('modalStoryText').innerHTML = storyHTML;
+            galleryScroll.innerHTML = '';
+            if (cat.otherPhotos && cat.otherPhotos.length > 0) {
+                gallerySection.classList.remove('hidden');
+                cat.otherPhotos.forEach(photo => {
+                    const item = document.createElement('div');
+                    item.className = 'gallery-item';
+                    item.innerHTML = `<img src="${photo.thumb}" alt="Gallery photo">`;
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openLightbox(photo.hd);
+                    });
+                    galleryScroll.appendChild(item);
+                });
+            } else {
+                gallerySection.classList.add('hidden');
+            }
+            currentHDUrl = cat.avatar_hd;
+            openModalUI();
+            setHash('modal');
+        }
+
+        function closeModal() {
+            if (!modalActive) return;
+            closeModalUI();
+            setHash('home');
+        }
+
+        function openLightbox(hdUrl) {
+            lightboxSpinner.classList.remove('hidden');
+            lightboxImg.classList.remove('loaded');
+            openLightboxUI();
+            setHash('lightbox');
+            const img = new Image();
+            img.src = hdUrl;
+            img.onload = () => {
+                lightboxImg.src = hdUrl;
+                lightboxSpinner.classList.add('hidden');
+                setTimeout(() => lightboxImg.classList.add('loaded'), 50);
+            };
+            img.onerror = () => {
+                lightboxImg.src = document.getElementById('modalAvatar').src;
+                lightboxSpinner.classList.add('hidden');
+                lightboxImg.classList.add('loaded');
+            };
+        }
+
+        function closeLightbox() {
+            if (!lightboxActive) return;
+            closeLightboxUI();
+            setHash('modal');
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        lightboxClose.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+        modalAvatarWrapper.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openLightbox(currentHDUrl);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (lightboxActive) closeLightbox();
+                else if (modalActive) closeModal();
+            }
+        });
+
+        // 筛选交互
         const genderToggle = document.getElementById('genderToggle');
         const genderSymbol = document.getElementById('genderSymbol');
         const genderOptions = document.getElementById('genderOptions');
@@ -996,17 +990,36 @@
             });
         });
 
-        // =============================================
-        //  🏁 页面初始化
-        // =============================================
+        // 排序交互
+        document.getElementById('sortDefault').addEventListener('click', () => {
+            currentSort = 'default';
+            updateSortUI();
+            renderCats();
+        });
+        document.getElementById('sortAffection').addEventListener('click', () => {
+            if (currentSort === 'affection') {
+                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+            } else {
+                currentSort = 'affection';
+                sortDirection = 'desc';
+            }
+            updateSortUI();
+            renderCats();
+        });
 
-        // 设置首页守卫 hash：#home
-        // 这会在历史记录中创建一个真实条目
-        // 用户按返回键时，浏览器从 #home 回退到无 hash，
-        // 触发 hashchange 事件，我们在事件中拦截并显示 toast
+        const sortToggle = document.getElementById('sortToggle');
+        const sortSymbol = document.getElementById('sortSymbol');
+        const sortOptions = document.getElementById('sortOptions');
+        sortToggle.addEventListener('click', () => {
+            const isOpen = sortOptions.classList.toggle('show');
+            sortToggle.classList.toggle('open', isOpen);
+            sortSymbol.textContent = isOpen ? '−' : '+';
+        });
+
+        // 初始化
         setHash('home');
+        updateSortUI();
 
-        // 加载数据
         fetch('cats.json')
             .then(response => {
                 if (!response.ok) throw new Error('找不到 cats.json 文件');

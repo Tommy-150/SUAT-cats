@@ -6,11 +6,7 @@
     <title>SUAT 🐱</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Noto+Sans+SC:wght@400;700;800&family=LXGW+WenKai+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Nunito', 'Noto Sans SC', 'LXGW WenKai TC', sans-serif;
@@ -18,683 +14,218 @@
             color: #333;
             min-height: 100vh;
             background-image:
-                radial-gradient(circle at 10% 20%, rgba(255, 200, 150, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(150, 200, 255, 0.15) 0%, transparent 40%);
+                radial-gradient(circle at 10% 20%, rgba(255,200,150,0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(150,200,255,0.15) 0%, transparent 40%);
             background-attachment: fixed;
             padding: 40px 20px;
         }
+        body.modal-open { overflow: hidden; }
 
-        body.modal-open {
-            overflow: hidden;
-        }
+        .loading-text { text-align: center; font-size: 1.2rem; color: #888; margin-top: 100px; grid-column: 1 / -1; }
+        .error-text { text-align: center; font-size: 1.2rem; color: red; margin-top: 100px; grid-column: 1 / -1; }
 
-        .loading-text {
-            text-align: center;
-            font-size: 1.2rem;
-            color: #888;
-            margin-top: 100px;
-            grid-column: 1 / -1;
-        }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 2.5rem; font-weight: 800; color: #4A4A4A; letter-spacing: 2px; }
+        .header p { color: #888; margin-top: 8px; font-size: 1.1rem; }
 
-        .error-text {
-            text-align: center;
-            font-size: 1.2rem;
-            color: red;
-            margin-top: 100px;
-            grid-column: 1 / -1;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #4A4A4A;
-            letter-spacing: 2px;
-        }
-
-        .header p {
-            color: #888;
-            margin-top: 8px;
-            font-size: 1.1rem;
-        }
-
-        .filters {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 50px;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-        }
+        .filters { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 50px; }
+        .filter-group { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px; }
 
         .filter-toggle {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 10px 26px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            border-radius: 50px;
-            cursor: pointer;
-            user-select: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 10px 26px; background: rgba(255,255,255,0.6); backdrop-filter: blur(10px);
+            border-radius: 50px; cursor: pointer; user-select: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.8);
         }
-
-        .filter-toggle:hover {
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            transform: translateY(-1px);
-        }
-
-        .filter-toggle span:first-child {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #555;
-        }
-
+        .filter-toggle:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .filter-toggle span:first-child { font-size: 1.1rem; font-weight: 700; color: #555; }
         .toggle-symbol {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            font-size: 1.5rem;
-            line-height: 24px;
-            text-align: center;
-            font-weight: 700;
-            color: #666;
+            display: inline-block; width: 24px; height: 24px; font-size: 1.5rem; line-height: 24px;
+            text-align: center; font-weight: 700; color: #666;
             transition: transform 0.3s ease, color 0.3s ease;
         }
-
-        .filter-toggle.open {
-            background: rgba(74, 74, 74, 0.08);
-            border-color: #ccc;
-        }
-
-        .filter-toggle.open .toggle-symbol {
-            color: #4A4A4A;
-        }
+        .filter-toggle.open { background: rgba(74,74,74,0.08); border-color: #ccc; }
+        .filter-toggle.open .toggle-symbol { color: #4A4A4A; }
 
         .filter-options {
-            display: none;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 14px;
-            padding: 8px 0;
-            animation: fadeDown 0.3s ease;
+            display: none; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 14px;
+            padding: 8px 0; animation: fadeDown 0.3s ease;
         }
-
-        .filter-options.show {
-            display: flex;
-        }
+        .filter-options.show { display: flex; }
 
         @keyframes fadeDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
         .filter-btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 50px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            color: #666;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-            font-family: inherit;
+            padding: 10px 24px; border: none; border-radius: 50px;
+            background: rgba(255,255,255,0.6); backdrop-filter: blur(10px);
+            color: #666; font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.03); font-family: inherit;
         }
+        .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .filter-btn.active { background: #4A4A4A; color: #fff; box-shadow: 0 8px 20px rgba(74,74,74,0.2); }
 
-        .filter-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-        }
+        /* 排序按钮内部箭头 */
+        .filter-btn.sort-btn { display: inline-flex; align-items: center; gap: 6px; }
+        .sort-arrows { display: inline-flex; align-items: center; gap: 2px; font-size: 0.9rem; }
+        .sort-arrows .arrow-up,
+        .sort-arrows .arrow-down { transition: opacity 0.3s; }
+        .filter-btn.sort-btn .arrow-up { opacity: 0.3; }
+        .filter-btn.sort-btn .arrow-down { opacity: 1; }
+        .filter-btn.sort-btn.asc .arrow-up { opacity: 1; }
+        .filter-btn.sort-btn.asc .arrow-down { opacity: 0.3; }
 
-        .filter-btn.active {
-            background: #4A4A4A;
-            color: #fff;
-            box-shadow: 0 8px 20px rgba(74, 74, 74, 0.2);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
 
         .card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(15px);
-            border-radius: 24px;
-            padding: 30px 20px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
+            background: rgba(255,255,255,0.7); backdrop-filter: blur(15px); border-radius: 24px;
+            padding: 30px 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255,255,255,0.8); transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+            position: relative; overflow: hidden; cursor: pointer;
         }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
 
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-        }
-
-        /* 全卡片遮罩，但头像通过 z-index 浮于上方 */
         .card::after {
             content: "🔍 偷看这只喵";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(247, 245, 240, 0.92);
-            backdrop-filter: blur(6px);
-            color: #4A4A4A;
-            font-size: 1.3rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding-top: 240px;
-            /* 关键定位：与亲密度爪子行对齐 */
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: 24px;
-            pointer-events: none;
-            z-index: 5;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(247,245,240,0.92); backdrop-filter: blur(6px);
+            color: #4A4A4A; font-size: 1.3rem; font-weight: 700; letter-spacing: 2px;
+            display: flex; justify-content: center; align-items: flex-start; padding-top: 240px;
+            opacity: 0; transition: opacity 0.3s ease; border-radius: 24px; pointer-events: none; z-index: 5;
         }
+        .card:hover::after { opacity: 1; }
 
-        .card:hover::after {
-            opacity: 1;
-        }
-
-        /* 头像浮于遮罩之上 */
-        .avatar-wrapper {
-            width: 140px;
-            height: 140px;
-            margin: 0 auto 20px;
-            position: relative;
-            z-index: 10;
-            border-radius: 24px;
-            overflow: hidden;
-        }
-
+        .avatar-wrapper { width: 140px; height: 140px; margin: 0 auto 20px; position: relative; z-index: 10; border-radius: 24px; overflow: hidden; }
         .avatar {
-            width: 100%;
-            height: 100%;
-            border-radius: 24px;
-            object-fit: cover;
-            border: 4px solid #fff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            transition: all 0.5s ease;
-            display: block;
+            width: 100%; height: 100%; border-radius: 24px; object-fit: cover; border: 4px solid #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); transition: all 0.5s ease; display: block;
         }
 
         .status-icon {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            width: 36px;
-            height: 36px;
-            background: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            opacity: 0;
-            transform: scale(0.5);
-            transition: all 0.3s ease;
-            z-index: 11;
+            position: absolute; bottom: 5px; right: 5px; width: 36px; height: 36px; background: #fff;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); opacity: 0; transform: scale(0.5); transition: all 0.3s ease; z-index: 11;
         }
 
-        .name-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
+        .name-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .name { font-size: 1.5rem; font-weight: 800; color: #333; }
+        .gender { font-size: 1.2rem; }
+        .gender.male { color: #5B8DEF; }
+        .gender.female { color: #FF7E93; }
+        .gender.unknown { color: #AAA; }
 
-        .name {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #333;
-        }
+        .affection { font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 10px; }
+        .paw-empty { opacity: 0.2; }
 
-        .gender {
-            font-size: 1.2rem;
-        }
+        .desc { font-size: 0.9rem; color: #888; line-height: 1.6; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
 
-        .gender.male {
-            color: #5B8DEF;
-        }
+        .card.status-star { border: 1px solid #e0e0e0; }
+        .card.status-star .avatar { filter: grayscale(100%); opacity: 0.8; }
+        .card.status-star .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-star .name { color: #888; }
 
-        .gender.female {
-            color: #FF7E93;
-        }
+        .card.status-lost { border: 1px dashed #d0d0d0; }
+        .card.status-lost .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-lost .name { color: #999; }
 
-        .gender.unknown {
-            color: #AAA;
-        }
+        .card.status-adopted { border: 1px solid #a0d2a0; }
+        .card.status-adopted .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-adopted .name { color: #2d6a2d; }
 
-        .affection {
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-        }
-
-        .paw-empty {
-            opacity: 0.2;
-        }
-
-        .desc {
-            font-size: 0.9rem;
-            color: #888;
-            line-height: 1.6;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #eee;
-        }
-
-        .click-hint {
-            display: none;
-        }
-
-        .card.status-star {
-            border: 1px solid #e0e0e0;
-        }
-
-        .card.status-star .avatar {
-            filter: grayscale(100%);
-            opacity: 0.8;
-        }
-
-        .card.status-star .status-icon {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .card.status-star .name {
-            color: #888;
-        }
-
-        .card.status-lost {
-            border: 1px dashed #d0d0d0;
-        }
-
-        .card.status-lost .status-icon {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .card.status-lost .name {
-            color: #999;
-        }
-
-        .card.status-adopted {
-            border: 1px solid #a0d2a0;
-        }
-
-        .card.status-adopted .status-icon {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .card.status-adopted .name {
-            color: #2d6a2d;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease forwards;
-            opacity: 0;
-        }
-
+        .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* 弹窗样式保持不变 */
+        /* Modal 弹窗样式 (与原版一致) */
         .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); display: flex;
+            justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
         }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
+        .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-content {
-            background: #fff;
-            width: 90%;
-            max-width: 700px;
-            max-height: 85vh;
-            border-radius: 24px;
-            padding: 40px;
-            position: relative;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-            transform: scale(0.9) translateY(20px);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            flex-direction: column;
+            background: #fff; width: 90%; max-width: 700px; max-height: 85vh; border-radius: 24px; padding: 40px;
+            position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            transform: scale(0.9) translateY(20px); transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+            display: flex; flex-direction: column;
         }
-
-        .modal-overlay.active .modal-content {
-            transform: scale(1) translateY(0);
-        }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
 
         .close-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 36px;
-            height: 36px;
-            background: #f0f0f0;
-            border: none;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            transition: all 0.2s;
-            z-index: 10;
+            position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; background: #f0f0f0;
+            border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; color: #666; transition: all 0.2s; z-index: 10;
         }
+        .close-btn:hover { background: #e0e0e0; transform: rotate(90deg); }
 
-        .close-btn:hover {
-            background: #e0e0e0;
-            transform: rotate(90deg);
-        }
-
-        .modal-header {
-            display: flex;
-            gap: 25px;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
+        .modal-header { display: flex; gap: 25px; align-items: center; margin-bottom: 25px; }
         .modal-avatar-wrapper {
-            position: relative;
-            flex-shrink: 0;
-            cursor: zoom-in;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            position: relative; flex-shrink: 0; cursor: zoom-in; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-
-        .modal-avatar {
-            width: 140px;
-            height: 140px;
-            object-fit: cover;
-            display: block;
-            border-radius: 20px;
-            transition: transform 0.4s ease;
-        }
-
+        .modal-avatar { width: 140px; height: 140px; object-fit: cover; display: block; border-radius: 20px; transition: transform 0.4s ease; }
         .zoom-hint {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(247, 245, 240, 0.88);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4A4A4A;
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            border-radius: 20px;
-            pointer-events: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(247,245,240,0.88); display: flex; align-items: center; justify-content: center;
+            color: #4A4A4A; font-size: 1rem; font-weight: 700; letter-spacing: 1px; opacity: 0; transition: opacity 0.3s;
+            border-radius: 20px; pointer-events: none;
         }
+        .modal-avatar-wrapper:hover .modal-avatar { transform: scale(1.1); }
+        .modal-avatar-wrapper:hover .zoom-hint { opacity: 1; }
 
-        .modal-avatar-wrapper:hover .modal-avatar {
-            transform: scale(1.1);
-        }
+        .modal-info { flex: 1; min-width: 0; }
+        .modal-info h2 { font-size: 2rem; margin-bottom: 10px; color: #333; word-break: break-all; }
+        .modal-meta { display: flex; gap: 20px; color: #888; font-size: 0.95rem; align-items: center; flex-wrap: wrap; }
 
-        .modal-avatar-wrapper:hover .zoom-hint {
-            opacity: 1;
-        }
+        .modal-story { flex: 1; overflow-y: auto; padding-right: 10px; }
+        .modal-story h3 { font-size: 1.2rem; color: #555; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px dashed #eee; }
+        .modal-story p { font-size: 1.05rem; line-height: 1.9; color: #444; margin-bottom: 18px; text-align: justify; text-indent: 2em; }
 
-        .modal-info {
-            flex: 1;
-            min-width: 0;
-        }
+        .modal-story::-webkit-scrollbar { width: 6px; }
+        .modal-story::-webkit-scrollbar-track { background: transparent; }
+        .modal-story::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
 
-        .modal-info h2 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            color: #333;
-            word-break: break-all;
-        }
-
-        .modal-meta {
-            display: flex;
-            gap: 20px;
-            color: #888;
-            font-size: 0.95rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .modal-story {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
-        .modal-story h3 {
-            font-size: 1.2rem;
-            color: #555;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px dashed #eee;
-        }
-
-        .modal-story p {
-            font-size: 1.05rem;
-            line-height: 1.9;
-            color: #444;
-            margin-bottom: 18px;
-            text-align: justify;
-            text-indent: 2em;
-        }
-
-        .modal-story::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .modal-story::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .modal-story::-webkit-scrollbar-thumb {
-            background: #ddd;
-            border-radius: 10px;
-        }
-
-        .gallery-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px dashed #eee;
-        }
-
-        .gallery-section.hidden {
-            display: none;
-        }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
+        .gallery-section { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #eee; }
+        .gallery-section.hidden { display: none; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; margin-top: 15px; }
         .gallery-item {
-            position: relative;
-            aspect-ratio: 1/1;
-            border-radius: 16px;
-            overflow: hidden;
-            cursor: zoom-in;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease;
+            position: relative; aspect-ratio: 1/1; border-radius: 16px; overflow: hidden; cursor: zoom-in;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.3s ease;
         }
-
-        .gallery-item:hover {
-            transform: translateY(-4px);
-        }
-
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.4s ease;
-        }
-
-        .gallery-item:hover img {
-            transform: scale(1.1);
-        }
-
-        .gallery-item .zoom-hint {
-            font-size: 0.9rem;
-            background: rgba(247, 245, 240, 0.88);
-            color: #4A4A4A;
-            border-radius: 16px;
-        }
-
-        .gallery-item:hover .zoom-hint {
-            opacity: 1;
-        }
+        .gallery-item:hover { transform: translateY(-4px); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+        .gallery-item:hover img { transform: scale(1.1); }
+        .gallery-item .zoom-hint { font-size: 0.9rem; background: rgba(247,245,240,0.88); color: #4A4A4A; border-radius: 16px; }
+        .gallery-item:hover .zoom-hint { opacity: 1; }
 
         .lightbox {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 2000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95);
+            z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s ease;
         }
-
-        .lightbox.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
+        .lightbox.active { opacity: 1; visibility: visible; }
         .lightbox-close {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 1.5rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
+            position: absolute; top: 30px; right: 30px; width: 44px; height: 44px; background: rgba(255,255,255,0.2);
+            border: none; border-radius: 50%; color: #fff; font-size: 1.5rem; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; transition: background 0.2s;
         }
-
-        .lightbox-close:hover {
-            background: rgba(255, 255, 255, 0.4);
-        }
-
+        .lightbox-close:hover { background: rgba(255,255,255,0.4); }
         .lightbox-img {
-            max-width: 90%;
-            max-height: 90vh;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            transform: scale(0.95);
-            transition: all 0.4s ease;
+            max-width: 90%; max-height: 90vh; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            opacity: 0; transform: scale(0.95); transition: all 0.4s ease;
         }
-
-        .lightbox-img.loaded {
-            opacity: 1;
-            transform: scale(1);
-        }
+        .lightbox-img.loaded { opacity: 1; transform: scale(1); }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top-color: #fff;
-            border-radius: 50%;
-            position: absolute;
-            animation: spin 0.8s linear infinite;
+            width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #fff;
+            border-radius: 50%; position: absolute; animation: spin 0.8s linear infinite;
         }
-
-        .spinner.hidden {
-            display: none;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+        .spinner.hidden { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -728,6 +259,24 @@
                 <button class="filter-btn status-btn" data-status="star">⭐ 喵星</button>
                 <button class="filter-btn status-btn" data-status="lost">🔍 失踪</button>
                 <button class="filter-btn status-btn" data-status="adopted">🏠 已领养</button>
+            </div>
+        </div>
+
+        <!-- ✅ 排序控件（折叠面板） -->
+        <div class="filter-group">
+            <div class="filter-toggle" id="sortToggle">
+                <span>排序</span>
+                <span class="toggle-symbol" id="sortSymbol">+</span>
+            </div>
+            <div class="filter-options" id="sortOptions">
+                <button class="filter-btn sort-btn active" id="sortDefault">默认排序</button>
+                <button class="filter-btn sort-btn" id="sortAffection">
+                    按亲密度
+                    <span class="sort-arrows">
+                        <span class="arrow-up">▲</span>
+                        <span class="arrow-down">▼</span>
+                    </span>
+                </button>
             </div>
         </div>
     </div>
@@ -773,7 +322,6 @@
         const grid = document.getElementById('catGrid');
         const loadingText = document.getElementById('loadingText');
         const modal = document.getElementById('storyModal');
-        const modalContent = document.getElementById('modalContent');
         const closeBtn = document.getElementById('closeModal');
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightboxImg');
@@ -786,6 +334,10 @@
         let currentGenderFilter = 'all';
         let currentStatusFilter = 'all';
         let currentHDUrl = '';
+
+        // 排序状态
+        let currentSort = 'default';
+        let sortDirection = 'desc';
 
         function getPaws(level) {
             let paws = '';
@@ -812,16 +364,39 @@
             return '❓ 未知性别';
         }
 
+        // 排序核心函数
+        function sortCats(cats) {
+            if (currentSort === 'affection') {
+                return [...cats].sort((a, b) => {
+                    if (sortDirection === 'desc') return b.affection - a.affection;
+                    else return a.affection - b.affection;
+                });
+            }
+            return cats;
+        }
+
+        function updateSortUI() {
+            const affectionBtn = document.getElementById('sortAffection');
+            const defaultBtn = document.getElementById('sortDefault');
+            if (!affectionBtn || !defaultBtn) return;
+            if (currentSort === 'affection') {
+                affectionBtn.classList.add('active');
+                defaultBtn.classList.remove('active');
+                if (sortDirection === 'asc') affectionBtn.classList.add('asc');
+                else affectionBtn.classList.remove('asc');
+            } else {
+                affectionBtn.classList.remove('active', 'asc');
+                defaultBtn.classList.add('active');
+            }
+        }
+
         function renderCats() {
             grid.innerHTML = '';
-            let filteredCats = catsData;
+            let sortedCats = sortCats(catsData);
+            let filteredCats = sortedCats;
 
-            if (currentGenderFilter !== 'all') {
-                filteredCats = filteredCats.filter(c => c.gender === currentGenderFilter);
-            }
-            if (currentStatusFilter !== 'all') {
-                filteredCats = filteredCats.filter(c => c.status === currentStatusFilter);
-            }
+            if (currentGenderFilter !== 'all') filteredCats = filteredCats.filter(c => c.gender === currentGenderFilter);
+            if (currentStatusFilter !== 'all') filteredCats = filteredCats.filter(c => c.status === currentStatusFilter);
 
             if (filteredCats.length === 0) {
                 grid.innerHTML = '<p class="loading-text">没有找到符合条件的猫咪</p>';
@@ -832,7 +407,6 @@
                 const card = document.createElement('div');
                 card.className = `card status-${cat.status || ''} fade-in`;
                 card.style.animationDelay = `${index * 0.1}s`;
-                // 原始卡片结构，不插入任何额外元素
                 card.innerHTML = `
                     <div class="avatar-wrapper">
                         <img src="${cat.avatar}" alt="${cat.name}" class="avatar">
@@ -879,7 +453,6 @@
             } else {
                 gallerySection.classList.add('hidden');
             }
-            modalContent.className = `modal-content status-${cat.status || ''}`;
             modal.classList.add('active');
             document.body.classList.add('modal-open');
             currentHDUrl = cat.avatar_hd;
@@ -891,9 +464,7 @@
         }
 
         closeBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (lightbox.classList.contains('active')) closeLightbox();
@@ -930,9 +501,7 @@
         }
 
         lightboxClose.addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) closeLightbox();
-        });
+        lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
 
         // 筛选交互
         const genderToggle = document.getElementById('genderToggle');
@@ -975,7 +544,33 @@
             });
         });
 
-        // 加载数据
+        // 排序交互
+        document.getElementById('sortDefault').addEventListener('click', () => {
+            currentSort = 'default';
+            updateSortUI();
+            renderCats();
+        });
+        document.getElementById('sortAffection').addEventListener('click', () => {
+            if (currentSort === 'affection') {
+                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+            } else {
+                currentSort = 'affection';
+                sortDirection = 'desc';
+            }
+            updateSortUI();
+            renderCats();
+        });
+
+        const sortToggle = document.getElementById('sortToggle');
+        const sortSymbol = document.getElementById('sortSymbol');
+        const sortOptions = document.getElementById('sortOptions');
+        sortToggle.addEventListener('click', () => {
+            const isOpen = sortOptions.classList.toggle('show');
+            sortToggle.classList.toggle('open', isOpen);
+            sortSymbol.textContent = isOpen ? '−' : '+';
+        });
+
+        // 初始数据加载
         fetch('cats.json')
             .then(response => {
                 if (!response.ok) throw new Error('找不到 cats.json 文件');
@@ -984,6 +579,7 @@
             .then(data => {
                 catsData = data;
                 if (loadingText) loadingText.remove();
+                updateSortUI();
                 renderCats();
             })
             .catch(error => {
