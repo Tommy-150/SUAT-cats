@@ -653,7 +653,24 @@
         let currentStatusFilter = 'all';
         let currentHDUrl = '';
 
-        // 弹窗状态
+        // ========================================
+        //  🔧 全新历史记录管理系统
+        // ========================================
+        //
+        //  核心思路：
+        //  1. 页面初始化时 pushState 两个缓冲条目（双重保险）
+        //  2. popstate 处理器中：
+        //     - 如果有弹窗打开 → 关闭弹窗 UI，然后 pushState 把条目补回来
+        //     - 如果没弹窗 → 显示退出提示 toast，pushState 补回条目
+        //     - 只有 toast 显示期间 2 秒内再次按返回，才真正允许退出
+        //  3. 手动关闭弹窗（点 X / 点遮罩）时：
+        //     - 先设置 manuallyClosing 标志
+        //     - 调用 history.back() 消耗掉弹窗对应的 history 条目
+        //     - popstate 触发时检测到 manuallyClosing，跳过处理
+        //  4. 不再在历史栈中堆积各种不同 state 对象，
+        //     所有补回的条目统一用 { guard: true }
+        // ========================================
+
         let modalActive = false;
         let lightboxActive = false;
         let manuallyClosing = false;
@@ -667,6 +684,7 @@
             exitToastTimer = setTimeout(() => {
                 exitToast.classList.remove('show');
                 exitHintShown = false;
+                exitToastTimer = null;
             }, 2000);
         }
 
@@ -679,41 +697,52 @@
             exitHintShown = false;
         }
 
-        // ---------- 历史记录管理 ----------
+        // ---------- popstate 处理器（核心修复） ----------
         window.addEventListener('popstate', (event) => {
+            // 手动关闭弹窗触发的 history.back()，直接跳过
             if (manuallyClosing) {
                 manuallyClosing = false;
                 return;
             }
+
+            // 优先级 1：大图查看器打开中 → 关闭大图
             if (lightboxActive) {
                 closeLightboxUI();
-                history.pushState({ lightboxClosed: true }, '');
+                // 补回一条 guard 条目，防止浏览器继续后退
+                history.pushState({ guard: true }, '');
                 resetExitHint();
                 return;
             }
+
+            // 优先级 2：抽屉 Modal 打开中 → 关闭抽屉
             if (modalActive) {
                 closeModalUI();
-                history.pushState({ modalClosed: true }, '');
+                // 补回一条 guard 条目
+                history.pushState({ guard: true }, '');
                 resetExitHint();
                 return;
             }
-            // 首页退出逻辑
+
+            // 优先级 3：首页状态 → 退出逻辑
             if (exitHintShown) {
+                // 2 秒内第二次按返回 → 允许浏览器正常后退退出
                 resetExitHint();
-                // 不 pushState，让浏览器正常回退
+                // 不 pushState，让浏览器回退到上一页
                 return;
             } else {
+                // 第一次按返回 → 显示提示，补回 guard 条目阻止退出
                 showExitToast();
-                history.pushState({ exitHint: true }, '');
+                history.pushState({ guard: true }, '');
             }
         });
 
-        // 纯 UI 关闭函数
+        // ---------- 纯 UI 关闭函数（不操作 history） ----------
         function closeLightboxUI() {
             if (!lightboxActive) return;
             lightbox.classList.remove('active');
             lightboxActive = false;
         }
+
         function closeModalUI() {
             if (!modalActive) return;
             modal.classList.remove('active');
@@ -721,13 +750,14 @@
             modalActive = false;
         }
 
-        // 带历史管理的关闭函数
+        // ---------- 带历史管理的关闭函数（手动关闭用） ----------
         function closeLightbox() {
             if (!lightboxActive) return;
             closeLightboxUI();
             manuallyClosing = true;
             history.back();
         }
+
         function closeModal() {
             if (!modalActive) return;
             closeModalUI();
@@ -735,6 +765,7 @@
             history.back();
         }
 
+        // ---------- 关闭按钮和遮罩点击事件 ----------
         closeBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
@@ -744,6 +775,7 @@
             if (e.target === lightbox) closeLightbox();
         });
 
+        // 键盘 Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (lightboxActive) closeLightbox();
@@ -751,6 +783,7 @@
             }
         });
 
+        // ---------- Lightbox 打开 ----------
         const modalAvatarWrapper = document.getElementById('modalAvatarWrapper');
         modalAvatarWrapper.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -762,7 +795,7 @@
             lightboxSpinner.classList.remove('hidden');
             lightboxImg.classList.remove('loaded');
             if (!lightboxActive) {
-                history.pushState({ lightbox: true }, '');
+                history.pushState({ guard: true }, '');
                 lightboxActive = true;
             }
             const img = new Image();
@@ -779,7 +812,41 @@
             };
         }
 
-        // 原有的渲染函数与筛选逻辑
+        // ---------- Modal 打开 ----------
+        function openModal(cat) {
+            document.getElementById('modalAvatar').src = cat.avatar;
+            document.getElementById('modalName').innerText = cat.name;
+            document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
+            document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
+            const paragraphs = cat.story.split('\n\n');
+            const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+            document.getElementById('modalStoryText').innerHTML = storyHTML;
+            galleryScroll.innerHTML = '';
+            if (cat.otherPhotos && cat.otherPhotos.length > 0) {
+                gallerySection.classList.remove('hidden');
+                cat.otherPhotos.forEach(photo => {
+                    const item = document.createElement('div');
+                    item.className = 'gallery-item';
+                    item.innerHTML = `<img src="${photo.thumb}" alt="Gallery photo">`;
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openLightbox(photo.hd);
+                    });
+                    galleryScroll.appendChild(item);
+                });
+            } else {
+                gallerySection.classList.add('hidden');
+            }
+            modal.classList.add('active');
+            document.body.classList.add('modal-open');
+            currentHDUrl = cat.avatar_hd;
+            if (!modalActive) {
+                history.pushState({ guard: true }, '');
+                modalActive = true;
+            }
+        }
+
+        // ---------- 渲染与筛选（未改动） ----------
         function getPaws(level) {
             let paws = '';
             for (let i = 1; i <= 5; i++) paws += i <= level ? '🐾' : '<span class="paw-empty">🐾</span>';
@@ -833,40 +900,7 @@
             });
         }
 
-        function openModal(cat) {
-            document.getElementById('modalAvatar').src = cat.avatar;
-            document.getElementById('modalName').innerText = cat.name;
-            document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
-            document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
-            const paragraphs = cat.story.split('\n\n');
-            const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-            document.getElementById('modalStoryText').innerHTML = storyHTML;
-            galleryScroll.innerHTML = '';
-            if (cat.otherPhotos && cat.otherPhotos.length > 0) {
-                gallerySection.classList.remove('hidden');
-                cat.otherPhotos.forEach(photo => {
-                    const item = document.createElement('div');
-                    item.className = 'gallery-item';
-                    item.innerHTML = `<img src="${photo.thumb}" alt="Gallery photo">`;
-                    item.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        openLightbox(photo.hd);
-                    });
-                    galleryScroll.appendChild(item);
-                });
-            } else {
-                gallerySection.classList.add('hidden');
-            }
-            modal.classList.add('active');
-            document.body.classList.add('modal-open');
-            currentHDUrl = cat.avatar_hd;
-            if (!modalActive) {
-                history.pushState({ modal: true }, '');
-                modalActive = true;
-            }
-        }
-
-        // 筛选交互
+        // ---------- 筛选交互（未改动） ----------
         const genderToggle = document.getElementById('genderToggle');
         const genderSymbol = document.getElementById('genderSymbol');
         const genderOptions = document.getElementById('genderOptions');
@@ -891,24 +925,29 @@
             statusSymbol.textContent = isOpen ? '−' : '+';
         });
         genderBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 currentGenderFilter = this.dataset.gender;
                 setActive(genderBtns, this);
                 renderCats();
             });
         });
         statusBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 currentStatusFilter = this.dataset.status;
                 setActive(statusBtns, this);
                 renderCats();
             });
         });
 
-        // 页面初始化：添加占位历史，避免首次返回直接退出
-        history.pushState({ page: 'home' }, '');
+        // ========================================
+        //  🔧 页面初始化：双重 guard 条目
+        //  pushState 两个缓冲，确保即使浏览器
+        //  吞掉一个，仍有一个可以拦截返回
+        // ========================================
+        history.pushState({ guard: true }, '');
+        history.pushState({ guard: true }, '');
 
-        // 加载数据
+        // ---------- 加载数据 ----------
         fetch('cats.json')
             .then(response => {
                 if (!response.ok) throw new Error('找不到 cats.json 文件');
