@@ -537,7 +537,6 @@
             }
         }
 
-        /* 返回键退出提示 toast */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -597,7 +596,6 @@
         <p class="loading-text" id="loadingText">正在读取猫咪档案...</p>
     </div>
 
-    <!-- 移动端底部抽屉 Modal -->
     <div class="modal-overlay" id="storyModal">
         <div class="modal-content" id="modalContent">
             <div class="drag-handle"></div>
@@ -631,14 +629,15 @@
         <img src="" alt="HD Image" class="lightbox-img" id="lightboxImg">
     </div>
 
-    <!-- 返回键退出提示 toast -->
     <div class="toast" id="exitToast">再按一次返回键退出页面</div>
 
     <script>
+        // =============================================
+        //  DOM 引用
+        // =============================================
         const grid = document.getElementById('catGrid');
         const loadingText = document.getElementById('loadingText');
         const modal = document.getElementById('storyModal');
-        const modalContent = document.getElementById('modalContent');
         const closeBtn = document.getElementById('closeModal');
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightboxImg');
@@ -647,36 +646,52 @@
         const gallerySection = document.getElementById('gallerySection');
         const galleryScroll = document.getElementById('galleryScroll');
         const exitToast = document.getElementById('exitToast');
+        const modalAvatarWrapper = document.getElementById('modalAvatarWrapper');
 
         let catsData = [];
         let currentGenderFilter = 'all';
         let currentStatusFilter = 'all';
         let currentHDUrl = '';
 
-        // ========================================
-        //  🔧 全新历史记录管理系统
-        // ========================================
+        // =============================================
+        //  🔧 全新的 Hash 历史记录管理系统
+        // =============================================
         //
-        //  核心思路：
-        //  1. 页面初始化时 pushState 两个缓冲条目（双重保险）
-        //  2. popstate 处理器中：
-        //     - 如果有弹窗打开 → 关闭弹窗 UI，然后 pushState 把条目补回来
-        //     - 如果没弹窗 → 显示退出提示 toast，pushState 补回条目
-        //     - 只有 toast 显示期间 2 秒内再次按返回，才真正允许退出
-        //  3. 手动关闭弹窗（点 X / 点遮罩）时：
-        //     - 先设置 manuallyClosing 标志
-        //     - 调用 history.back() 消耗掉弹窗对应的 history 条目
-        //     - popstate 触发时检测到 manuallyClosing，跳过处理
-        //  4. 不再在历史栈中堆积各种不同 state 对象，
-        //     所有补回的条目统一用 { guard: true }
-        // ========================================
+        //  原理：
+        //  用 location.hash 代替 pushState 来管理历史记录。
+        //  hash 变化产生的历史记录是浏览器原生级别的，
+        //  所有手机浏览器（Chrome/WebView/微信/QQ/UC等）
+        //  的返回键都能可靠地回退 hash，触发 hashchange 事件。
+        //
+        //  Hash 状态定义：
+        //    无 hash（或 #home）= 首页
+        //    #modal              = 抽屉打开
+        //    #lightbox           = 大图查看器打开
+        //
+        //  返回键行为：
+        //    lightbox 打开时按返回 → hash 从 #lightbox 变为 #modal → 关闭大图
+        //    modal 打开时按返回   → hash 从 #modal 变为空     → 关闭抽屉
+        //    首页按返回          → hash 从空变为空（无变化）   → 需要特殊处理
+        //
+        //  首页退出防护：
+        //    初始化时在 URL 上加一个 #home，这样用户按返回时
+        //    hash 从 #home 变为空，hashchange 能捕获到，
+        //    此时显示 toast 并重新设回 #home 阻止退出。
+        //    2秒内再按一次 → 允许退出。
+        // =============================================
 
+        // UI 状态
         let modalActive = false;
         let lightboxActive = false;
-        let manuallyClosing = false;
+
+        // 退出提示状态
         let exitHintShown = false;
         let exitToastTimer = null;
 
+        // 防止 hashchange 自身引起的连锁反应
+        let ignoreHashChange = false;
+
+        // -------- 退出 Toast --------
         function showExitToast() {
             if (exitToastTimer) clearTimeout(exitToastTimer);
             exitToast.classList.add('show');
@@ -697,123 +712,99 @@
             exitHintShown = false;
         }
 
-        // ---------- popstate 处理器（核心修复） ----------
-        window.addEventListener('popstate', (event) => {
-            // 手动关闭弹窗触发的 history.back()，直接跳过
-            if (manuallyClosing) {
-                manuallyClosing = false;
-                return;
-            }
-
-            // 优先级 1：大图查看器打开中 → 关闭大图
-            if (lightboxActive) {
-                closeLightboxUI();
-                // 补回一条 guard 条目，防止浏览器继续后退
-                history.pushState({ guard: true }, '');
-                resetExitHint();
-                return;
-            }
-
-            // 优先级 2：抽屉 Modal 打开中 → 关闭抽屉
-            if (modalActive) {
-                closeModalUI();
-                // 补回一条 guard 条目
-                history.pushState({ guard: true }, '');
-                resetExitHint();
-                return;
-            }
-
-            // 优先级 3：首页状态 → 退出逻辑
-            if (exitHintShown) {
-                // 2 秒内第二次按返回 → 允许浏览器正常后退退出
-                resetExitHint();
-                // 不 pushState，让浏览器回退到上一页
-                return;
-            } else {
-                // 第一次按返回 → 显示提示，补回 guard 条目阻止退出
-                showExitToast();
-                history.pushState({ guard: true }, '');
-            }
-        });
-
-        // ---------- 纯 UI 关闭函数（不操作 history） ----------
-        function closeLightboxUI() {
-            if (!lightboxActive) return;
-            lightbox.classList.remove('active');
-            lightboxActive = false;
+        // -------- 纯 UI 开关函数（不操作 hash） --------
+        function openModalUI() {
+            modal.classList.add('active');
+            document.body.classList.add('modal-open');
+            modalActive = true;
         }
 
         function closeModalUI() {
-            if (!modalActive) return;
             modal.classList.remove('active');
             document.body.classList.remove('modal-open');
             modalActive = false;
         }
 
-        // ---------- 带历史管理的关闭函数（手动关闭用） ----------
-        function closeLightbox() {
-            if (!lightboxActive) return;
-            closeLightboxUI();
-            manuallyClosing = true;
-            history.back();
-        }
-
-        function closeModal() {
-            if (!modalActive) return;
-            closeModalUI();
-            manuallyClosing = true;
-            history.back();
-        }
-
-        // ---------- 关闭按钮和遮罩点击事件 ----------
-        closeBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-        lightboxClose.addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) closeLightbox();
-        });
-
-        // 键盘 Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (lightboxActive) closeLightbox();
-                else if (modalActive) closeModal();
-            }
-        });
-
-        // ---------- Lightbox 打开 ----------
-        const modalAvatarWrapper = document.getElementById('modalAvatarWrapper');
-        modalAvatarWrapper.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openLightbox(currentHDUrl);
-        });
-
-        function openLightbox(hdUrl) {
+        function openLightboxUI() {
             lightbox.classList.add('active');
-            lightboxSpinner.classList.remove('hidden');
-            lightboxImg.classList.remove('loaded');
-            if (!lightboxActive) {
-                history.pushState({ guard: true }, '');
-                lightboxActive = true;
-            }
-            const img = new Image();
-            img.src = hdUrl;
-            img.onload = () => {
-                lightboxImg.src = hdUrl;
-                lightboxSpinner.classList.add('hidden');
-                setTimeout(() => lightboxImg.classList.add('loaded'), 50);
-            };
-            img.onerror = () => {
-                lightboxImg.src = document.getElementById('modalAvatar').src;
-                lightboxSpinner.classList.add('hidden');
-                lightboxImg.classList.add('loaded');
-            };
+            lightboxActive = true;
         }
 
-        // ---------- Modal 打开 ----------
+        function closeLightboxUI() {
+            lightbox.classList.remove('active');
+            lightboxActive = false;
+        }
+
+        // -------- Hash 操作工具函数 --------
+        function getCurrentHash() {
+            // 去掉 # 号，返回纯字符串
+            return location.hash.replace(/^#/, '');
+        }
+
+        // 设置 hash，同时标记 ignoreHashChange 防止死循环
+        function setHash(hash) {
+            ignoreHashChange = true;
+            location.hash = hash;
+            // 用 setTimeout 确保 hashchange 事件触发后才重置标志
+            setTimeout(() => { ignoreHashChange = false; }, 50);
+        }
+
+        // 移除 hash（回到无 hash 状态），同时标记 ignore
+        function clearHash() {
+            ignoreHashChange = true;
+            history.replaceState(null, '', location.pathname + location.search);
+            setTimeout(() => { ignoreHashChange = false; }, 50);
+        }
+
+        // =============================================
+        //  核心：hashchange 事件处理器
+        // =============================================
+        window.addEventListener('hashchange', function (e) {
+            if (ignoreHashChange) return;
+
+            const newHash = getCurrentHash();
+
+            // ---- Lightbox 应该关闭 ----
+            // 当前 lightbox 开着，但 hash 已经不是 #lightbox 了
+            if (lightboxActive && newHash !== 'lightbox') {
+                closeLightboxUI();
+                // 如果 hash 也不是 #modal，说明 modal 也该关了
+                if (modalActive && newHash !== 'modal') {
+                    closeModalUI();
+                }
+                resetExitHint();
+                return;
+            }
+
+            // ---- Modal 应该关闭 ----
+            // 当前 modal 开着，但 hash 不是 #modal 也不是 #lightbox
+            if (modalActive && newHash !== 'modal' && newHash !== 'lightbox') {
+                closeModalUI();
+                resetExitHint();
+                return;
+            }
+
+            // ---- 首页状态：hash 被清空了（用户按了返回键把 #home 回退掉了） ----
+            if (!lightboxActive && !modalActive) {
+                if (exitHintShown) {
+                    // 2秒内第二次返回 → 允许退出，不做任何拦截
+                    resetExitHint();
+                    // 不调用 setHash，让浏览器自然后退
+                    return;
+                } else {
+                    // 第一次返回 → 显示 toast，重新设回 #home 阻止退出
+                    showExitToast();
+                    setHash('home');
+                    return;
+                }
+            }
+        });
+
+        // =============================================
+        //  打开/关闭 Modal（带 hash 管理）
+        // =============================================
         function openModal(cat) {
+            // 填充 Modal 内容
             document.getElementById('modalAvatar').src = cat.avatar;
             document.getElementById('modalName').innerText = cat.name;
             document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
@@ -837,16 +828,82 @@
             } else {
                 gallerySection.classList.add('hidden');
             }
-            modal.classList.add('active');
-            document.body.classList.add('modal-open');
             currentHDUrl = cat.avatar_hd;
-            if (!modalActive) {
-                history.pushState({ guard: true }, '');
-                modalActive = true;
-            }
+
+            // 打开 UI + 设置 hash
+            openModalUI();
+            setHash('modal');
         }
 
-        // ---------- 渲染与筛选（未改动） ----------
+        function closeModal() {
+            if (!modalActive) return;
+            closeModalUI();
+            // hash 回到 #home（首页的守卫 hash）
+            setHash('home');
+        }
+
+        // =============================================
+        //  打开/关闭 Lightbox（带 hash 管理）
+        // =============================================
+        function openLightbox(hdUrl) {
+            lightboxSpinner.classList.remove('hidden');
+            lightboxImg.classList.remove('loaded');
+
+            openLightboxUI();
+            setHash('lightbox');
+
+            const img = new Image();
+            img.src = hdUrl;
+            img.onload = () => {
+                lightboxImg.src = hdUrl;
+                lightboxSpinner.classList.add('hidden');
+                setTimeout(() => lightboxImg.classList.add('loaded'), 50);
+            };
+            img.onerror = () => {
+                lightboxImg.src = document.getElementById('modalAvatar').src;
+                lightboxSpinner.classList.add('hidden');
+                lightboxImg.classList.add('loaded');
+            };
+        }
+
+        function closeLightbox() {
+            if (!lightboxActive) return;
+            closeLightboxUI();
+            // hash 回到 #modal（因为 lightbox 是在 modal 之上打开的）
+            setHash('modal');
+        }
+
+        // =============================================
+        //  事件绑定
+        // =============================================
+
+        // 关闭按钮 & 遮罩点击
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        lightboxClose.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+
+        // Modal 头像点击 → 打开大图
+        modalAvatarWrapper.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openLightbox(currentHDUrl);
+        });
+
+        // 键盘 Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (lightboxActive) closeLightbox();
+                else if (modalActive) closeModal();
+            }
+        });
+
+        // =============================================
+        //  渲染函数 & 筛选（与原代码一致）
+        // =============================================
         function getPaws(level) {
             let paws = '';
             for (let i = 1; i <= 5; i++) paws += i <= level ? '🐾' : '<span class="paw-empty">🐾</span>';
@@ -900,7 +957,7 @@
             });
         }
 
-        // ---------- 筛选交互（未改动） ----------
+        // ---------- 筛选交互 ----------
         const genderToggle = document.getElementById('genderToggle');
         const genderSymbol = document.getElementById('genderSymbol');
         const genderOptions = document.getElementById('genderOptions');
@@ -939,15 +996,17 @@
             });
         });
 
-        // ========================================
-        //  🔧 页面初始化：双重 guard 条目
-        //  pushState 两个缓冲，确保即使浏览器
-        //  吞掉一个，仍有一个可以拦截返回
-        // ========================================
-        history.pushState({ guard: true }, '');
-        history.pushState({ guard: true }, '');
+        // =============================================
+        //  🏁 页面初始化
+        // =============================================
 
-        // ---------- 加载数据 ----------
+        // 设置首页守卫 hash：#home
+        // 这会在历史记录中创建一个真实条目
+        // 用户按返回键时，浏览器从 #home 回退到无 hash，
+        // 触发 hashchange 事件，我们在事件中拦截并显示 toast
+        setHash('home');
+
+        // 加载数据
         fetch('cats.json')
             .then(response => {
                 if (!response.ok) throw new Error('找不到 cats.json 文件');
