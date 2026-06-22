@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>正在前往 SUAT 🐱...</title>
     <style>
-        /* 保持背景色一致，防止跳转时白屏闪烁 */
         body { 
             background-color: #F7F5F0; 
             margin: 0; 
@@ -15,29 +14,41 @@
             height: 100vh; 
             font-family: 'Nunito', 'Noto Sans SC', sans-serif; 
             color: #888; 
-            font-size: 1.2rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        .hint-text {
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <p>正在为您跳转...</p>
+    <p class="hint-text" id="hint">正在检测设备...</p>
     
     <script>
-        // 智能设备检测逻辑
         (function() {
-            // 1. 通过 User-Agent 检测移动端设备
+            const hintElement = document.getElementById('hint');
             const userAgent = navigator.userAgent || navigator.vendor || window.opera;
             const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-            
-            // 2. 通过屏幕宽度辅助检测 (小于 768px 视为移动端)
             const isSmallScreen = window.innerWidth < 768;
+            const isMobile = isMobileUA || isSmallScreen;
 
-            // 只要满足其一，就跳转到移动端
-            if (isMobileUA || isSmallScreen) {
-                window.location.replace('index_mobile.html');
+            // 显示对应提示
+            if (isMobile) {
+                hintElement.textContent = '正在跳转到 📱 手机端';
             } else {
-                window.location.replace('index_pc.html');
+                hintElement.textContent = '正在跳转到 💻 电脑端';
             }
+
+            // 短暂停留后跳转，让用户看清提示
+            setTimeout(() => {
+                if (isMobile) {
+                    window.location.replace('index_mobile.html');
+                } else {
+                    window.location.replace('index_pc.html');
+                }
+            }, 800);
         })();
     </script>
 </body>

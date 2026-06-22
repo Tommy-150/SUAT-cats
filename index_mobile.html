@@ -6,206 +6,556 @@
     <title>SUAT 🐱</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Noto+Sans+SC:wght@400;700;800&family=LXGW+WenKai+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
         body {
             font-family: 'Nunito', 'Noto Sans SC', 'LXGW WenKai TC', sans-serif;
-            background-color: #F7F5F0; color: #333; min-height: 100vh;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255, 200, 150, 0.15) 0%, transparent 40%),
+            background-color: #F7F5F0;
+            color: #333;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 10% 20%, rgba(255, 200, 150, 0.15) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(150, 200, 255, 0.15) 0%, transparent 40%);
-            background-attachment: fixed; padding: 24px 16px; padding-bottom: 40px;
-            overscroll-behavior-y: contain; /* 防止抽屉拉动时触发整个页面的下拉刷新 */
+            background-attachment: fixed;
+            padding: 24px 16px;
+            padding-bottom: 40px;
+            overscroll-behavior-y: contain;
         }
-        body.modal-open { overflow: hidden; }
-        .loading-text, .error-text { text-align: center; font-size: 1rem; color: #888; margin-top: 60px; grid-column: 1 / -1; }
-        .error-text { color: red; }
+        body.modal-open {
+            overflow: hidden;
+        }
+        .loading-text,
+        .error-text {
+            text-align: center;
+            font-size: 1rem;
+            color: #888;
+            margin-top: 60px;
+            grid-column: 1 / -1;
+        }
+        .error-text {
+            color: red;
+        }
 
-        .header { text-align: center; margin-bottom: 24px; }
-        .header h1 { font-size: 2rem; font-weight: 800; color: #4A4A4A; letter-spacing: 1px; }
-        .header p { color: #888; margin-top: 4px; font-size: 0.95rem; }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #4A4A4A;
+            letter-spacing: 1px;
+        }
+        .header p {
+            color: #888;
+            margin-top: 4px;
+            font-size: 0.95rem;
+        }
 
-        .filters { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 30px; }
-        .filter-group { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .filters {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
 
         .filter-toggle {
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 10px 24px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
-            border-radius: 50px; cursor: pointer; user-select: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.9);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.9);
             transition: all 0.2s ease;
         }
-        .filter-toggle:active { transform: scale(0.96); background: rgba(74, 74, 74, 0.08); }
-        .filter-toggle span:first-child { font-size: 1rem; font-weight: 700; color: #555; }
-        .toggle-symbol { font-size: 1.3rem; font-weight: 700; color: #666; line-height: 1; }
-        .filter-toggle.open .toggle-symbol { color: #4A4A4A; }
+        .filter-toggle:active {
+            transform: scale(0.96);
+            background: rgba(74, 74, 74, 0.08);
+        }
+        .filter-toggle span:first-child {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #555;
+        }
+        .toggle-symbol {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #666;
+            line-height: 1;
+        }
+        .filter-toggle.open .toggle-symbol {
+            color: #4A4A4A;
+        }
 
         .filter-options {
-            display: none; flex-wrap: wrap; justify-content: center; gap: 10px;
-            margin-top: 12px; animation: fadeDown 0.3s ease;
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+            animation: fadeDown 0.3s ease;
         }
-        .filter-options.show { display: flex; }
-        @keyframes fadeDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .filter-options.show {
+            display: flex;
+        }
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         .filter-btn {
-            padding: 10px 20px; border: none; border-radius: 50px;
-            background: rgba(255, 255, 255, 0.7); color: #666; font-size: 0.95rem; font-weight: 700; 
-            cursor: pointer; font-family: inherit; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.7);
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
             transition: all 0.2s ease;
         }
-        .filter-btn:active { transform: scale(0.95); }
-        .filter-btn.active { background: #4A4A4A; color: #fff; box-shadow: 0 4px 12px rgba(74,74,74,0.2); }
+        .filter-btn:active {
+            transform: scale(0.95);
+        }
+        .filter-btn.active {
+            background: #4A4A4A;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(74, 74, 74, 0.2);
+        }
 
-        /* 移动端单列布局 */
-        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 500px; margin: 0 auto; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
         .card {
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px);
-            border-radius: 20px; padding: 24px 20px; text-align: center;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.04); border: 1px solid rgba(255,255,255,0.9);
-            transition: transform 0.1s ease; position: relative; overflow: hidden; cursor: pointer;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            transition: transform 0.1s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
         }
-        /* 移动端点击反馈，替代 hover */
-        .card:active { transform: scale(0.98); } 
-        
-        .avatar-wrapper { width: 120px; height: 120px; margin: 0 auto 16px; position: relative; }
-        .avatar { width: 100%; height: 100%; border-radius: 20px; object-fit: cover; border: 3px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .avatar-wrapper {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+            position: relative;
+        }
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
         .status-icon {
-            position: absolute; bottom: 2px; right: 2px; width: 32px; height: 32px;
-            background: #fff; border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 1.1rem; box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-            opacity: 0; transform: scale(0.5);
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 32px;
+            height: 32px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: scale(0.5);
         }
-        .name-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; }
-        .name { font-size: 1.3rem; font-weight: 800; color: #333; }
-        .gender { font-size: 1.1rem; }
-        .gender.male { color: #5B8DEF; }
-        .gender.female { color: #FF7E93; }
-        .gender.unknown { color: #AAA; }
-        .affection { font-size: 1.1rem; letter-spacing: 1px; margin-bottom: 8px; }
-        .paw-empty { opacity: 0.2; }
-        .desc { font-size: 0.9rem; color: #777; line-height: 1.5; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #eee; }
-        
-        /* 移动端常显提示，去掉 hover 显示逻辑 */
-        .click-hint { margin-top: 14px; font-size: 0.85rem; color: #999; font-weight: 600; }
+        .name-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #333;
+        }
+        .gender {
+            font-size: 1.1rem;
+        }
+        .gender.male {
+            color: #5B8DEF;
+        }
+        .gender.female {
+            color: #FF7E93;
+        }
+        .gender.unknown {
+            color: #AAA;
+        }
+        .affection {
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .paw-empty {
+            opacity: 0.2;
+        }
+        .desc {
+            font-size: 0.9rem;
+            color: #777;
+            line-height: 1.5;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed #eee;
+        }
 
-        .card.status-star { border: 1px solid #e0e0e0; }
-        .card.status-star .avatar { filter: grayscale(100%); opacity: 0.8; }
-        .card.status-star .status-icon { opacity: 1; transform: scale(1); }
-        .card.status-star .name { color: #888; }
+        .click-hint {
+            margin-top: 14px;
+            font-size: 0.85rem;
+            color: #999;
+            font-weight: 600;
+        }
 
-        .card.status-lost { border: 1px dashed #d0d0d0; }
-        .card.status-lost .status-icon { opacity: 1; transform: scale(1); }
-        .card.status-lost .name { color: #999; }
+        .card.status-star {
+            border: 1px solid #e0e0e0;
+        }
+        .card.status-star .avatar {
+            filter: grayscale(100%);
+            opacity: 0.8;
+        }
+        .card.status-star .status-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .card.status-star .name {
+            color: #888;
+        }
 
-        .card.status-adopted { border: 1px solid #a0d2a0; }
-        .card.status-adopted .status-icon { opacity: 1; transform: scale(1); }
-        .card.status-adopted .name { color: #2d6a2d; }
+        .card.status-lost {
+            border: 1px dashed #d0d0d0;
+        }
+        .card.status-lost .status-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .card.status-lost .name {
+            color: #999;
+        }
 
-        .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .card.status-adopted {
+            border: 1px solid #a0d2a0;
+        }
+        .card.status-adopted .status-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .card.status-adopted .name {
+            color: #2d6a2d;
+        }
 
-        /* 移动端专属：底部抽屉 (Bottom Sheet) */
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5); z-index: 1000; 
-            opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
         }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        
-        .modal-content {
-            position: absolute; bottom: 0; left: 0; width: 100%; max-height: 92vh;
-            background: #fff; border-radius: 28px 28px 0 0; padding: 0;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
-            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            display: flex; flex-direction: column;
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
-        .modal-overlay.active .modal-content { transform: translateY(0); }
 
-        /* 顶部拖拽指示条 */
+        .modal-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-height: 92vh;
+            background: #fff;
+            border-radius: 28px 28px 0 0;
+            padding: 0;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
         .drag-handle {
-            width: 40px; height: 4px; background: #e0e0e0; border-radius: 4px;
-            margin: 12px auto 8px; flex-shrink: 0;
+            width: 40px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 12px auto 8px;
+            flex-shrink: 0;
         }
 
         .close-btn {
-            position: absolute; top: 16px; right: 16px; width: 40px; height: 40px;
-            background: #f0f0f0; border: none; border-radius: 50%; font-size: 1.2rem;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            color: #666; z-index: 10;
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            z-index: 10;
         }
-        .close-btn:active { background: #e0e0e0; transform: scale(0.9); }
+        .close-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.9);
+        }
 
-        .modal-header { 
-            display: flex; gap: 16px; align-items: center; 
-            padding: 16px 24px 20px; border-bottom: 1px solid #f5f5f5; 
+        .modal-header {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            padding: 16px 24px 20px;
+            border-bottom: 1px solid #f5f5f5;
             flex-shrink: 0;
         }
         .modal-avatar-wrapper {
-            flex-shrink: 0; border-radius: 16px; overflow: hidden; 
-            box-shadow: 0 6px 16px rgba(0,0,0,0.08); position: relative;
+            flex-shrink: 0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+            position: relative;
+            cursor: pointer;
         }
-        .modal-avatar { width: 80px; height: 80px; object-fit: cover; display: block; }
-        .zoom-hint {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;
-            color: #fff; font-size: 1.2rem; opacity: 1; /* 移动端常显放大镜提示 */
+        .modal-avatar {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            display: block;
         }
 
-        .modal-info { flex: 1; min-width: 0; }
-        .modal-info h2 { font-size: 1.5rem; margin-bottom: 6px; color: #333; word-break: break-all; }
-        .modal-meta { display: flex; flex-direction: column; gap: 4px; color: #888; font-size: 0.85rem; }
-        
-        .modal-story { 
-            flex: 1; overflow-y: auto; padding: 24px; 
-            -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+        .modal-info {
+            flex: 1;
+            min-width: 0;
         }
-        .modal-story h3 { font-size: 1.1rem; color: #555; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px dashed #eee; }
-        .modal-story p { font-size: 1rem; line-height: 1.8; color: #444; margin-bottom: 16px; text-align: justify; text-indent: 2em; }
+        .modal-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+            color: #333;
+            word-break: break-all;
+        }
+        .modal-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            color: #888;
+            font-size: 0.85rem;
+        }
 
-        /* 移动端横向滑动画廊 */
-        .gallery-section { margin-top: 24px; padding-top: 16px; border-top: 2px dashed #eee; }
-        .gallery-section.hidden { display: none; }
-        .gallery-scroll { 
-            display: flex; gap: 12px; overflow-x: auto; padding: 8px 0 16px; 
-            scroll-snap-type: x mandatory; /* 滑动吸附效果 */
+        .modal-story {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            -webkit-overflow-scrolling: touch;
         }
-        .gallery-scroll::-webkit-scrollbar { display: none; } /* 隐藏滚动条 */
-        
+        .modal-story h3 {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px dashed #eee;
+        }
+        .modal-story p {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #444;
+            margin-bottom: 16px;
+            text-align: justify;
+            text-indent: 2em;
+        }
+
+        .gallery-section {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 2px dashed #eee;
+        }
+        .gallery-section.hidden {
+            display: none;
+        }
+        .gallery-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 8px 0 16px;
+            scroll-snap-type: x mandatory;
+        }
+        .gallery-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
         .gallery-item {
-            position: relative; flex-shrink: 0; width: 140px; height: 140px;
-            border-radius: 16px; overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08); scroll-snap-align: start;
+            position: relative;
+            flex-shrink: 0;
+            width: 140px;
+            height: 140px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            scroll-snap-align: start;
+            cursor: pointer;
         }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .gallery-item .zoom-hint { font-size: 1.2rem; background: rgba(0,0,0,0.3); opacity: 1; }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
 
-        /* Lightbox (全屏查看大图) */
         .lightbox {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95); z-index: 2000;
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0; visibility: hidden; transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
         }
-        .lightbox.active { opacity: 1; visibility: visible; }
+        .lightbox.active {
+            opacity: 1;
+            visibility: visible;
+        }
         .lightbox-close {
-            position: absolute; top: 20px; right: 20px; width: 48px; height: 48px; /* 加大关闭按钮 */
-            background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
-            color: #fff; font-size: 1.5rem; cursor: pointer; display: flex;
-            align-items: center; justify-content: center;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .lightbox-close:active { background: rgba(255,255,255,0.4); }
+        .lightbox-close:active {
+            background: rgba(255, 255, 255, 0.4);
+        }
         .lightbox-img {
-            max-width: 95%; max-height: 85vh; border-radius: 8px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            opacity: 0; transform: scale(0.95); transition: all 0.3s ease;
+            max-width: 95%;
+            max-height: 85vh;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.3s ease;
         }
-        .lightbox-img.loaded { opacity: 1; transform: scale(1); }
+        .lightbox-img.loaded {
+            opacity: 1;
+            transform: scale(1);
+        }
         .spinner {
-            width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2);
-            border-top-color: #fff; border-radius: 50%; position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            position: absolute;
             animation: spin 0.8s linear infinite;
         }
-        .spinner.hidden { display: none; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner.hidden {
+            display: none;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 返回键退出提示 toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            z-index: 3000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -255,7 +605,6 @@
             <div class="modal-header">
                 <div class="modal-avatar-wrapper" id="modalAvatarWrapper">
                     <img src="" alt="" class="modal-avatar" id="modalAvatar">
-                    <div class="zoom-hint">🔍</div>
                 </div>
                 <div class="modal-info">
                     <h2 id="modalName"></h2>
@@ -282,6 +631,9 @@
         <img src="" alt="HD Image" class="lightbox-img" id="lightboxImg">
     </div>
 
+    <!-- 返回键退出提示 toast -->
+    <div class="toast" id="exitToast">再按一次返回键退出页面</div>
+
     <script>
         const grid = document.getElementById('catGrid');
         const loadingText = document.getElementById('loadingText');
@@ -294,31 +646,156 @@
         const lightboxClose = document.getElementById('lightboxClose');
         const gallerySection = document.getElementById('gallerySection');
         const galleryScroll = document.getElementById('galleryScroll');
+        const exitToast = document.getElementById('exitToast');
 
         let catsData = [];
         let currentGenderFilter = 'all';
         let currentStatusFilter = 'all';
         let currentHDUrl = '';
 
-        function getPaws(level) {
-            let paws = '';
-            for(let i=1; i<=5; i++) paws += i <= level ? '🐾' : '<span class="paw-empty">🐾</span>';
-            return paws;
+        // 弹窗状态
+        let modalActive = false;
+        let lightboxActive = false;
+        let manuallyClosing = false;
+        let exitHintShown = false;
+        let exitToastTimer = null;
+
+        function showExitToast() {
+            if (exitToastTimer) clearTimeout(exitToastTimer);
+            exitToast.classList.add('show');
+            exitHintShown = true;
+            exitToastTimer = setTimeout(() => {
+                exitToast.classList.remove('show');
+                exitHintShown = false;
+            }, 2000);
         }
 
+        function resetExitHint() {
+            if (exitToastTimer) {
+                clearTimeout(exitToastTimer);
+                exitToastTimer = null;
+            }
+            exitToast.classList.remove('show');
+            exitHintShown = false;
+        }
+
+        // ---------- 历史记录管理 ----------
+        window.addEventListener('popstate', (event) => {
+            if (manuallyClosing) {
+                manuallyClosing = false;
+                return;
+            }
+            if (lightboxActive) {
+                closeLightboxUI();
+                history.pushState({ lightboxClosed: true }, '');
+                resetExitHint();
+                return;
+            }
+            if (modalActive) {
+                closeModalUI();
+                history.pushState({ modalClosed: true }, '');
+                resetExitHint();
+                return;
+            }
+            // 首页退出逻辑
+            if (exitHintShown) {
+                resetExitHint();
+                // 不 pushState，让浏览器正常回退
+                return;
+            } else {
+                showExitToast();
+                history.pushState({ exitHint: true }, '');
+            }
+        });
+
+        // 纯 UI 关闭函数
+        function closeLightboxUI() {
+            if (!lightboxActive) return;
+            lightbox.classList.remove('active');
+            lightboxActive = false;
+        }
+        function closeModalUI() {
+            if (!modalActive) return;
+            modal.classList.remove('active');
+            document.body.classList.remove('modal-open');
+            modalActive = false;
+        }
+
+        // 带历史管理的关闭函数
+        function closeLightbox() {
+            if (!lightboxActive) return;
+            closeLightboxUI();
+            manuallyClosing = true;
+            history.back();
+        }
+        function closeModal() {
+            if (!modalActive) return;
+            closeModalUI();
+            manuallyClosing = true;
+            history.back();
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        lightboxClose.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (lightboxActive) closeLightbox();
+                else if (modalActive) closeModal();
+            }
+        });
+
+        const modalAvatarWrapper = document.getElementById('modalAvatarWrapper');
+        modalAvatarWrapper.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openLightbox(currentHDUrl);
+        });
+
+        function openLightbox(hdUrl) {
+            lightbox.classList.add('active');
+            lightboxSpinner.classList.remove('hidden');
+            lightboxImg.classList.remove('loaded');
+            if (!lightboxActive) {
+                history.pushState({ lightbox: true }, '');
+                lightboxActive = true;
+            }
+            const img = new Image();
+            img.src = hdUrl;
+            img.onload = () => {
+                lightboxImg.src = hdUrl;
+                lightboxSpinner.classList.add('hidden');
+                setTimeout(() => lightboxImg.classList.add('loaded'), 50);
+            };
+            img.onerror = () => {
+                lightboxImg.src = document.getElementById('modalAvatar').src;
+                lightboxSpinner.classList.add('hidden');
+                lightboxImg.classList.add('loaded');
+            };
+        }
+
+        // 原有的渲染函数与筛选逻辑
+        function getPaws(level) {
+            let paws = '';
+            for (let i = 1; i <= 5; i++) paws += i <= level ? '🐾' : '<span class="paw-empty">🐾</span>';
+            return paws;
+        }
         function getStatusIcon(status) {
             if (status === 'star') return '⭐';
             if (status === 'lost') return '🔍';
             if (status === 'adopted') return '🏠';
             return '';
         }
-
         function getGenderDisplay(gender) {
             if (gender === 'male') return '♂';
             if (gender === 'female') return '♀';
             return '❓';
         }
-
         function getGenderText(gender) {
             if (gender === 'male') return '♂ 男孩';
             if (gender === 'female') return '♀ 女孩';
@@ -328,23 +805,16 @@
         function renderCats() {
             grid.innerHTML = '';
             let filteredCats = catsData;
-            
-            if (currentGenderFilter !== 'all') {
-                filteredCats = filteredCats.filter(c => c.gender === currentGenderFilter);
-            }
-            if (currentStatusFilter !== 'all') {
-                filteredCats = filteredCats.filter(c => c.status === currentStatusFilter);
-            }
-
+            if (currentGenderFilter !== 'all') filteredCats = filteredCats.filter(c => c.gender === currentGenderFilter);
+            if (currentStatusFilter !== 'all') filteredCats = filteredCats.filter(c => c.status === currentStatusFilter);
             if (filteredCats.length === 0) {
                 grid.innerHTML = '<p class="loading-text">没有找到符合条件的猫咪</p>';
                 return;
             }
-
             filteredCats.forEach((cat, index) => {
                 const card = document.createElement('div');
                 card.className = `card status-${cat.status || ''} fade-in`;
-                card.style.animationDelay = `${index * 0.05}s`; 
+                card.style.animationDelay = `${index * 0.05}s`;
                 card.innerHTML = `
                     <div class="avatar-wrapper">
                         <img src="${cat.avatar}" alt="${cat.name}" class="avatar">
@@ -368,21 +838,16 @@
             document.getElementById('modalName').innerText = cat.name;
             document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
             document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
-            
             const paragraphs = cat.story.split('\n\n');
             const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
             document.getElementById('modalStoryText').innerHTML = storyHTML;
-            
-            galleryScroll.innerHTML = ''; 
+            galleryScroll.innerHTML = '';
             if (cat.otherPhotos && cat.otherPhotos.length > 0) {
-                gallerySection.classList.remove('hidden'); 
+                gallerySection.classList.remove('hidden');
                 cat.otherPhotos.forEach(photo => {
                     const item = document.createElement('div');
                     item.className = 'gallery-item';
-                    item.innerHTML = `
-                        <img src="${photo.thumb}" alt="Gallery photo">
-                        <div class="zoom-hint">🔍</div>
-                    `;
+                    item.innerHTML = `<img src="${photo.thumb}" alt="Gallery photo">`;
                     item.addEventListener('click', (e) => {
                         e.stopPropagation();
                         openLightbox(photo.hd);
@@ -390,70 +855,24 @@
                     galleryScroll.appendChild(item);
                 });
             } else {
-                gallerySection.classList.add('hidden'); 
+                gallerySection.classList.add('hidden');
             }
-            
             modal.classList.add('active');
             document.body.classList.add('modal-open');
             currentHDUrl = cat.avatar_hd;
-        }
-
-        function closeModal() {
-            modal.classList.remove('active');
-            document.body.classList.remove('modal-open');
-        }
-
-        closeBtn.addEventListener('click', closeModal);
-        // 点击抽屉外部（黑色遮罩）关闭
-        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (lightbox.classList.contains('active')) closeLightbox();
-                else if (modal.classList.contains('active')) closeModal();
+            if (!modalActive) {
+                history.pushState({ modal: true }, '');
+                modalActive = true;
             }
-        });
-
-        const modalAvatarWrapper = document.getElementById('modalAvatarWrapper');
-        modalAvatarWrapper.addEventListener('click', (e) => {
-            e.stopPropagation(); 
-            openLightbox(currentHDUrl);
-        });
-
-        function openLightbox(hdUrl) {
-            lightbox.classList.add('active');
-            lightboxSpinner.classList.remove('hidden'); 
-            lightboxImg.classList.remove('loaded'); 
-            const img = new Image();
-            img.src = hdUrl;
-            img.onload = () => {
-                lightboxImg.src = hdUrl;
-                lightboxSpinner.classList.add('hidden'); 
-                setTimeout(() => lightboxImg.classList.add('loaded'), 50); 
-            };
-            img.onerror = () => {
-                lightboxImg.src = document.getElementById('modalAvatar').src;
-                lightboxSpinner.classList.add('hidden');
-                lightboxImg.classList.add('loaded');
-            };
         }
 
-        function closeLightbox() {
-            lightbox.classList.remove('active');
-        }
-
-        lightboxClose.addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
-
-        // ---------- 筛选胶囊交互 ----------
+        // 筛选交互
         const genderToggle = document.getElementById('genderToggle');
         const genderSymbol = document.getElementById('genderSymbol');
         const genderOptions = document.getElementById('genderOptions');
-
         const statusToggle = document.getElementById('statusToggle');
         const statusSymbol = document.getElementById('statusSymbol');
         const statusOptions = document.getElementById('statusOptions');
-
         const genderBtns = document.querySelectorAll('.gender-btn');
         const statusBtns = document.querySelectorAll('.status-btn');
 
@@ -461,19 +880,16 @@
             buttons.forEach(b => b.classList.remove('active'));
             if (activeButton) activeButton.classList.add('active');
         }
-
         genderToggle.addEventListener('click', () => {
             const isOpen = genderOptions.classList.toggle('show');
             genderToggle.classList.toggle('open', isOpen);
             genderSymbol.textContent = isOpen ? '−' : '+';
         });
-
         statusToggle.addEventListener('click', () => {
             const isOpen = statusOptions.classList.toggle('show');
             statusToggle.classList.toggle('open', isOpen);
             statusSymbol.textContent = isOpen ? '−' : '+';
         });
-
         genderBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 currentGenderFilter = this.dataset.gender;
@@ -481,7 +897,6 @@
                 renderCats();
             });
         });
-
         statusBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 currentStatusFilter = this.dataset.status;
@@ -490,7 +905,10 @@
             });
         });
 
-        // 加载共用数据
+        // 页面初始化：添加占位历史，避免首次返回直接退出
+        history.pushState({ page: 'home' }, '');
+
+        // 加载数据
         fetch('cats.json')
             .then(response => {
                 if (!response.ok) throw new Error('找不到 cats.json 文件');
@@ -498,7 +916,7 @@
             })
             .then(data => {
                 catsData = data;
-                if(loadingText) loadingText.remove();
+                if (loadingText) loadingText.remove();
                 renderCats();
             })
             .catch(error => {
