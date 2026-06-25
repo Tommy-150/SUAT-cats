@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>敏感词遮蔽</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            padding: 20px;
+            line-height: 1.8;
+            max-width: 680px;
+            margin: 0 auto;
+            color: #333;
+            background: #fff;
+        }
+
+        .blocked-word {
+            background: #000;
+            color: transparent;
+            border-radius: 2px;
+            padding: 0 2px;
+            cursor: pointer;
+            user-select: none;
+            outline: none;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .blocked-word:hover,
+        .blocked-word:focus {
+            background: transparent;
+            color: #d00;
+            text-decoration: underline;
+            user-select: text;
+        }
+    </style>
+</head>
+<body>
+    <div id="content"></div>
+
+    <script>
+        (async function () {
+            // 你可以修改这里的演示文本
+            const rawText = `这是一份内部文件，敏感词1包含以下机密信息：本次交易的暗号是“春风行动”，请使用密码XY-2024进行验证。关于洗钱案件的调查涉及大量违禁品和毒品，枪支来源疑似与黑市有关，详情属于绝密级别。`;
+
+            let banWords = [];
+
+            try {
+                const res = await fetch('./ban_words.json');
+                if (res.ok) {
+                    const data = await res.json();
+                    // 兼容多种 JSON 格式，确保能提取到词汇数组
+                    if (Array.isArray(data)) {
+                        banWords = data;
+                    } else if (typeof data === 'object' && data !== null) {
+                        // 尝试从常见字段名中提取
+                        const possibleKeys = ['words', 'ban_words', 'sensitive_words', 'keywords', 'list', 'data'];
+                        for (const key of possibleKeys) {
+                            if (Array.isArray(data[key])) {
+                                banWords = data[key];
+                                break;
+                            }
+                        }
+                        // 如果仍未找到，遍历所有值取第一个数组
+                        if (banWords.length === 0) {
+                            for (const val of Object.values(data)) {
+                                if (Array.isArray(val)) {
+                                    banWords = val;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    // 过滤出有效字符串并去空
+                    banWords = banWords.filter(w => typeof w === 'string' && w.trim().length > 0);
+                }
+            } catch (_) {
+                // 读取失败时用默认词，保证页面能看到效果
+                banWords = ['机密', '绝密', '暗号', '密码', '洗钱', '毒品', '枪支', '黑市', '违禁品'];
+            }
+
+            // 按长度降序排列，确保长词优先被匹配
+            banWords.sort((a, b) => b.length - a.length);
+            banWords = [...new Set(banWords)]; // 去重
+
+            function escapeRegex(str) {
+                return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            if (banWords.length > 0) {
+                const pattern = banWords.map(w => escapeRegex(w)).join('|');
+                const regex = new RegExp(pattern, 'gi');
+                // 先转义 HTML 特殊字符，再替换敏感词
+                const escapedText = rawText
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                const resultHtml = escapedText.replace(regex, match =>
+                    `<span class="blocked-word" tabindex="0">${match}</span>`
+                );
+                document.getElementById('content').innerHTML = resultHtml;
+            } else {
+                document.getElementById('content').textContent = rawText;
+            }
+        })();
+    </script>
+</body>
+</html>

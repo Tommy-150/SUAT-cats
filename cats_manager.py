@@ -4,7 +4,7 @@
 SUAT-cats 管理器
 ================
 行列表视图，支持上移/下移步数调整顺序，内建预览服务器。
-集成：基本信息编辑、故事编辑、图片预览、缩略图编辑、新增猫咪、自动同步前端（Excel + cats.json）。
+集成：基本信息编辑、故事编辑、图片预览、缩略图编辑、新增猫咪、删除猫咪、自动同步前端（Excel + cats.json）。
 关闭时若有未保存的顺序变更会提醒。
 依赖：Pillow、openpyxl
 """
@@ -113,7 +113,7 @@ EXCEL_PATH = BASE_DIR / "统计信息.xlsx"
 JSON_PATH = BASE_DIR / "cats.json"
 CLASSIFIED_DIR = BASE_DIR / "classified"
 INDEX_HTML = BASE_DIR / "index.html"
-TEMP_THUMB_DIR = BASE_DIR / ".tmp_thumbs"          # 新增：临时缩略图目录
+TEMP_THUMB_DIR = BASE_DIR / ".tmp_thumbs"          # 临时缩略图目录
 
 THUMB_SUFFIX = "_thumb"
 THUMB_OUTPUT_SIZE = 300
@@ -1713,6 +1713,61 @@ class App(tk.Tk):
         except Exception as e:
             messagebox.showerror("加载失败", f"{e}\n\n{traceback.format_exc()}")
 
+    # ---------- 删除猫咪 ----------
+    def _delete_cat(self, cat):
+        """删除一只猫咪：确认后删除 Excel 行、整个文件夹和所有照片，然后刷新并同步 JSON。"""
+        cat_id = cat['id']
+        cat_name = cat['name']
+        folder_path = CLASSIFIED_DIR / f"{cat_id} {cat_name}"
+        # 确认对话框
+        if not messagebox.askyesno(
+            "⚠️ 永久删除",
+            f"确定要删除 {cat_id} {cat_name} 吗？\n\n"
+            f"此操作将永久删除：\n"
+            f"  • Excel 中的该行数据\n"
+            f"  • 整个文件夹及其所有图片：\n    {folder_path}\n\n"
+            "此操作不可撤销！"
+        ):
+            return
+
+        errors = []
+        # 1. 删除文件夹
+        if folder_path.exists():
+            try:
+                shutil.rmtree(folder_path)
+            except Exception as e:
+                errors.append(f"删除文件夹失败: {e}")
+
+        # 2. 删除 Excel 行
+        try:
+            row_index = cat.get("_row")
+            if row_index:
+                self.store.delete_row(row_index)
+                self.store.save()
+            else:
+                errors.append("找不到该猫咪在 Excel 中的行号")
+        except Exception as e:
+            errors.append(f"删除 Excel 行失败: {e}")
+
+        if errors:
+            messagebox.showerror("删除失败", "部分操作未完成：\n" + "\n".join(errors))
+            self._reload_from_excel()  # 尝试恢复界面
+            return
+
+        # 3. 重新加载数据并更新前端文件
+        self._reload_from_excel()
+        try:
+            count, warns = regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH)
+            status_msg = f"已删除 {cat_id} {cat_name}，同步完成。"
+            if warns:
+                status_msg += f" (警告 {len(warns)} 条)"
+            self.status_var.set(status_msg)
+        except Exception as e:
+            self.status_var.set(f"已删除 {cat_id} {cat_name}，但 cats.json 同步失败：{e}")
+
+        # 清除顺序脏标记（删除操作已经直接保存，不再有未应用顺序）
+        self._order_dirty = False
+
     # ---------- 过滤 ----------
     def _filtered(self):
         rs = list(self.rows)
@@ -1847,6 +1902,15 @@ class App(tk.Tk):
                                  cursor="hand2",
                                  command=lambda c=cat: self._edit_cat(c))
             edit_btn.pack(side=tk.LEFT, padx=(4, 0))
+
+            # 删除按钮（新增）
+            delete_btn = tk.Button(btn_frame, text="🗑️ 删除",
+                                   font=ui_font(FS_SMALL, "bold"),
+                                   bg=COLOR_DANGER, fg="white",
+                                   relief=tk.FLAT, borderwidth=0, padx=8,
+                                   cursor="hand2",
+                                   command=lambda c=cat: self._delete_cat(c))
+            delete_btn.pack(side=tk.LEFT, padx=(4, 0))
 
             # 分隔线
             tk.Frame(self.list_frame, bg=COLOR_DIVIDER, height=1).pack(fill=tk.X)

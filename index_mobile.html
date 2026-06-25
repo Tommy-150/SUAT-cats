@@ -20,13 +20,11 @@
             background-image: radial-gradient(circle at 10% 20%, rgba(255, 200, 150, 0.15) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(150, 200, 255, 0.15) 0%, transparent 40%);
             background-attachment: fixed;
-            padding: 24px 16px;
-            padding-bottom: 40px;
+            padding: 24px 16px 40px;
             overscroll-behavior-y: contain;
         }
-        body.modal-open {
-            overflow: hidden;
-        }
+        body.modal-open { overflow: hidden; }
+
         .loading-text,
         .error-text {
             text-align: center;
@@ -35,39 +33,14 @@
             margin-top: 60px;
             grid-column: 1 / -1;
         }
-        .error-text {
-            color: red;
-        }
+        .error-text { color: red; }
 
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #4A4A4A;
-            letter-spacing: 1px;
-        }
-        .header p {
-            color: #888;
-            margin-top: 4px;
-            font-size: 0.95rem;
-        }
+        .header { text-align: center; margin-bottom: 24px; }
+        .header h1 { font-size: 2rem; font-weight: 800; color: #4A4A4A; letter-spacing: 1px; }
+        .header p { color: #888; margin-top: 4px; font-size: 0.95rem; }
 
-        .filters {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 30px;
-        }
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
+        .filters { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 30px; }
+        .filter-group { display: flex; flex-direction: column; align-items: center; width: 100%; }
 
         .filter-toggle {
             display: inline-flex;
@@ -84,24 +57,10 @@
             border: 1px solid rgba(255, 255, 255, 0.9);
             transition: all 0.2s ease;
         }
-        .filter-toggle:active {
-            transform: scale(0.96);
-            background: rgba(74, 74, 74, 0.08);
-        }
-        .filter-toggle span:first-child {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #555;
-        }
-        .toggle-symbol {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #666;
-            line-height: 1;
-        }
-        .filter-toggle.open .toggle-symbol {
-            color: #4A4A4A;
-        }
+        .filter-toggle:active { transform: scale(0.96); background: rgba(74, 74, 74, 0.08); }
+        .filter-toggle span:first-child { font-size: 1rem; font-weight: 700; color: #555; }
+        .toggle-symbol { font-size: 1.3rem; font-weight: 700; color: #666; line-height: 1; }
+        .filter-toggle.open .toggle-symbol { color: #4A4A4A; }
 
         .filter-options {
             display: none;
@@ -111,18 +70,10 @@
             margin-top: 12px;
             animation: fadeDown 0.3s ease;
         }
-        .filter-options.show {
-            display: flex;
-        }
+        .filter-options.show { display: flex; }
         @keyframes fadeDown {
-            from {
-                opacity: 0;
-                transform: translateY(-8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .filter-btn {
@@ -138,51 +89,24 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
             transition: all 0.2s ease;
         }
-        .filter-btn:active {
-            transform: scale(0.95);
-        }
+        .filter-btn:active { transform: scale(0.95); }
         .filter-btn.active {
             background: #4A4A4A;
             color: #fff;
             box-shadow: 0 4px 12px rgba(74, 74, 74, 0.2);
         }
 
-        /* 排序专用 */
-        .filter-btn.sort-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .sort-arrows {
-            display: inline-flex;
-            align-items: center;
-            gap: 2px;
-            font-size: 0.85rem;
-        }
+        .filter-btn.sort-btn { display: inline-flex; align-items: center; gap: 6px; }
+        .sort-arrows { display: inline-flex; align-items: center; gap: 2px; font-size: 0.85rem; }
         .sort-arrows .arrow-up,
-        .sort-arrows .arrow-down {
-            transition: opacity 0.3s;
-        }
-        .filter-btn.sort-btn .arrow-up {
-            opacity: 0.3;
-        }
-        .filter-btn.sort-btn .arrow-down {
-            opacity: 1;
-        }
-        .filter-btn.sort-btn.asc .arrow-up {
-            opacity: 1;
-        }
-        .filter-btn.sort-btn.asc .arrow-down {
-            opacity: 0.3;
-        }
+        .sort-arrows .arrow-down { transition: opacity 0.3s; }
+        .filter-btn.sort-btn .arrow-up { opacity: 0.3; }
+        .filter-btn.sort-btn .arrow-down { opacity: 1; }
+        .filter-btn.sort-btn.asc .arrow-up { opacity: 1; }
+        .filter-btn.sort-btn.asc .arrow-down { opacity: 0.3; }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            max-width: 500px;
-            margin: 0 auto;
-        }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 500px; margin: 0 auto; }
+
         .card {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(15px);
@@ -196,16 +120,9 @@
             overflow: hidden;
             cursor: pointer;
         }
-        .card:active {
-            transform: scale(0.98);
-        }
+        .card:active { transform: scale(0.98); }
 
-        .avatar-wrapper {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 16px;
-            position: relative;
-        }
+        .avatar-wrapper { width: 120px; height: 120px; margin: 0 auto 16px; position: relative; }
         .avatar {
             width: 100%;
             height: 100%;
@@ -230,38 +147,14 @@
             opacity: 0;
             transform: scale(0.5);
         }
-        .name-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        .name {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #333;
-        }
-        .gender {
-            font-size: 1.1rem;
-        }
-        .gender.male {
-            color: #5B8DEF;
-        }
-        .gender.female {
-            color: #FF7E93;
-        }
-        .gender.unknown {
-            color: #AAA;
-        }
-        .affection {
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        .paw-empty {
-            opacity: 0.2;
-        }
+        .name-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; }
+        .name { font-size: 1.3rem; font-weight: 800; color: #333; }
+        .gender { font-size: 1.1rem; }
+        .gender.male { color: #5B8DEF; }
+        .gender.female { color: #FF7E93; }
+        .gender.unknown { color: #AAA; }
+        .affection { font-size: 1.1rem; letter-spacing: 1px; margin-bottom: 8px; }
+        .paw-empty { opacity: 0.2; }
         .desc {
             font-size: 0.9rem;
             color: #777;
@@ -271,65 +164,60 @@
             border-top: 1px dashed #eee;
         }
 
-        .click-hint {
-            margin-top: 14px;
-            font-size: 0.85rem;
-            color: #999;
-            font-weight: 600;
-        }
+        .click-hint { margin-top: 14px; font-size: 0.85rem; color: #999; font-weight: 600; }
 
-        .card.status-star {
-            border: 1px solid #e0e0e0;
-        }
-        .card.status-star .avatar {
-            filter: grayscale(100%);
-            opacity: 0.8;
-        }
-        .card.status-star .status-icon {
-            opacity: 1;
-            transform: scale(1);
-        }
-        .card.status-star .name {
-            color: #888;
-        }
+        .card.status-star { border: 1px solid #e0e0e0; }
+        .card.status-star .avatar { filter: grayscale(100%); opacity: 0.8; }
+        .card.status-star .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-star .name { color: #888; }
 
-        .card.status-lost {
-            border: 1px dashed #d0d0d0;
-        }
-        .card.status-lost .status-icon {
-            opacity: 1;
-            transform: scale(1);
-        }
-        .card.status-lost .name {
-            color: #999;
-        }
+        .card.status-lost { border: 1px dashed #d0d0d0; }
+        .card.status-lost .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-lost .name { color: #999; }
 
-        .card.status-adopted {
-            border: 1px solid #a0d2a0;
-        }
-        .card.status-adopted .status-icon {
-            opacity: 1;
-            transform: scale(1);
-        }
-        .card.status-adopted .name {
-            color: #2d6a2d;
-        }
+        .card.status-adopted { border: 1px solid #a0d2a0; }
+        .card.status-adopted .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-adopted .name { color: #2d6a2d; }
 
         .fade-in {
             animation: fadeIn 0.5s ease forwards;
             opacity: 0;
         }
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
+        /* ===== 敏感词遮蔽样式（移动端：点击显示3秒） ===== */
+        .blocked-word {
+            display: inline;
+            background-color: #111111;
+            color: transparent;
+            border-radius: 3px;
+            padding: 1px 3px;
+            margin: 0 1px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s ease, color 0.2s ease;
+            /* 隐约纹理暗示此处有内容 */
+            background-image:
+                repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255,255,255,0.03) 2px,
+                    rgba(255,255,255,0.03) 4px);
+        }
+        /* 点击后显示的样式 */
+        .blocked-word.revealed {
+            background: transparent;
+            background-image: none;
+            color: inherit;
+            user-select: text;
+            text-decoration: underline dotted rgba(0,0,0,0.2);
+            text-underline-offset: 3px;
+        }
+
+        /* ===== 弹窗相关 ===== */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -342,10 +230,7 @@
             visibility: hidden;
             transition: opacity 0.3s ease;
         }
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
 
         .modal-content {
             position: absolute;
@@ -362,9 +247,7 @@
             display: flex;
             flex-direction: column;
         }
-        .modal-overlay.active .modal-content {
-            transform: translateY(0);
-        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
 
         .drag-handle {
             width: 40px;
@@ -392,10 +275,7 @@
             color: #666;
             z-index: 10;
         }
-        .close-btn:active {
-            background: #e0e0e0;
-            transform: scale(0.9);
-        }
+        .close-btn:active { background: #e0e0e0; transform: scale(0.9); }
 
         .modal-header {
             display: flex;
@@ -413,30 +293,11 @@
             position: relative;
             cursor: pointer;
         }
-        .modal-avatar {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            display: block;
-        }
+        .modal-avatar { width: 80px; height: 80px; object-fit: cover; display: block; }
 
-        .modal-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .modal-info h2 {
-            font-size: 1.5rem;
-            margin-bottom: 6px;
-            color: #333;
-            word-break: break-all;
-        }
-        .modal-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            color: #888;
-            font-size: 0.85rem;
-        }
+        .modal-info { flex: 1; min-width: 0; }
+        .modal-info h2 { font-size: 1.5rem; margin-bottom: 6px; color: #333; word-break: break-all; }
+        .modal-meta { display: flex; flex-direction: column; gap: 4px; color: #888; font-size: 0.85rem; }
 
         .modal-story {
             flex: 1;
@@ -444,30 +305,11 @@
             padding: 24px;
             -webkit-overflow-scrolling: touch;
         }
-        .modal-story h3 {
-            font-size: 1.1rem;
-            color: #555;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 2px dashed #eee;
-        }
-        .modal-story p {
-            font-size: 1rem;
-            line-height: 1.8;
-            color: #444;
-            margin-bottom: 16px;
-            text-align: justify;
-            text-indent: 2em;
-        }
+        .modal-story h3 { font-size: 1.1rem; color: #555; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px dashed #eee; }
+        .modal-story p { font-size: 1rem; line-height: 1.8; color: #444; margin-bottom: 16px; text-align: justify; text-indent: 2em; }
 
-        .gallery-section {
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 2px dashed #eee;
-        }
-        .gallery-section.hidden {
-            display: none;
-        }
+        .gallery-section { margin-top: 24px; padding-top: 16px; border-top: 2px dashed #eee; }
+        .gallery-section.hidden { display: none; }
         .gallery-scroll {
             display: flex;
             gap: 12px;
@@ -475,9 +317,7 @@
             padding: 8px 0 16px;
             scroll-snap-type: x mandatory;
         }
-        .gallery-scroll::-webkit-scrollbar {
-            display: none;
-        }
+        .gallery-scroll::-webkit-scrollbar { display: none; }
 
         .gallery-item {
             position: relative;
@@ -490,12 +330,7 @@
             scroll-snap-align: start;
             cursor: pointer;
         }
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         .lightbox {
             position: fixed;
@@ -512,10 +347,7 @@
             visibility: hidden;
             transition: all 0.3s ease;
         }
-        .lightbox.active {
-            opacity: 1;
-            visibility: visible;
-        }
+        .lightbox.active { opacity: 1; visibility: visible; }
         .lightbox-close {
             position: absolute;
             top: 20px;
@@ -532,9 +364,7 @@
             align-items: center;
             justify-content: center;
         }
-        .lightbox-close:active {
-            background: rgba(255, 255, 255, 0.4);
-        }
+        .lightbox-close:active { background: rgba(255, 255, 255, 0.4); }
         .lightbox-img {
             max-width: 95%;
             max-height: 85vh;
@@ -544,10 +374,7 @@
             transform: scale(0.95);
             transition: all 0.3s ease;
         }
-        .lightbox-img.loaded {
-            opacity: 1;
-            transform: scale(1);
-        }
+        .lightbox-img.loaded { opacity: 1; transform: scale(1); }
         .spinner {
             width: 40px;
             height: 40px;
@@ -557,14 +384,8 @@
             position: absolute;
             animation: spin 0.8s linear infinite;
         }
-        .spinner.hidden {
-            display: none;
-        }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+        .spinner.hidden { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .toast {
             position: fixed;
@@ -581,9 +402,7 @@
             transition: opacity 0.3s ease;
             pointer-events: none;
         }
-        .toast.show {
-            opacity: 1;
-        }
+        .toast.show { opacity: 1; }
     </style>
 </head>
 <body>
@@ -620,7 +439,6 @@
             </div>
         </div>
 
-        <!-- 排序控件 -->
         <div class="filter-group">
             <div class="filter-toggle" id="sortToggle">
                 <span>排序</span>
@@ -675,365 +493,458 @@
     <div class="toast" id="exitToast">再按一次返回键退出页面</div>
 
     <script>
-        const grid = document.getElementById('catGrid');
-        const loadingText = document.getElementById('loadingText');
-        const modal = document.getElementById('storyModal');
-        const closeBtn = document.getElementById('closeModal');
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightboxImg');
-        const lightboxSpinner = document.getElementById('lightboxSpinner');
-        const lightboxClose = document.getElementById('lightboxClose');
-        const gallerySection = document.getElementById('gallerySection');
-        const galleryScroll = document.getElementById('galleryScroll');
-        const exitToast = document.getElementById('exitToast');
-        const modalAvatarWrapper = document.getElementById('modalAvatarWrapper');
+        (function() {
+            // ==================== DOM 元素 ====================
+            const grid = document.getElementById('catGrid');
+            const loadingText = document.getElementById('loadingText');
+            const modal = document.getElementById('storyModal');
+            const closeBtn = document.getElementById('closeModal');
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightboxImg');
+            const lightboxSpinner = document.getElementById('lightboxSpinner');
+            const lightboxClose = document.getElementById('lightboxClose');
+            const gallerySection = document.getElementById('gallerySection');
+            const galleryScroll = document.getElementById('galleryScroll');
+            const exitToast = document.getElementById('exitToast');
+            const modalAvatarWrapper = document.getElementById('modalAvatarWrapper');
+            const modalStoryText = document.getElementById('modalStoryText');
 
-        let catsData = [];
-        let currentGenderFilter = 'all';
-        let currentStatusFilter = 'all';
-        let currentHDUrl = '';
+            let catsData = [];
+            let currentGenderFilter = 'all';
+            let currentStatusFilter = 'all';
+            let currentHDUrl = '';
 
-        // 排序状态
-        let currentSort = 'default';
-        let sortDirection = 'desc';
+            let currentSort = 'default';
+            let sortDirection = 'desc';
 
-        // Hash 管理
-        let modalActive = false;
-        let lightboxActive = false;
-        let exitHintShown = false;
-        let exitToastTimer = null;
-        let ignoreHashChange = false;
+            // 敏感词列表
+            let banWords = [];
 
-        function showExitToast() {
-            if (exitToastTimer) clearTimeout(exitToastTimer);
-            exitToast.classList.add('show');
-            exitHintShown = true;
-            exitToastTimer = setTimeout(() => {
+            // ==================== 哈希状态管理 ====================
+            let modalActive = false;
+            let lightboxActive = false;
+            let exitHintShown = false;
+            let exitToastTimer = null;
+            let ignoreHashChange = false;
+
+            function showExitToast() {
+                if (exitToastTimer) clearTimeout(exitToastTimer);
+                exitToast.classList.add('show');
+                exitHintShown = true;
+                exitToastTimer = setTimeout(() => {
+                    exitToast.classList.remove('show');
+                    exitHintShown = false;
+                    exitToastTimer = null;
+                }, 2000);
+            }
+
+            function resetExitHint() {
+                if (exitToastTimer) {
+                    clearTimeout(exitToastTimer);
+                    exitToastTimer = null;
+                }
                 exitToast.classList.remove('show');
                 exitHintShown = false;
-                exitToastTimer = null;
-            }, 2000);
-        }
-
-        function resetExitHint() {
-            if (exitToastTimer) {
-                clearTimeout(exitToastTimer);
-                exitToastTimer = null;
-            }
-            exitToast.classList.remove('show');
-            exitHintShown = false;
-        }
-
-        function openModalUI() {
-            modal.classList.add('active');
-            document.body.classList.add('modal-open');
-            modalActive = true;
-        }
-
-        function closeModalUI() {
-            modal.classList.remove('active');
-            document.body.classList.remove('modal-open');
-            modalActive = false;
-        }
-
-        function openLightboxUI() {
-            lightbox.classList.add('active');
-            lightboxActive = true;
-        }
-
-        function closeLightboxUI() {
-            lightbox.classList.remove('active');
-            lightboxActive = false;
-        }
-
-        function getCurrentHash() {
-            return location.hash.replace(/^#/, '');
-        }
-
-        function setHash(hash) {
-            ignoreHashChange = true;
-            location.hash = hash;
-            setTimeout(() => { ignoreHashChange = false; }, 50);
-        }
-
-        window.addEventListener('hashchange', function (e) {
-            if (ignoreHashChange) return;
-            const newHash = getCurrentHash();
-
-            if (lightboxActive && newHash !== 'lightbox') {
-                closeLightboxUI();
-                if (modalActive && newHash !== 'modal') {
-                    closeModalUI();
-                }
-                resetExitHint();
-                return;
             }
 
-            if (modalActive && newHash !== 'modal' && newHash !== 'lightbox') {
-                closeModalUI();
-                resetExitHint();
-                return;
+            function openModalUI() {
+                modal.classList.add('active');
+                document.body.classList.add('modal-open');
+                modalActive = true;
             }
 
-            if (!lightboxActive && !modalActive) {
-                if (exitHintShown) {
+            function closeModalUI() {
+                modal.classList.remove('active');
+                document.body.classList.remove('modal-open');
+                modalActive = false;
+            }
+
+            function openLightboxUI() {
+                lightbox.classList.add('active');
+                lightboxActive = true;
+            }
+
+            function closeLightboxUI() {
+                lightbox.classList.remove('active');
+                lightboxActive = false;
+            }
+
+            function getCurrentHash() {
+                return location.hash.replace(/^#/, '');
+            }
+
+            function setHash(hash) {
+                ignoreHashChange = true;
+                location.hash = hash;
+                setTimeout(() => { ignoreHashChange = false; }, 50);
+            }
+
+            window.addEventListener('hashchange', function(e) {
+                if (ignoreHashChange) return;
+                const newHash = getCurrentHash();
+
+                if (lightboxActive && newHash !== 'lightbox') {
+                    closeLightboxUI();
+                    if (modalActive && newHash !== 'modal') {
+                        closeModalUI();
+                    }
                     resetExitHint();
                     return;
-                } else {
-                    showExitToast();
-                    setHash('home');
+                }
+
+                if (modalActive && newHash !== 'modal' && newHash !== 'lightbox') {
+                    closeModalUI();
+                    resetExitHint();
                     return;
                 }
-            }
-        });
 
-        // 排序函数
-        function getPaws(level) {
-            let paws = '';
-            for (let i = 1; i <= 5; i++) paws += i <= level ? '🐾' : '<span class="paw-empty">🐾</span>';
-            return paws;
-        }
-        function getStatusIcon(status) {
-            if (status === 'star') return '⭐';
-            if (status === 'lost') return '🔍';
-            if (status === 'adopted') return '🏠';
-            return '';
-        }
-        function getGenderDisplay(gender) {
-            if (gender === 'male') return '♂';
-            if (gender === 'female') return '♀';
-            return '❓';
-        }
-        function getGenderText(gender) {
-            if (gender === 'male') return '♂ 男孩';
-            if (gender === 'female') return '♀ 女孩';
-            return '❓ 未知性别';
-        }
-
-        function sortCats(cats) {
-            if (currentSort === 'affection') {
-                return [...cats].sort((a, b) => {
-                    if (sortDirection === 'desc') return b.affection - a.affection;
-                    else return a.affection - b.affection;
-                });
-            }
-            return cats;
-        }
-
-        function updateSortUI() {
-            const affectionBtn = document.getElementById('sortAffection');
-            const defaultBtn = document.getElementById('sortDefault');
-            if (!affectionBtn || !defaultBtn) return;
-            if (currentSort === 'affection') {
-                affectionBtn.classList.add('active');
-                defaultBtn.classList.remove('active');
-                if (sortDirection === 'asc') {
-                    affectionBtn.classList.add('asc');
-                } else {
-                    affectionBtn.classList.remove('asc');
+                if (!lightboxActive && !modalActive) {
+                    if (exitHintShown) {
+                        resetExitHint();
+                    } else {
+                        showExitToast();
+                        setHash('home');
+                    }
                 }
-            } else {
-                affectionBtn.classList.remove('active', 'asc');
-                defaultBtn.classList.add('active');
-            }
-        }
-
-        function renderCats() {
-            grid.innerHTML = '';
-            let sortedCats = sortCats(catsData);
-            let filteredCats = sortedCats;
-
-            if (currentGenderFilter !== 'all') filteredCats = filteredCats.filter(c => c.gender === currentGenderFilter);
-            if (currentStatusFilter !== 'all') filteredCats = filteredCats.filter(c => c.status === currentStatusFilter);
-
-            if (filteredCats.length === 0) {
-                grid.innerHTML = '<p class="loading-text">没有找到符合条件的猫咪</p>';
-                return;
-            }
-            filteredCats.forEach((cat, index) => {
-                const card = document.createElement('div');
-                card.className = `card status-${cat.status || ''} fade-in`;
-                card.style.animationDelay = `${index * 0.05}s`;
-                card.innerHTML = `
-                    <div class="avatar-wrapper">
-                        <img src="${cat.avatar}" alt="${cat.name}" class="avatar">
-                        <div class="status-icon">${getStatusIcon(cat.status)}</div>
-                    </div>
-                    <div class="name-row">
-                        <span class="name">${cat.name}</span>
-                        <span class="gender ${cat.gender}">${getGenderDisplay(cat.gender)}</span>
-                    </div>
-                    <div class="affection">${getPaws(cat.affection)}</div>
-                    <div class="desc">${cat.desc}</div>
-                    <div class="click-hint">点击查看故事 👆</div>
-                `;
-                card.addEventListener('click', () => openModal(cat));
-                grid.appendChild(card);
             });
-        }
 
-        function openModal(cat) {
-            document.getElementById('modalAvatar').src = cat.avatar;
-            document.getElementById('modalName').innerText = cat.name;
-            document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
-            document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
-            const paragraphs = cat.story.split('\n\n');
-            const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-            document.getElementById('modalStoryText').innerHTML = storyHTML;
-            galleryScroll.innerHTML = '';
-            if (cat.otherPhotos && cat.otherPhotos.length > 0) {
-                gallerySection.classList.remove('hidden');
-                cat.otherPhotos.forEach(photo => {
-                    const item = document.createElement('div');
-                    item.className = 'gallery-item';
-                    item.innerHTML = `<img src="${photo.thumb}" alt="Gallery photo">`;
-                    item.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        openLightbox(photo.hd);
-                    });
-                    galleryScroll.appendChild(item);
+            // ==================== 工具函数 ====================
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return String(text).replace(/[&<>"']/g, char => map[char]);
+            }
+
+            function escapeRegex(str) {
+                return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            // 敏感词遮蔽：将匹配到的词包裹为 <span class="blocked-word">
+            function maskSensitiveWords(text) {
+                if (!banWords.length) return text;
+                // 按长度降序，避免短词优先匹配导致长词被截断
+                const sorted = [...banWords].sort((a, b) => b.length - a.length);
+                const pattern = sorted.map(w => escapeRegex(w)).join('|');
+                const regex = new RegExp(pattern, 'gi');
+                return text.replace(regex, (match) => `<span class="blocked-word">${match}</span>`);
+            }
+
+            // 处理敏感词块的点击：显示3秒后恢复
+            function handleBlockedWordClick(wordElement) {
+                if (!wordElement.classList.contains('blocked-word')) return;
+                // 如果已经有定时器，先清除
+                if (wordElement.dataset.timerId) {
+                    clearTimeout(parseInt(wordElement.dataset.timerId));
+                }
+                // 添加显示样式
+                wordElement.classList.add('revealed');
+                // 设置新定时器，3秒后移除样式
+                const timerId = setTimeout(() => {
+                    wordElement.classList.remove('revealed');
+                    wordElement.removeAttribute('data-timer-id');
+                }, 1000);
+                wordElement.dataset.timerId = timerId;
+            }
+
+            // 为容器内所有.blocked-word绑定点击事件（委托）
+            function attachBlockedWordListeners(container) {
+                container.addEventListener('click', function(e) {
+                    const blocked = e.target.closest('.blocked-word');
+                    if (blocked) {
+                        e.stopPropagation(); // 阻止冒泡到外层卡片或弹窗
+                        handleBlockedWordClick(blocked);
+                    }
                 });
-            } else {
-                gallerySection.classList.add('hidden');
             }
-            currentHDUrl = cat.avatar_hd;
-            openModalUI();
-            setHash('modal');
-        }
 
-        function closeModal() {
-            if (!modalActive) return;
-            closeModalUI();
+            // ==================== 渲染函数 ====================
+            function getPaws(level) {
+                let paws = '';
+                for (let i = 1; i <= 5; i++) paws += i <= level ? '🐾' : '<span class="paw-empty">🐾</span>';
+                return paws;
+            }
+            function getStatusIcon(status) {
+                if (status === 'star') return '⭐';
+                if (status === 'lost') return '🔍';
+                if (status === 'adopted') return '🏠';
+                return '';
+            }
+            function getGenderDisplay(gender) {
+                if (gender === 'male') return '♂';
+                if (gender === 'female') return '♀';
+                return '❓';
+            }
+            function getGenderText(gender) {
+                if (gender === 'male') return '♂ 男孩';
+                if (gender === 'female') return '♀ 女孩';
+                return '❓ 未知性别';
+            }
+
+            function sortCats(cats) {
+                if (currentSort === 'affection') {
+                    return [...cats].sort((a, b) => {
+                        if (sortDirection === 'desc') return b.affection - a.affection;
+                        else return a.affection - b.affection;
+                    });
+                }
+                return cats;
+            }
+
+            function updateSortUI() {
+                const affectionBtn = document.getElementById('sortAffection');
+                const defaultBtn = document.getElementById('sortDefault');
+                if (!affectionBtn || !defaultBtn) return;
+                if (currentSort === 'affection') {
+                    affectionBtn.classList.add('active');
+                    defaultBtn.classList.remove('active');
+                    if (sortDirection === 'asc') affectionBtn.classList.add('asc');
+                    else affectionBtn.classList.remove('asc');
+                } else {
+                    affectionBtn.classList.remove('active', 'asc');
+                    defaultBtn.classList.add('active');
+                }
+            }
+
+            function renderCats() {
+                grid.innerHTML = '';
+                let sortedCats = sortCats(catsData);
+                let filteredCats = sortedCats;
+
+                if (currentGenderFilter !== 'all')
+                    filteredCats = filteredCats.filter(c => c.gender === currentGenderFilter);
+                if (currentStatusFilter !== 'all')
+                    filteredCats = filteredCats.filter(c => c.status === currentStatusFilter);
+
+                if (filteredCats.length === 0) {
+                    grid.innerHTML = '<p class="loading-text">没有找到符合条件的猫咪</p>';
+                    return;
+                }
+
+                filteredCats.forEach((cat, index) => {
+                    const card = document.createElement('div');
+                    card.className = `card status-${cat.status || ''} fade-in`;
+                    card.style.animationDelay = `${index * 0.05}s`;
+
+                    // 描述文本转义并应用敏感词遮蔽
+                    const safeDesc = maskSensitiveWords(escapeHtml(cat.desc));
+
+                    card.innerHTML = `
+                        <div class="avatar-wrapper">
+                            <img src="${cat.avatar}" alt="${escapeHtml(cat.name)}" class="avatar">
+                            <div class="status-icon">${getStatusIcon(cat.status)}</div>
+                        </div>
+                        <div class="name-row">
+                            <span class="name">${escapeHtml(cat.name)}</span>
+                            <span class="gender ${cat.gender}">${getGenderDisplay(cat.gender)}</span>
+                        </div>
+                        <div class="affection">${getPaws(cat.affection)}</div>
+                        <div class="desc">${safeDesc}</div>
+                        <div class="click-hint">点击查看故事 👆</div>
+                    `;
+                    card.addEventListener('click', () => openModal(cat));
+                    grid.appendChild(card);
+                });
+            }
+
+            function openModal(cat) {
+                document.getElementById('modalAvatar').src = cat.avatar;
+                document.getElementById('modalName').innerText = cat.name;
+                document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
+                document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
+
+                // 故事文本转义并应用敏感词遮蔽
+                const safeStory = maskSensitiveWords(escapeHtml(cat.story));
+                const paragraphs = safeStory.split('\n\n');
+                const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+                modalStoryText.innerHTML = storyHTML;
+
+                galleryScroll.innerHTML = '';
+                if (cat.otherPhotos && cat.otherPhotos.length > 0) {
+                    gallerySection.classList.remove('hidden');
+                    cat.otherPhotos.forEach(photo => {
+                        const item = document.createElement('div');
+                        item.className = 'gallery-item';
+                        item.innerHTML = `<img src="${photo.thumb}" alt="Gallery photo">`;
+                        item.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            openLightbox(photo.hd);
+                        });
+                        galleryScroll.appendChild(item);
+                    });
+                } else {
+                    gallerySection.classList.add('hidden');
+                }
+
+                currentHDUrl = cat.avatar_hd;
+                openModalUI();
+                setHash('modal');
+            }
+
+            function closeModal() {
+                if (!modalActive) return;
+                closeModalUI();
+                setHash('home');
+            }
+
+            function openLightbox(hdUrl) {
+                lightboxSpinner.classList.remove('hidden');
+                lightboxImg.classList.remove('loaded');
+                openLightboxUI();
+                setHash('lightbox');
+                const img = new Image();
+                img.src = hdUrl;
+                img.onload = () => {
+                    lightboxImg.src = hdUrl;
+                    lightboxSpinner.classList.add('hidden');
+                    setTimeout(() => lightboxImg.classList.add('loaded'), 50);
+                };
+                img.onerror = () => {
+                    lightboxImg.src = document.getElementById('modalAvatar').src;
+                    lightboxSpinner.classList.add('hidden');
+                    lightboxImg.classList.add('loaded');
+                };
+            }
+
+            function closeLightbox() {
+                if (!lightboxActive) return;
+                closeLightboxUI();
+                setHash('modal');
+            }
+
+            // ==================== 事件绑定 ====================
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            lightboxClose.addEventListener('click', closeLightbox);
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox) closeLightbox();
+            });
+            modalAvatarWrapper.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openLightbox(currentHDUrl);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (lightboxActive) closeLightbox();
+                    else if (modalActive) closeModal();
+                }
+            });
+
+            // 为网格和弹窗故事区绑定敏感词点击委托
+            attachBlockedWordListeners(grid);
+            attachBlockedWordListeners(modalStoryText);
+
+            // ==================== 筛选与排序交互 ====================
+            const genderToggle = document.getElementById('genderToggle');
+            const genderSymbol = document.getElementById('genderSymbol');
+            const genderOptions = document.getElementById('genderOptions');
+            const statusToggle = document.getElementById('statusToggle');
+            const statusSymbol = document.getElementById('statusSymbol');
+            const statusOptions = document.getElementById('statusOptions');
+            const genderBtns = document.querySelectorAll('.gender-btn');
+            const statusBtns = document.querySelectorAll('.status-btn');
+
+            function setActive(buttons, activeButton) {
+                buttons.forEach(b => b.classList.remove('active'));
+                if (activeButton) activeButton.classList.add('active');
+            }
+
+            genderToggle.addEventListener('click', () => {
+                const isOpen = genderOptions.classList.toggle('show');
+                genderToggle.classList.toggle('open', isOpen);
+                genderSymbol.textContent = isOpen ? '−' : '+';
+            });
+            statusToggle.addEventListener('click', () => {
+                const isOpen = statusOptions.classList.toggle('show');
+                statusToggle.classList.toggle('open', isOpen);
+                statusSymbol.textContent = isOpen ? '−' : '+';
+            });
+
+            genderBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentGenderFilter = this.dataset.gender;
+                    setActive(genderBtns, this);
+                    renderCats();
+                });
+            });
+            statusBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentStatusFilter = this.dataset.status;
+                    setActive(statusBtns, this);
+                    renderCats();
+                });
+            });
+
+            document.getElementById('sortDefault').addEventListener('click', () => {
+                currentSort = 'default';
+                updateSortUI();
+                renderCats();
+            });
+            document.getElementById('sortAffection').addEventListener('click', () => {
+                if (currentSort === 'affection') {
+                    sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+                } else {
+                    currentSort = 'affection';
+                    sortDirection = 'desc';
+                }
+                updateSortUI();
+                renderCats();
+            });
+
+            const sortToggle = document.getElementById('sortToggle');
+            const sortSymbol = document.getElementById('sortSymbol');
+            const sortOptions = document.getElementById('sortOptions');
+            sortToggle.addEventListener('click', () => {
+                const isOpen = sortOptions.classList.toggle('show');
+                sortToggle.classList.toggle('open', isOpen);
+                sortSymbol.textContent = isOpen ? '−' : '+';
+            });
+
+            // ==================== 数据加载 ====================
             setHash('home');
-        }
-
-        function openLightbox(hdUrl) {
-            lightboxSpinner.classList.remove('hidden');
-            lightboxImg.classList.remove('loaded');
-            openLightboxUI();
-            setHash('lightbox');
-            const img = new Image();
-            img.src = hdUrl;
-            img.onload = () => {
-                lightboxImg.src = hdUrl;
-                lightboxSpinner.classList.add('hidden');
-                setTimeout(() => lightboxImg.classList.add('loaded'), 50);
-            };
-            img.onerror = () => {
-                lightboxImg.src = document.getElementById('modalAvatar').src;
-                lightboxSpinner.classList.add('hidden');
-                lightboxImg.classList.add('loaded');
-            };
-        }
-
-        function closeLightbox() {
-            if (!lightboxActive) return;
-            closeLightboxUI();
-            setHash('modal');
-        }
-
-        closeBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-        lightboxClose.addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) closeLightbox();
-        });
-        modalAvatarWrapper.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openLightbox(currentHDUrl);
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (lightboxActive) closeLightbox();
-                else if (modalActive) closeModal();
-            }
-        });
-
-        // 筛选交互
-        const genderToggle = document.getElementById('genderToggle');
-        const genderSymbol = document.getElementById('genderSymbol');
-        const genderOptions = document.getElementById('genderOptions');
-        const statusToggle = document.getElementById('statusToggle');
-        const statusSymbol = document.getElementById('statusSymbol');
-        const statusOptions = document.getElementById('statusOptions');
-        const genderBtns = document.querySelectorAll('.gender-btn');
-        const statusBtns = document.querySelectorAll('.status-btn');
-
-        function setActive(buttons, activeButton) {
-            buttons.forEach(b => b.classList.remove('active'));
-            if (activeButton) activeButton.classList.add('active');
-        }
-        genderToggle.addEventListener('click', () => {
-            const isOpen = genderOptions.classList.toggle('show');
-            genderToggle.classList.toggle('open', isOpen);
-            genderSymbol.textContent = isOpen ? '−' : '+';
-        });
-        statusToggle.addEventListener('click', () => {
-            const isOpen = statusOptions.classList.toggle('show');
-            statusToggle.classList.toggle('open', isOpen);
-            statusSymbol.textContent = isOpen ? '−' : '+';
-        });
-        genderBtns.forEach(btn => {
-            btn.addEventListener('click', function () {
-                currentGenderFilter = this.dataset.gender;
-                setActive(genderBtns, this);
-                renderCats();
-            });
-        });
-        statusBtns.forEach(btn => {
-            btn.addEventListener('click', function () {
-                currentStatusFilter = this.dataset.status;
-                setActive(statusBtns, this);
-                renderCats();
-            });
-        });
-
-        // 排序交互
-        document.getElementById('sortDefault').addEventListener('click', () => {
-            currentSort = 'default';
             updateSortUI();
-            renderCats();
-        });
-        document.getElementById('sortAffection').addEventListener('click', () => {
-            if (currentSort === 'affection') {
-                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
-            } else {
-                currentSort = 'affection';
-                sortDirection = 'desc';
-            }
-            updateSortUI();
-            renderCats();
-        });
 
-        const sortToggle = document.getElementById('sortToggle');
-        const sortSymbol = document.getElementById('sortSymbol');
-        const sortOptions = document.getElementById('sortOptions');
-        sortToggle.addEventListener('click', () => {
-            const isOpen = sortOptions.classList.toggle('show');
-            sortToggle.classList.toggle('open', isOpen);
-            sortSymbol.textContent = isOpen ? '−' : '+';
-        });
-
-        // 初始化
-        setHash('home');
-        updateSortUI();
-
-        fetch('cats.json')
-            .then(response => {
-                if (!response.ok) throw new Error('找不到 cats.json 文件');
-                return response.json();
-            })
-            .then(data => {
-                catsData = data;
+            // 先尝试加载敏感词库，再加载猫咪数据
+            Promise.all([
+                fetch('ban_words.json')
+                    .then(response => {
+                        if (!response.ok) throw new Error('文件不存在');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.words && Array.isArray(data.words)) {
+                            banWords = data.words.map(w => w.trim()).filter(w => w.length > 0);
+                            banWords.sort((a, b) => b.length - a.length);
+                            console.log(`✅ 已加载 ${banWords.length} 个敏感词`);
+                        } else {
+                            console.warn('⚠️ ban_words.json 格式不正确');
+                        }
+                    })
+                    .catch(() => {
+                        console.log('💡 未检测到 ban_words.json，敏感词功能未启用');
+                    }),
+                fetch('cats.json')
+                    .then(response => {
+                        if (!response.ok) throw new Error('找不到 cats.json 文件');
+                        return response.json();
+                    })
+                    .then(data => {
+                        catsData = data;
+                    })
+            ]).then(() => {
                 if (loadingText) loadingText.remove();
                 renderCats();
-            })
-            .catch(error => {
-                console.error('读取数据失败:', error);
+            }).catch(error => {
+                console.error('数据加载失败:', error);
                 grid.innerHTML = '<p class="error-text">❌ 读取猫咪档案失败，请检查 cats.json 文件。</p>';
             });
+        })();
     </script>
 </body>
 </html>

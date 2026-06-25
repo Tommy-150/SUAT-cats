@@ -210,18 +210,18 @@
   },
   {
     "id": "11",
-    "name": "河边奶牛(暂用名)",
+    "name": "宕机猫(暂用名)",
     "gender": "unknown",
-    "avatar": "classified/11 河边奶牛(暂用名)/river_side_milk_cow_01_thumb.jpg",
-    "avatar_hd": "classified/11 河边奶牛(暂用名)/river_side_milk_cow_01.jpg",
+    "avatar": "classified/11 宕机猫(暂用名)/river_side_milk_cow_01_thumb.jpg",
+    "avatar_hd": "classified/11 宕机猫(暂用名)/river_side_milk_cow_01.jpg",
     "affection": 1,
     "status": "lost",
-    "desc": "蝙蝠侠",
-    "story": "曾经住在河边桥底下的一只奶牛，像蝙蝠侠，2026年年初失踪",
+    "desc": "很像宕机猫",
+    "story": "曾经住在河边桥底下的一只奶牛，像著名网图宕机猫，2026年年初失踪",
     "otherPhotos": [
       {
-        "thumb": "classified/11 河边奶牛(暂用名)/river_side_milk_cow_02_thumb.jpg",
-        "hd": "classified/11 河边奶牛(暂用名)/river_side_milk_cow_02.jpg"
+        "thumb": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02_thumb.jpg",
+        "hd": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02.jpg"
       }
     ]
   },
@@ -649,21 +649,14 @@
     "avatar": "classified/36 大橘1号(暂用名)/big_orange_two_01_thumb.jpg",
     "avatar_hd": "classified/36 大橘1号(暂用名)/big_orange_two_01.jpg",
     "affection": 1,
-    "status": "lost",
+    "status": "normal",
     "desc": "普通的大橘",
-    "story": "喜欢小只古典纹，毛色偏橘，从未被古典纹喜欢过，只会被被古典纹哈气嫌弃，因为古典纹已经喜欢上了老橘，2026年年初失踪。",
-    "otherPhotos": []
-  },
-  {
-    "id": "37",
-    "name": "大橘2号（暂用名）",
-    "gender": "unknown",
-    "avatar": "classified/37 大橘2号（暂用名）/big_orange_three_01_thumb.jpg",
-    "avatar_hd": "classified/37 大橘2号（暂用名）/big_orange_three_01.jpg",
-    "affection": 1,
-    "status": "lost",
-    "desc": "普通的大橘",
-    "story": "有点偏奶油色，喜欢小只古典纹，古典纹也爱过，但是后来就被古典纹哈气嫌弃，因为古典纹已经喜欢上了老橘，2025年年末失踪。",
-    "otherPhotos": []
+    "story": "喜欢小只古典纹，毛色介于橘和奶油色中间，曾经被古典纹喜欢过，可是后来古典纹已经喜欢上了老橘，就不喜欢他了，明明是他先来的啊。",
+    "otherPhotos": [
+      {
+        "thumb": "classified/36 大橘1号(暂用名)/big_orange_two_02_thumb.jpg",
+        "hd": "classified/36 大橘1号(暂用名)/big_orange_two_02.jpg"
+      }
+    ]
   }
 ]

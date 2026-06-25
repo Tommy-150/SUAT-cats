@@ -68,7 +68,6 @@
         .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
         .filter-btn.active { background: #4A4A4A; color: #fff; box-shadow: 0 8px 20px rgba(74,74,74,0.2); }
 
-        /* 排序按钮内部箭头 */
         .filter-btn.sort-btn { display: inline-flex; align-items: center; gap: 6px; }
         .sort-arrows { display: inline-flex; align-items: center; gap: 2px; font-size: 0.9rem; }
         .sort-arrows .arrow-up,
@@ -141,7 +140,7 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Modal 弹窗样式 (与原版一致) */
+        /* Modal 弹窗样式 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); display: flex;
@@ -226,6 +225,38 @@
         }
         .spinner.hidden { display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== 敏感词遮蔽样式 ===== */
+        .blocked-word {
+            display: inline;
+            background-color: #111111;
+            color: transparent;
+            border-radius: 3px;
+            padding: 1px 3px;
+            margin: 0 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            /* 微妙的纹理暗示此处有内容 */
+            background-image:
+                repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255,255,255,0.03) 2px,
+                    rgba(255,255,255,0.03) 4px);
+        }
+
+        .blocked-word:hover {
+            background-color: transparent;
+            background-image: none;
+            color: inherit;  /* 继承父元素文字颜色，保持与其他文字一致 */
+            user-select: text;
+            text-decoration: underline;
+            text-decoration-color: rgba(0,0,0,0.15);
+            text-underline-offset: 2px;
+            text-decoration-thickness: 1px;
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
@@ -262,7 +293,6 @@
             </div>
         </div>
 
-        <!-- ✅ 排序控件（折叠面板） -->
         <div class="filter-group">
             <div class="filter-toggle" id="sortToggle">
                 <span>排序</span>
@@ -334,10 +364,37 @@
         let currentGenderFilter = 'all';
         let currentStatusFilter = 'all';
         let currentHDUrl = '';
-
-        // 排序状态
         let currentSort = 'default';
         let sortDirection = 'desc';
+
+        // 敏感词列表
+        let banWords = [];
+
+        // ---------- 工具函数 ----------
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>"']/g, char => map[char]);
+        }
+
+        function escapeRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 敏感词遮蔽处理
+        function maskSensitiveWords(text) {
+            if (!banWords.length) return text;
+            // 按长度降序排列，优先匹配长词
+            const sorted = [...banWords].sort((a, b) => b.length - a.length);
+            const pattern = sorted.map(w => escapeRegex(w)).join('|');
+            const regex = new RegExp(pattern, 'gi');
+            return text.replace(regex, (match) => `<span class="blocked-word">${match}</span>`);
+        }
 
         function getPaws(level) {
             let paws = '';
@@ -364,7 +421,6 @@
             return '❓ 未知性别';
         }
 
-        // 排序核心函数
         function sortCats(cats) {
             if (currentSort === 'affection') {
                 return [...cats].sort((a, b) => {
@@ -407,17 +463,21 @@
                 const card = document.createElement('div');
                 card.className = `card status-${cat.status || ''} fade-in`;
                 card.style.animationDelay = `${index * 0.1}s`;
+
+                // 对描述进行转义并应用敏感词遮蔽
+                const safeDesc = maskSensitiveWords(escapeHtml(cat.desc));
+
                 card.innerHTML = `
                     <div class="avatar-wrapper">
-                        <img src="${cat.avatar}" alt="${cat.name}" class="avatar">
+                        <img src="${cat.avatar}" alt="${escapeHtml(cat.name)}" class="avatar">
                         <div class="status-icon">${getStatusIcon(cat.status)}</div>
                     </div>
                     <div class="name-row">
-                        <span class="name">${cat.name}</span>
+                        <span class="name">${escapeHtml(cat.name)}</span>
                         <span class="gender ${cat.gender}">${getGenderDisplay(cat.gender)}</span>
                     </div>
                     <div class="affection">${getPaws(cat.affection)}</div>
-                    <div class="desc">${cat.desc}</div>
+                    <div class="desc">${safeDesc}</div>
                 `;
                 card.addEventListener('click', () => openModal(cat));
                 grid.appendChild(card);
@@ -430,7 +490,9 @@
             document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
             document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
 
-            const paragraphs = cat.story.split('\n\n');
+            // 故事文本：先转义，再应用敏感词遮蔽，然后按段落分割
+            const safeStory = maskSensitiveWords(escapeHtml(cat.story));
+            const paragraphs = safeStory.split('\n\n');
             const storyHTML = paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
             document.getElementById('modalStoryText').innerHTML = storyHTML;
 
@@ -503,7 +565,7 @@
         lightboxClose.addEventListener('click', closeLightbox);
         lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
 
-        // 筛选交互
+        // 筛选与排序交互
         const genderToggle = document.getElementById('genderToggle');
         const genderSymbol = document.getElementById('genderSymbol');
         const genderOptions = document.getElementById('genderOptions');
@@ -544,7 +606,6 @@
             });
         });
 
-        // 排序交互
         document.getElementById('sortDefault').addEventListener('click', () => {
             currentSort = 'default';
             updateSortUI();
@@ -570,21 +631,43 @@
             sortSymbol.textContent = isOpen ? '−' : '+';
         });
 
-        // 初始数据加载
-        fetch('cats.json')
+        // ---------- 数据加载流程 ----------
+        // 先加载敏感词库，再加载猫咪数据，确保渲染时敏感词已可用
+        fetch('ban_words.json')
             .then(response => {
-                if (!response.ok) throw new Error('找不到 cats.json 文件');
+                if (!response.ok) throw new Error('ban_words.json 不存在或无法访问');
                 return response.json();
             })
             .then(data => {
-                catsData = data;
-                if (loadingText) loadingText.remove();
-                updateSortUI();
-                renderCats();
+                if (data.words && Array.isArray(data.words)) {
+                    banWords = data.words.map(w => w.trim()).filter(w => w.length > 0);
+                    // 按长度降序排列，便于正则匹配
+                    banWords.sort((a, b) => b.length - a.length);
+                    console.log(`✅ 已加载 ${banWords.length} 个敏感词`);
+                } else {
+                    console.warn('⚠️ ban_words.json 格式不正确，缺少 words 数组');
+                }
             })
-            .catch(error => {
-                console.error('读取数据失败:', error);
-                grid.innerHTML = '<p class="error-text">❌ 读取猫咪档案失败，请检查 cats.json 文件是否存在且格式正确。</p>';
+            .catch(err => {
+                console.log('💡 未检测到 ban_words.json 或加载失败，敏感词功能未启用');
+            })
+            .finally(() => {
+                // 无论敏感词是否加载成功，都继续加载猫咪数据
+                fetch('cats.json')
+                    .then(response => {
+                        if (!response.ok) throw new Error('找不到 cats.json 文件');
+                        return response.json();
+                    })
+                    .then(data => {
+                        catsData = data;
+                        if (loadingText) loadingText.remove();
+                        updateSortUI();
+                        renderCats();
+                    })
+                    .catch(error => {
+                        console.error('读取数据失败:', error);
+                        grid.innerHTML = '<p class="error-text">❌ 读取猫咪档案失败，请检查 cats.json 文件是否存在且格式正确。</p>';
+                    });
             });
     </script>
 </body>
