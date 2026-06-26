@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SUAT-cats 管理器（增强版：支持标签管理）
-==========================================
+SUAT-cats 管理器（增强版：标签管理、批量打标签、窗口自适应）
+========================================================
 行列表视图，支持上移/下移步数调整顺序，内建预览服务器。
-集成：基本信息编辑、故事编辑、图片预览、缩略图编辑、新增猫咪、删除猫咪、标签管理、自动同步前端（Excel + cats.json）。
+集成：基本信息编辑、故事编辑、图片预览、缩略图编辑、新增猫咪、删除猫咪、
+     标签管理（增删改、查看关联猫、批量添加标签）、自动同步前端（Excel + cats.json）。
 关闭时若有未保存的顺序变更会提醒。
 依赖：Pillow、openpyxl
-
-新增功能：
-- 右侧标签管理面板（增删改，预设色块 + 调色盘）
-- 编辑猫咪时可多选标签
-- cats.json 自动保留 tags 字段
 """
 
 import os
@@ -120,7 +116,7 @@ JSON_PATH = BASE_DIR / "cats.json"
 TAG_COLOR_PATH = BASE_DIR / "tag_color.json"
 CLASSIFIED_DIR = BASE_DIR / "classified"
 INDEX_HTML = BASE_DIR / "index.html"
-TEMP_THUMB_DIR = BASE_DIR / ".tmp_thumbs"          # 临时缩略图目录
+TEMP_THUMB_DIR = BASE_DIR / ".tmp_thumbs"
 
 THUMB_SUFFIX = "_thumb"
 THUMB_OUTPUT_SIZE = 300
@@ -140,7 +136,6 @@ COLUMN_KEYWORDS = {
     "status": "状态", "desc": "概要", "story": "故事", "pic": "图名",
 }
 
-# 预设的颜色块（用于标签选择）
 PRESET_COLORS = [
     "#F9A8D4", "#A78BFA", "#6EE7B7", "#FCA5A5",
     "#D4A373", "#7F8C8D", "#A3B18A", "#B5838D",
@@ -271,10 +266,9 @@ class ExcelStore:
 
 
 # ============================================================
-# cats.json 重生成（增加 tags 支持）
+# cats.json 与标签相关工具
 # ============================================================
 def regenerate_cats_json(rows, classified_dir, json_path, tags_map=None):
-    """根据 rows 重新生成 cats.json，可选传入 tags_map={id: [tag, ...]}"""
     warnings = []
     cats = []
     for row in rows:
@@ -317,7 +311,6 @@ def regenerate_cats_json(rows, classified_dir, json_path, tags_map=None):
                 "hd": f"{folder_json}/{pic_name}_{seq_str}.jpg",
             })
 
-        # 获取该猫的 tags
         tags = []
         if tags_map and cat_id in tags_map:
             tags = [t for t in tags_map[cat_id] if isinstance(t, str) and t.strip()]
@@ -339,7 +332,6 @@ def regenerate_cats_json(rows, classified_dir, json_path, tags_map=None):
 
 
 def load_tags_from_json(json_path):
-    """从 cats.json 读取所有猫咪的 tags，返回 {id: [tag, ...]}"""
     tags_map = {}
     if not json_path.exists():
         return tags_map
@@ -355,7 +347,6 @@ def load_tags_from_json(json_path):
 
 
 def load_tag_colors(path):
-    """加载标签颜色文件，返回 dict，失败返回 {}"""
     if not path.exists():
         return {}
     try:
@@ -366,13 +357,12 @@ def load_tag_colors(path):
 
 
 def save_tag_colors(path, data):
-    """保存标签颜色到文件"""
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 # ============================================================
-# 缩略图工具（保持原样）
+# 缩略图工具
 # ============================================================
 def auto_thumbnail(src_path, dst_path, output_size=THUMB_OUTPUT_SIZE, crop_ratio=0.6):
     img = Image.open(src_path).convert("RGB")
@@ -450,20 +440,22 @@ def mono_font(size=FS_SMALL):
 
 
 # ============================================================
-# 缩略图裁剪器（增加 on_close 回调）
+# 缩略图裁剪器（保持原有）
 # ============================================================
 class ThumbEditor(tk.Toplevel):
     def __init__(self, master, original_path, on_done=None, on_close=None):
         super().__init__(master)
         self.title(f"编辑缩略图 - {original_path.name}")
-        self.geometry("1000x720")
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        self.geometry(f"{int(sw*0.8)}x{int(sh*0.8)}")
         self.configure(bg=COLOR_BG)
         self.transient(master)
         self.grab_set()
 
         self.original_path = original_path
         self.on_done = on_done
-        self.on_close = on_close          # 新增：关闭时回调（不论是否保存）
+        self.on_close = on_close
         self.original_image = Image.open(original_path)
         self.tk_image = None
         self.crop_box = None
@@ -656,31 +648,181 @@ class ThumbEditor(tk.Toplevel):
 
 
 # ============================================================
-# CatEditor（增加标签编辑）
+# 标签综合管理窗口（编辑名称/颜色 + 查看关联猫 + 批量添加标签）
+# ============================================================
+class TagManageWindow(tk.Toplevel):
+    def __init__(self, master, tag_name, tag_color, all_cats, cat_tags_map, all_tag_names,
+                 on_save_and_apply):
+        """
+        on_save_and_apply: 回调函数，接收 (old_name, new_name, new_color, status_dict)
+                           status_dict 为 {cat_id: bool}，True 表示拥有标签，False 表示不拥有
+                           在此回调中应同时处理标签更新和标签分配。
+        """
+        super().__init__(master)
+        self.tag_name = tag_name
+        self.tag_color = tag_color
+        self.all_cats = all_cats
+        self.cat_tags_map = cat_tags_map
+        self.all_tag_names = all_tag_names
+        self.on_save_and_apply = on_save_and_apply
+
+        self.title(f"管理标签「{tag_name}」")
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        w = int(sw * 0.7)
+        h = int(sh * 0.8)
+        x = (sw - w) // 2
+        y = (sh - h) // 4
+        self.geometry(f"{w}x{h}+{x}+{y}")
+        self.minsize(700, 600)
+        self.configure(bg=COLOR_BG)
+        self.transient(master)
+        self.grab_set()
+
+        self._build()
+
+    def _build(self):
+        # ── 编辑标签区域 ──
+        edit_frame = tk.LabelFrame(self, text="编辑标签", font=ui_font(FS_BODY, "bold"),
+                                   bg=COLOR_BG, fg=COLOR_ACCENT)
+        edit_frame.pack(fill=tk.X, padx=10, pady=(10, 5))
+
+        row1 = tk.Frame(edit_frame, bg=COLOR_BG)
+        row1.pack(fill=tk.X, padx=10, pady=5)
+        tk.Label(row1, text="名称：", bg=COLOR_BG, font=ui_font(FS_BODY)).pack(side=tk.LEFT)
+        self.name_var = tk.StringVar(value=self.tag_name)
+        tk.Entry(row1, textvariable=self.name_var, font=ui_font(FS_BODY), width=20).pack(side=tk.LEFT, padx=5)
+
+        row2 = tk.Frame(edit_frame, bg=COLOR_BG)
+        row2.pack(fill=tk.X, padx=10, pady=5)
+        tk.Label(row2, text="颜色：", bg=COLOR_BG, font=ui_font(FS_BODY)).pack(side=tk.LEFT)
+        self.color_var = tk.StringVar(value=self.tag_color)
+        self.color_preview = tk.Label(row2, text="    ", bg=self.tag_color, relief=tk.SOLID,
+                                      width=4, borderwidth=2)
+        self.color_preview.pack(side=tk.LEFT, padx=5)
+        tk.Button(row2, text="🎨 调色盘", command=self._pick_color,
+                  font=ui_font(FS_SMALL), bg=COLOR_ACCENT_LIGHT, fg="white",
+                  relief=tk.FLAT, padx=8, pady=2, cursor="hand2").pack(side=tk.LEFT, padx=5)
+
+        color_grid = tk.Frame(edit_frame, bg=COLOR_BG)
+        color_grid.pack(fill=tk.X, padx=10, pady=5)
+        self.color_buttons = []
+        for i, c in enumerate(PRESET_COLORS):
+            btn = tk.Button(color_grid, bg=c, width=3, height=1, relief=tk.FLAT,
+                            borderwidth=1, cursor="hand2",
+                            command=lambda col=c: self._select_color(col))
+            btn.grid(row=i // 10, column=i % 10, padx=2, pady=2)
+            self.color_buttons.append((btn, c))
+        self._highlight_selected_color(self.tag_color)
+
+        # ── 猫咪列表 ──
+        cats_frame = tk.LabelFrame(self, text="关联猫咪（勾选 = 拥有此标签）", font=ui_font(FS_BODY, "bold"),
+                                   bg=COLOR_BG, fg=COLOR_ACCENT)
+        cats_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 5))
+
+        list_container = tk.Frame(cats_frame, bg=COLOR_BG)
+        list_container.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        canvas = tk.Canvas(list_container, bg=COLOR_BG, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=canvas.yview)
+        self.cats_list_frame = tk.Frame(canvas, bg=COLOR_BG)
+        self.cats_list_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=self.cats_list_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.cat_check_vars = {}
+        self._populate_cats_list()
+
+        # ── 底部统一按钮 ──
+        bottom_bar = tk.Frame(self, bg=COLOR_BG)
+        bottom_bar.pack(fill=tk.X, padx=10, pady=(0, 10))
+        tk.Button(bottom_bar, text="💾 保存并应用", command=self._save_and_apply,
+                  font=ui_font(FS_BODY, "bold"), bg=COLOR_ACCENT, fg="white",
+                  relief=tk.FLAT, padx=20, pady=6, cursor="hand2").pack(side=tk.RIGHT, padx=5)
+
+    def _populate_cats_list(self):
+        for w in self.cats_list_frame.winfo_children():
+            w.destroy()
+        self.cat_check_vars.clear()
+        for cat in self.all_cats:
+            cat_id = cat["id"]
+            cat_name = cat["name"]
+            has_tag = self.tag_name in self.cat_tags_map.get(cat_id, [])
+            text = f"{cat_id} {cat_name}"
+            if has_tag:
+                text += " ★"
+            var = tk.BooleanVar(value=has_tag)
+            cb = tk.Checkbutton(self.cats_list_frame, text=text, variable=var,
+                                bg=COLOR_BG, font=ui_font(FS_SMALL), anchor="w",
+                                activebackground=COLOR_BG, selectcolor=COLOR_BG)
+            cb.pack(fill=tk.X, padx=5, pady=1)
+            self.cat_check_vars[cat_id] = var
+
+    def _select_color(self, color):
+        self.color_var.set(color)
+        self.color_preview.config(bg=color)
+        self._highlight_selected_color(color)
+
+    def _highlight_selected_color(self, color):
+        for btn, c in self.color_buttons:
+            if c == color:
+                btn.config(relief=tk.SOLID, borderwidth=2)
+            else:
+                btn.config(relief=tk.FLAT, borderwidth=1)
+
+    def _pick_color(self):
+        chosen = colorchooser.askcolor(color=self.color_var.get(), parent=self)
+        if chosen[1]:
+            self._select_color(chosen[1])
+
+    def _save_and_apply(self):
+        new_name = self.name_var.get().strip()
+        if not new_name:
+            messagebox.showwarning("提示", "名称不能为空", parent=self)
+            return
+        # 检查名称是否与其他标签冲突（除了自身）
+        if new_name != self.tag_name and new_name in self.all_tag_names:
+            messagebox.showwarning("冲突", f"标签「{new_name}」已存在", parent=self)
+            return
+        new_color = self.color_var.get()
+        status = {cat_id: var.get() for cat_id, var in self.cat_check_vars.items()}
+
+        # 调用回调：传递旧名称、新名称、新颜色、状态字典
+        self.on_save_and_apply(self.tag_name, new_name, new_color, status)
+
+        # 更新窗口标题和内部缓存的标签名
+        self.tag_name = new_name
+        self.title(f"管理标签「{new_name}」")
+        messagebox.showinfo("成功", "标签信息与分配已更新", parent=self)
+        # 刷新猫咪列表（反映新的标签分配和名称）
+        self._populate_cats_list()
+
+# ============================================================
+# CatEditor（窗口自适应，增加应用标签按钮）
 # ============================================================
 class CatEditor(tk.Toplevel):
-    def __init__(self, master, store, cat=None, on_saved=None, tag_colors=None, cat_tags=None):
-        """
-        tag_colors: 全部可用标签名称列表
-        cat_tags:   该猫已有的标签列表
-        """
+    def __init__(self, master, store, cat=None, on_saved=None, on_tags_applied=None,
+                 tag_colors=None, cat_tags=None):
         super().__init__(master)
         self.store = store
         self.cat = cat
         self.on_saved = on_saved
+        self.on_tags_applied = on_tags_applied
         self.is_new = cat is None
-        self.tag_colors = tag_colors or []          # 所有标签名
-        self.cat_tags = cat_tags or []              # 当前猫的标签
+        self.tag_colors = tag_colors or []
+        self.cat_tags = cat_tags or []
 
         title = "新增猫咪" if self.is_new else f"编辑 {cat['id']} {cat['name']}"
         self.title(title)
 
         sw = self.winfo_screenwidth()
         sh = self.winfo_screenheight()
-        target_w = max(1100, min(int(sw * 0.8), 1600))
-        target_h = max(750, min(int(sh * 0.8), 1000))
+        # 窗口宽度取屏幕宽度的 85%，高度取 80%，最小尺寸也相应调整
+        target_w = max(1100, int(sw * 0.85))
+        target_h = max(750, int(sh * 0.80))
         self.geometry(f"{target_w}x{target_h}")
-        self.minsize(max(900, int(sw * 0.55)), max(700, int(sh * 0.55)))
+        self.minsize(max(900, int(sw*0.55)), max(700, int(sh*0.55)))
 
         self.configure(bg=COLOR_BG)
         self.transient(master)
@@ -693,9 +835,7 @@ class CatEditor(tk.Toplevel):
         self._preview_thumb_img = None
         self._last_original = None
         self._last_thumb = None
-
-        # 标签选中状态变量
-        self.tag_vars = {}  # tag_name -> tk.BooleanVar
+        self.tag_vars = {}
 
         TEMP_THUMB_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -713,7 +853,7 @@ class CatEditor(tk.Toplevel):
             int(self.var_affection.get() or 0), self.var_desc.get(),
             self.txt_story.get("1.0", tk.END),
             tuple((str(p["src"]), p["seq"], p.get("thumb_temp", None) and str(p["thumb_temp"])) for p in self.new_photo_queue),
-            {t: v.get() for t, v in self.tag_vars.items()}  # 标签快照
+            {t: v.get() for t, v in self.tag_vars.items()}
         )
 
     def _is_dirty(self):
@@ -789,7 +929,7 @@ class CatEditor(tk.Toplevel):
         entry(body, self.var_name, 0, 3)
 
         label(body, "图名", 1, 0)
-        e_pic = entry(body, self.var_pic, 1, 1)
+        entry(body, self.var_pic, 1, 1)
 
         label(body, "概要", 1, 2)
         entry(body, self.var_desc, 1, 3)
@@ -815,11 +955,11 @@ class CatEditor(tk.Toplevel):
         if self.is_new:
             tk.Label(body, text="提示：编号与图名保存后不可修改。图名只能包含 英文/数字/下划线。",
                      bg=COLOR_CARD, fg=COLOR_SUBTEXT, font=ui_font(FS_TINY),
-                     wraplength=520, justify="left").grid(row=4, column=0, columnspan=4, sticky="w", padx=4, pady=(8,0))
+                     wraplength=520, justify="left").grid(row=4, column=0, columnspan=4, sticky="w", padx=4, pady=(8, 0))
         else:
             tk.Label(body, text="提示：图名修改后将重命名所有相关图片文件，请谨慎操作。只能包含英文/数字/下划线。",
                      bg=COLOR_CARD, fg=COLOR_SUBTEXT, font=ui_font(FS_TINY),
-                     wraplength=520, justify="left").grid(row=4, column=0, columnspan=4, sticky="w", padx=4, pady=(8,0))
+                     wraplength=520, justify="left").grid(row=4, column=0, columnspan=4, sticky="w", padx=4, pady=(8, 0))
 
         # ----- 故事 -----
         story_card = self._make_card(left, "故事")
@@ -831,7 +971,7 @@ class CatEditor(tk.Toplevel):
                                  highlightbackground=COLOR_DIVIDER, highlightcolor=COLOR_INFO)
         self.txt_story.pack(fill=tk.BOTH, expand=True)
 
-        # ----- 标签选择区 (新增) -----
+        # ----- 标签选择区（带应用按钮） -----
         tag_card = self._make_card(left, "标签")
         tag_card.pack(fill=tk.X, pady=(8, 0))
         tag_inner = tk.Frame(tag_card, bg=COLOR_CARD)
@@ -839,6 +979,10 @@ class CatEditor(tk.Toplevel):
         self.tag_frame = tk.Frame(tag_inner, bg=COLOR_CARD)
         self.tag_frame.pack(fill=tk.BOTH)
         self._populate_tag_checkboxes()
+        btn_apply_tags = tk.Button(tag_inner, text="✅ 应用标签", command=self._apply_tags_only,
+                                   font=ui_font(FS_SMALL, "bold"), bg=COLOR_INFO, fg="white",
+                                   relief=tk.FLAT, padx=10, pady=5, cursor="hand2")
+        btn_apply_tags.pack(anchor="e", pady=(6, 0))
 
         # ----- 图片区 -----
         photo_card = self._make_card(right, "图片")
@@ -862,34 +1006,32 @@ class CatEditor(tk.Toplevel):
         self.preview_original_box, self.preview_original_label = make_preview_box(preview_frame, 0, "原图预览")
         self.preview_thumb_box, self.preview_thumb_label = make_preview_box(preview_frame, 1, "缩略图预览")
 
-        # 图片操作按钮（保持原有）
         def pill(parent, text, color, cmd):
             return tk.Button(parent, text=text, command=cmd, font=ui_font(FS_SMALL, "bold"),
                              bg=color, fg="white", relief=tk.FLAT, borderwidth=0, padx=10, pady=5, cursor="hand2")
 
         if self.is_new:
             row1 = tk.Frame(photo_inner, bg=COLOR_CARD)
-            row1.pack(fill=tk.X, pady=(2,2))
+            row1.pack(fill=tk.X, pady=(2, 2))
             pill(row1, "📷 选主图", COLOR_OK, lambda: self._start_photo_selection(seq=1)).pack(side=tk.LEFT, padx=2)
             pill(row1, "➕ 加补充", COLOR_INFO, lambda: self._start_photo_selection(seq=None)).pack(side=tk.LEFT, padx=2)
             row2 = tk.Frame(photo_inner, bg=COLOR_CARD)
-            row2.pack(fill=tk.X, pady=(0,4))
+            row2.pack(fill=tk.X, pady=(0, 4))
             pill(row2, "✏️ 重裁缩略", COLOR_WARN, self._manual_rethumb_queued).pack(side=tk.LEFT, padx=2)
             pill(row2, "🗑 移除", COLOR_DANGER, self._remove_queued).pack(side=tk.LEFT, padx=2)
         else:
             row1 = tk.Frame(photo_inner, bg=COLOR_CARD)
-            row1.pack(fill=tk.X, pady=(2,2))
+            row1.pack(fill=tk.X, pady=(2, 2))
             pill(row1, "✏️ 重裁缩略", COLOR_WARN, self._edit_existing_thumb).pack(side=tk.LEFT, padx=2)
             pill(row1, "➕ 补充图", COLOR_INFO, self._add_extra_existing).pack(side=tk.LEFT, padx=2)
             pill(row1, "🗑 删除", COLOR_DANGER, self._delete_existing_photo).pack(side=tk.LEFT, padx=2)
             row2 = tk.Frame(photo_inner, bg=COLOR_CARD)
-            row2.pack(fill=tk.X, pady=(0,4))
+            row2.pack(fill=tk.X, pady=(0, 4))
             pill(row2, "🔄 设为主图", "#7E57C2", self._swap_to_main).pack(side=tk.LEFT, padx=2)
             pill(row2, "📁 打开文件夹", COLOR_ACCENT_LIGHT, lambda: open_in_explorer(self._folder())).pack(side=tk.LEFT, padx=2)
 
-        # 图片列表
         list_holder = tk.Frame(photo_inner, bg="white", highlightthickness=1, highlightbackground=COLOR_DIVIDER)
-        list_holder.pack(fill=tk.BOTH, expand=True, pady=(4,0))
+        list_holder.pack(fill=tk.BOTH, expand=True, pady=(4, 0))
         self.photo_list = tk.Listbox(list_holder, font=mono_font(FS_SMALL), activestyle="dotbox", relief=tk.FLAT,
                                      bg="white", borderwidth=0, highlightthickness=0, selectbackground=COLOR_HOVER,
                                      selectforeground=COLOR_TEXT)
@@ -899,16 +1041,25 @@ class CatEditor(tk.Toplevel):
         self.photo_list.config(yscrollcommand=sb.set)
         self.photo_list.bind("<<ListboxSelect>>", lambda _e: self._on_photo_select())
 
-        # 底部按钮
         bottom = tk.Frame(self, bg=COLOR_BG)
-        bottom.pack(fill=tk.X, padx=20, pady=(0,16))
+        bottom.pack(fill=tk.X, padx=20, pady=(0, 16))
         tk.Button(bottom, text="取消", command=self._on_close_request, font=ui_font(FS_BODY), bg="#eaeaea", fg=COLOR_TEXT,
                   relief=tk.FLAT, borderwidth=0, padx=22, pady=8, cursor="hand2").pack(side=tk.RIGHT, padx=4)
         tk.Button(bottom, text="💾 保存并同步", command=self._save, font=ui_font(FS_BODY, "bold"), bg=COLOR_ACCENT, fg="white",
                   relief=tk.FLAT, borderwidth=0, padx=24, pady=8, cursor="hand2").pack(side=tk.RIGHT, padx=4)
 
+    def _apply_tags_only(self):
+        if self.is_new:
+            messagebox.showwarning("提示", "请先保存猫咪基本信息", parent=self)
+            return
+        selected = [t for t, var in self.tag_vars.items() if var.get()]
+        cat_id = self.cat["id"]
+        if self.on_tags_applied:
+            self.on_tags_applied(cat_id, selected)
+        messagebox.showinfo("已应用", "标签已更新并同步到 cats.json", parent=self)
+        self._initial_snapshot = self._snapshot()
+
     def _populate_tag_checkboxes(self):
-        """重建标签复选框（基于 self.tag_colors 和 self.cat_tags）"""
         for widget in self.tag_frame.winfo_children():
             widget.destroy()
         self.tag_vars.clear()
@@ -916,25 +1067,22 @@ class CatEditor(tk.Toplevel):
             var = tk.BooleanVar(value=(tag in self.cat_tags))
             cb = tk.Checkbutton(self.tag_frame, text=tag, variable=var,
                                 bg=COLOR_CARD, font=ui_font(FS_SMALL),
-                                activebackground=COLOR_CARD,
-                                selectcolor=COLOR_CARD)
+                                activebackground=COLOR_CARD, selectcolor=COLOR_CARD)
             cb.pack(side=tk.LEFT, padx=4, pady=2)
             self.tag_vars[tag] = var
 
     def _make_card(self, parent, title):
         card = tk.Frame(parent, bg=COLOR_CARD, highlightthickness=1, highlightbackground=COLOR_CARD_BORDER)
         title_bar = tk.Frame(card, bg=COLOR_CARD)
-        title_bar.pack(fill=tk.X, padx=18, pady=(12,4))
+        title_bar.pack(fill=tk.X, padx=18, pady=(12, 4))
         tk.Label(title_bar, text=title, bg=COLOR_CARD, fg=COLOR_ACCENT, font=ui_font(FS_BODY+1, "bold")).pack(side=tk.LEFT)
         sep = tk.Frame(card, bg=COLOR_DIVIDER, height=1)
         sep.pack(fill=tk.X, padx=18)
         return card
 
     def _update_paw_preview(self):
-        try:
-            n = int(self.var_affection.get())
-        except Exception:
-            n = 0
+        try: n = int(self.var_affection.get())
+        except: n = 0
         n = max(0, min(5, n))
         self.aff_preview.config(text="🐾" * n + "·" * (5 - n))
 
@@ -982,7 +1130,6 @@ class CatEditor(tk.Toplevel):
         self._last_original = original_path
         self._last_thumb = thumb_path
 
-    # ---------- 图片管理方法（保持原有）----------
     def _on_photo_select(self):
         idx = self._selected_idx()
         if idx is None: return
@@ -1131,10 +1278,8 @@ class CatEditor(tk.Toplevel):
         pic = self.cat["pic_name"]
         for t in [folder / f"{pic}_{seq:02d}.jpg", folder / f"{pic}_{seq:02d}_thumb.jpg"]:
             if t.is_file():
-                try:
-                    t.unlink()
-                except Exception as e:
-                    messagebox.showerror("删除失败", f"{t}: {e}")
+                try: t.unlink()
+                except Exception as e: messagebox.showerror("删除失败", f"{t}: {e}")
         self._refresh_existing_photos()
         self._mark_dirty()
 
@@ -1156,7 +1301,6 @@ class CatEditor(tk.Toplevel):
         self._refresh_existing_photos()
         self._mark_dirty()
 
-    # ---------- 保存逻辑（支持图名变更与标签保存）----------
     def _save(self):
         try:
             cat_id = self.var_id.get().strip().zfill(2)
@@ -1164,10 +1308,8 @@ class CatEditor(tk.Toplevel):
             pic = self.var_pic.get().strip()
             gender = (self.var_gender.get().strip() or "unknown")
             status = (self.var_status.get().strip() or "normal")
-            try:
-                affection = int(self.var_affection.get())
-            except Exception:
-                affection = 1
+            try: affection = int(self.var_affection.get())
+            except: affection = 1
             desc = self.var_desc.get().strip()
             story = self.txt_story.get("1.0", tk.END).strip()
             selected_tags = [t for t, var in self.tag_vars.items() if var.get()]
@@ -1232,13 +1374,11 @@ class CatEditor(tk.Toplevel):
                 })
                 actions.append(f"更新 Excel 行 编号={cat_id}")
 
-            # 返回标签数据供主窗口更新
             self.result_tags = selected_tags
             self.result_id = cat_id
-
             self._initial_snapshot = self._snapshot()
             if self.on_saved:
-                self.on_saved(actions, cat_id, selected_tags)  # 回调增加标签参数
+                self.on_saved(actions, cat_id, selected_tags)
             self.destroy()
         except Exception as e:
             messagebox.showerror("保存失败", f"{e}\n\n{traceback.format_exc()}")
@@ -1258,13 +1398,15 @@ class CatEditor(tk.Toplevel):
 
 
 # ============================================================
-# 主窗口 —— 增加标签管理面板
+# 主窗口
 # ============================================================
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("🐱 SUAT-cats 管理器")
-        self.geometry("1400x860")  # 加宽以容纳标签面板
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        self.geometry(f"{int(sw*0.9)}x{int(sh*0.85)}")
         self.minsize(1100, 700)
         self.configure(bg=COLOR_BG)
 
@@ -1278,12 +1420,10 @@ class App(tk.Tk):
         self.current_filter = "all"
         self.search_term = ""
 
-        # 标签相关
-        self.tag_colors = {}           # 从 tag_color.json 读取
-        self.cat_tags_map = {}         # id -> [tag, ...] (从 cats.json 读取)
+        self.tag_colors = {}
+        self.cat_tags_map = {}
         self._order_dirty = False
 
-        # 内建预览服务器
         self.http_server = None
         self.http_server_thread = None
 
@@ -1294,19 +1434,14 @@ class App(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self._on_close_app)
 
     def _load_all_data(self):
-        """加载 Excel、标签颜色和已有的猫咪标签"""
         try:
             self.store.load()
             self.rows = self.store.all_rows()
         except Exception as e:
             messagebox.showerror("加载 Excel 失败", str(e))
             self.rows = []
-
-        # 加载 tag_color.json
         self.tag_colors = load_tag_colors(TAG_COLOR_PATH)
-        # 加载 cats.json 中已有的标签映射
         self.cat_tags_map = load_tags_from_json(JSON_PATH)
-
         self._render()
         self._render_tag_panel()
         self.status_var.set(f"已加载 {len(self.rows)} 只猫咪")
@@ -1317,17 +1452,13 @@ class App(tk.Tk):
             ans = messagebox.askyesnocancel(
                 "未保存的顺序变更",
                 "你移动过猫咪的顺序，但尚未点击「应用变更」保存到 Excel。\n\n"
-                "是 ＝ 保存并退出\n否 ＝ 丢弃变更并退出\n取消 ＝ 继续编辑"
+                "是 ＝ 保存并退出\n否 ＝ 丢弃并退出\n取消 ＝ 继续编辑"
             )
             if ans is None: return
             if ans:
-                try:
-                    self._apply_changes_silent()
-                except Exception as e:
-                    messagebox.showerror("保存失败", f"{e}")
-                    return
-        if self.http_server:
-            self._stop_server()
+                try: self._apply_changes_silent()
+                except Exception as e: messagebox.showerror("保存失败", str(e)); return
+        if self.http_server: self._stop_server()
         self.destroy()
 
     def _apply_changes_silent(self):
@@ -1349,40 +1480,35 @@ class App(tk.Tk):
             new_folder = CLASSIFIED_DIR / new_folder_name
             old_folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}"
             if new_folder.exists() and new_folder != old_folder:
-                conflicts.append(f"{new_folder_name}")
+                conflicts.append(new_folder_name)
         if conflicts:
             messagebox.showerror("重命名冲突", "\n".join(conflicts)); return
 
         if not silent and not messagebox.askyesno("确认重新编号", "是否按当前顺序重新编号所有猫咪？"):
             return
 
-        # 先重命名到临时名称
         temp_suffix = "_renaming"
         for cat in self.rows:
             old_folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}"
             if old_folder.is_dir():
                 old_folder.rename(CLASSIFIED_DIR / f"{cat['id']} {cat['name']}{temp_suffix}")
-        # 再改为目标名称
         for idx, cat in enumerate(self.rows):
             new_id = f"{idx+1:02d}"
             temp_folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}{temp_suffix}"
             if temp_folder.is_dir():
                 temp_folder.rename(CLASSIFIED_DIR / f"{new_id} {cat['name']}")
 
-        # 更新内存和 Excel
         for idx, cat in enumerate(self.rows):
             cat["id"] = f"{idx+1:02d}"
         self.store.rewrite_rows(self.rows)
         self.store.save()
 
-        # 更新标签映射中的 ID（旧 ID 转换为新 ID）
         new_tags_map = {}
         for old_id, new_id in old_to_new.items():
             if old_id in self.cat_tags_map:
                 new_tags_map[new_id] = self.cat_tags_map[old_id]
         self.cat_tags_map = new_tags_map
 
-        # 重新生成 cats.json
         count, warns = regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH, self.cat_tags_map)
         self._order_dirty = False
         if not silent:
@@ -1396,74 +1522,98 @@ class App(tk.Tk):
 
     # ---------- 标签管理面板 ----------
     def _render_tag_panel(self):
-        """刷新右侧标签管理区域"""
-        if hasattr(self, 'tag_panel_frame'):
-            for w in self.tag_panel_frame.winfo_children():
-                w.destroy()
-        else:
-            return  # 如果还没创建，稍后在 _build 中调用
+        if not hasattr(self, 'tag_panel_frame'): return
+        for w in self.tag_panel_frame.winfo_children():
+            w.destroy()
 
-        # 标题
         tk.Label(self.tag_panel_frame, text="🏷️ 标签管理",
                  font=ui_font(FS_BODY+1, "bold"), bg=COLOR_CARD, fg=COLOR_ACCENT
-                 ).pack(anchor="w", padx=12, pady=(10,6))
+                 ).pack(anchor="w", padx=12, pady=(10, 6))
 
-        # 标签列表区域（带滚动）
         list_container = tk.Frame(self.tag_panel_frame, bg=COLOR_CARD)
-        list_container.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0,8))
+        list_container.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
         canvas = tk.Canvas(list_container, bg=COLOR_CARD, highlightthickness=0, height=200)
         scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=canvas.yview)
         self.tag_list_frame = tk.Frame(canvas, bg=COLOR_CARD)
         self.tag_list_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0,0), window=self.tag_list_frame, anchor="nw")
+        canvas.create_window((0, 0), window=self.tag_list_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self._populate_tag_list()
 
-        # 操作按钮
         btn_frame = tk.Frame(self.tag_panel_frame, bg=COLOR_CARD)
-        btn_frame.pack(fill=tk.X, padx=8, pady=(0,10))
+        btn_frame.pack(fill=tk.X, padx=8, pady=(0, 10))
         tk.Button(btn_frame, text="➕ 添加标签", command=self._add_tag_dialog,
                   font=ui_font(FS_SMALL, "bold"), bg=COLOR_OK, fg="white",
                   relief=tk.FLAT, borderwidth=0, padx=10, pady=5, cursor="hand2"
-                  ).pack(side=tk.LEFT, padx=2)
+                  ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
         tk.Button(btn_frame, text="🗑️ 删除", command=self._delete_tag,
                   font=ui_font(FS_SMALL, "bold"), bg=COLOR_DANGER, fg="white",
                   relief=tk.FLAT, borderwidth=0, padx=10, pady=5, cursor="hand2"
-                  ).pack(side=tk.LEFT, padx=2)
+                  ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
 
     def _populate_tag_list(self):
         for w in self.tag_list_frame.winfo_children():
             w.destroy()
-        self.tag_check_vars = {}  # tag -> BooleanVar (用于选中删除)
+        self.tag_check_vars = {}
         for tag, color in self.tag_colors.items():
             frame = tk.Frame(self.tag_list_frame, bg=COLOR_CARD)
             frame.pack(fill=tk.X, pady=2)
             var = tk.BooleanVar(value=False)
-            cb = tk.Checkbutton(frame, variable=var, bg=COLOR_CARD,
-                                activebackground=COLOR_CARD, selectcolor=COLOR_CARD)
+            cb = tk.Checkbutton(frame, variable=var, bg=COLOR_CARD, activebackground=COLOR_CARD, selectcolor=COLOR_CARD)
             cb.pack(side=tk.LEFT)
-            # 颜色方块
-            color_box = tk.Label(frame, text="   ", bg=color, width=4, relief=tk.RIDGE)
+            color_box = tk.Label(frame, text="   ", bg=color, width=4, relief=tk.RIDGE, cursor="hand2")
             color_box.pack(side=tk.LEFT, padx=4)
-            # 名称
-            tk.Label(frame, text=tag, bg=COLOR_CARD, font=ui_font(FS_SMALL)).pack(side=tk.LEFT, padx=4)
+            color_box.bind("<Button-1>", lambda e, t=tag, c=color: self._on_tag_click(t, c))
+            name_label = tk.Label(frame, text=tag, bg=COLOR_CARD, font=ui_font(FS_SMALL), cursor="hand2")
+            name_label.pack(side=tk.LEFT, padx=4)
+            name_label.bind("<Button-1>", lambda e, t=tag, c=color: self._on_tag_click(t, c))
             self.tag_check_vars[tag] = var
 
+    def _on_tag_click(self, tag_name, tag_color):
+        def on_save_and_apply(old_name, new_name, new_color, status_dict):
+            # 1. 更新标签颜色与名称（若名称变化则更新所有相关数据）
+            if old_name != new_name:
+                # 重命名猫咪标签映射中的键
+                for cid in list(self.cat_tags_map.keys()):
+                    if old_name in self.cat_tags_map[cid]:
+                        self.cat_tags_map[cid] = [new_name if t == old_name else t for t in self.cat_tags_map[cid]]
+                # 更新标签颜色字典的键
+                self.tag_colors.pop(old_name, None)
+                self.tag_colors[new_name] = new_color
+            else:
+                self.tag_colors[old_name] = new_color
+
+            # 保存标签颜色到文件
+            save_tag_colors(TAG_COLOR_PATH, self.tag_colors)
+
+            # 2. 根据新的状态字典更新猫咪标签分配（使用新名称）
+            for cat_id, has_tag in status_dict.items():
+                if cat_id not in self.cat_tags_map:
+                    self.cat_tags_map[cat_id] = []
+                if has_tag and new_name not in self.cat_tags_map[cat_id]:
+                    self.cat_tags_map[cat_id].append(new_name)
+                elif not has_tag and new_name in self.cat_tags_map[cat_id]:
+                    self.cat_tags_map[cat_id].remove(new_name)
+
+            # 3. 刷新界面与同步 JSON
+            self._sync_tags_to_json()
+            self._render_tag_panel()
+
+        TagManageWindow(self, tag_name, tag_color, self.rows, self.cat_tags_map,
+                        list(self.tag_colors.keys()), on_save_and_apply)
+
+    def _sync_tags_to_json(self):
+        regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH, self.cat_tags_map)
+
     def _add_tag_dialog(self):
-        """弹出窗口：输入名称，选择颜色（预设色块 + 调色盘）—— 自适应大小"""
         dialog = tk.Toplevel(self)
         dialog.title("添加标签")
-        # 根据屏幕尺寸动态设置窗口大小（约为屏幕的 40% 宽，50% 高）
-        sw = self.winfo_screenwidth()
-        sh = self.winfo_screenheight()
-        w = int(sw * 0.4)
-        h = int(sh * 0.5)
-        # 计算居中位置
-        x = (sw - w) // 2
-        y = (sh - h) // 3
+        sw = self.winfo_screenwidth(); sh = self.winfo_screenheight()
+        w, h = int(sw * 0.4), int(sh * 0.5)
+        x, y = (sw - w) // 2, (sh - h) // 3
         dialog.geometry(f"{w}x{h}+{x}+{y}")
         dialog.minsize(500, 350)
         dialog.configure(bg=COLOR_BG)
@@ -1475,91 +1625,55 @@ class App(tk.Tk):
         tk.Entry(dialog, textvariable=name_var, font=ui_font(FS_BODY), width=20).pack(pady=4)
 
         tk.Label(dialog, text="选择颜色：", bg=COLOR_BG, font=ui_font(FS_BODY)).pack(pady=(10, 4))
-
         color_var = tk.StringVar(value="#F9A8D4")
         color_frame = tk.Frame(dialog, bg=COLOR_BG)
         color_frame.pack(pady=6)
-
-        # 预设颜色方块（保持原样）
         for i, c in enumerate(PRESET_COLORS):
-            btn = tk.Button(color_frame, bg=c, activebackground=c, width=3, height=1,
+            btn = tk.Button(color_frame, bg=c, width=3, height=1,
                             relief=tk.FLAT, borderwidth=1, cursor="hand2",
                             command=lambda col=c: color_var.set(col))
             btn.grid(row=i // 8, column=i % 8, padx=2, pady=2)
+        tk.Button(color_frame, text="🎨", bg="#FFFFFF", font=("", 10), width=3, height=1,
+                  relief=tk.FLAT, borderwidth=1, cursor="hand2",
+                  command=lambda: self._pick_color(color_var, dialog)).grid(row=len(PRESET_COLORS) // 8, column=len(PRESET_COLORS) % 8, padx=2, pady=2)
 
-        # 调色盘按钮
-        picker_btn = tk.Button(color_frame, text="🎨", bg="#FFFFFF", font=("", 10), width=3, height=1,
-                            relief=tk.FLAT, borderwidth=1, cursor="hand2",
-                            command=lambda: self._pick_color(color_var, dialog))
-        picker_btn.grid(row=len(PRESET_COLORS) // 8, column=len(PRESET_COLORS) % 8, padx=2, pady=2)
-
-        def save_new_tag():
+        def save():
             name = name_var.get().strip()
-            if not name:
-                messagebox.showwarning("提示", "名称不能为空", parent=dialog)
-                return
-            if name in self.tag_colors:
-                messagebox.showwarning("提示", "该标签已存在", parent=dialog)
-                return
-            color = color_var.get()
-            self.tag_colors[name] = color
+            if not name: messagebox.showwarning("提示", "名称不能为空", parent=dialog); return
+            if name in self.tag_colors: messagebox.showwarning("提示", "该标签已存在", parent=dialog); return
+            self.tag_colors[name] = color_var.get()
             save_tag_colors(TAG_COLOR_PATH, self.tag_colors)
             self._render_tag_panel()
             dialog.destroy()
 
-        tk.Button(dialog, text="保存", command=save_new_tag,
-                font=ui_font(FS_BODY, "bold"), bg=COLOR_ACCENT, fg="white",
-                padx=20, pady=6, relief=tk.FLAT, cursor="hand2").pack(pady=20)
-
-        def save_new_tag():
-            name = name_var.get().strip()
-            if not name:
-                messagebox.showwarning("提示", "名称不能为空", parent=dialog)
-                return
-            if name in self.tag_colors:
-                messagebox.showwarning("提示", "该标签已存在", parent=dialog)
-                return
-            color = color_var.get()
-            self.tag_colors[name] = color
-            save_tag_colors(TAG_COLOR_PATH, self.tag_colors)
-            self._render_tag_panel()
-            dialog.destroy()
-
-        tk.Button(dialog, text="保存", command=save_new_tag,
-                  font=ui_font(FS_BODY, "bold"), bg=COLOR_ACCENT, fg="white",
-                  padx=20, pady=6, relief=tk.FLAT, cursor="hand2").pack(pady=20)
+        tk.Button(dialog, text="保存", command=save, font=ui_font(FS_BODY, "bold"),
+                  bg=COLOR_ACCENT, fg="white", padx=20, pady=6, relief=tk.FLAT, cursor="hand2").pack(pady=20)
 
     def _pick_color(self, color_var, dialog):
-        """调用系统调色盘"""
         chosen = colorchooser.askcolor(color=color_var.get(), parent=dialog)
         if chosen[1]:
             color_var.set(chosen[1])
 
     def _delete_tag(self):
-        """删除选中的标签"""
         to_delete = [tag for tag, var in self.tag_check_vars.items() if var.get()]
         if not to_delete:
-            messagebox.showwarning("提示", "请先勾选要删除的标签")
-            return
-        if not messagebox.askyesno("确认", f"确定删除以下标签吗？\n{', '.join(to_delete)}"):
-            return
+            messagebox.showwarning("提示", "请先勾选要删除的标签"); return
+        if not messagebox.askyesno("确认", f"确定删除以下标签吗？\n{', '.join(to_delete)}"): return
         for tag in to_delete:
             self.tag_colors.pop(tag, None)
-            # 同时从所有猫咪的标签中移除
-            for cat_id in self.cat_tags_map:
-                if tag in self.cat_tags_map[cat_id]:
-                    self.cat_tags_map[cat_id].remove(tag)
+            for cid in self.cat_tags_map:
+                if tag in self.cat_tags_map[cid]:
+                    self.cat_tags_map[cid].remove(tag)
         save_tag_colors(TAG_COLOR_PATH, self.tag_colors)
         self._render_tag_panel()
+        self._sync_tags_to_json()
         self.status_var.set(f"已删除标签: {', '.join(to_delete)}")
 
     # ---------- UI 构建 ----------
     def _configure_ttk_styles(self):
         style = ttk.Style(self)
-        try:
-            style.theme_use("clam")
-        except Exception:
-            pass
+        try: style.theme_use("clam")
+        except: pass
         style.configure("TCombobox", font=ui_font(FS_BODY), padding=4)
 
     def _build_menu(self):
@@ -1574,41 +1688,37 @@ class App(tk.Tk):
         m_file.add_separator()
         m_file.add_command(label="退出", command=self._on_close_app)
         bar.add_cascade(label="文件", menu=m_file)
-        # 工具菜单（保持不变，略）
         self.config(menu=bar)
 
     def _build(self):
         head = tk.Frame(self, bg=COLOR_BG)
-        head.pack(fill=tk.X, pady=(20,4))
+        head.pack(fill=tk.X, pady=(20, 4))
         tk.Label(head, text="🐾 SUAT 🐱", font=ui_font(FS_TITLE, "bold"), bg=COLOR_BG, fg=COLOR_ACCENT).pack()
-        tk.Label(head, text="记录每一个相遇与告别", font=ui_font(FS_SUBTITLE), bg=COLOR_BG, fg=COLOR_SUBTEXT).pack(pady=(2,10))
+        tk.Label(head, text="记录每一个相遇与告别", font=ui_font(FS_SUBTITLE), bg=COLOR_BG, fg=COLOR_SUBTEXT).pack(pady=(2, 10))
 
-        # 工具栏
         bar = tk.Frame(self, bg=COLOR_BG)
-        bar.pack(fill=tk.X, padx=24, pady=(0,6))
+        bar.pack(fill=tk.X, padx=24, pady=(0, 6))
         def primary(parent, text, color, cmd):
             return tk.Button(parent, text=text, command=cmd, font=ui_font(FS_BODY, "bold"), bg=color, fg="white",
                              relief=tk.FLAT, borderwidth=0, padx=14, pady=7, cursor="hand2")
-        primary(bar, "➕ 新增猫咪", COLOR_ACCENT, self._add_cat).pack(side=tk.LEFT, padx=(0,6))
+        primary(bar, "➕ 新增猫咪", COLOR_ACCENT, self._add_cat).pack(side=tk.LEFT, padx=(0, 6))
         primary(bar, "🔄 刷新", COLOR_INFO, self._load_all_data).pack(side=tk.LEFT, padx=4)
         primary(bar, "💾 应用变更", COLOR_WARN, self._apply_changes).pack(side=tk.LEFT, padx=4)
         self.preview_btn = tk.Button(bar, text="🖥️ 预览前端", font=ui_font(FS_BODY, "bold"), bg=COLOR_OK, fg="white",
                                      relief=tk.FLAT, borderwidth=0, padx=14, pady=7, cursor="hand2", command=self._toggle_server)
         self.preview_btn.pack(side=tk.LEFT, padx=4)
 
-        # 搜索
         right_search = tk.Frame(bar, bg=COLOR_BG)
         right_search.pack(side=tk.RIGHT)
         self.var_search = tk.StringVar()
         e = tk.Entry(right_search, textvariable=self.var_search, font=ui_font(FS_BODY), width=22, relief=tk.FLAT,
                      bg="white", highlightthickness=1, highlightbackground=COLOR_DIVIDER, highlightcolor=COLOR_INFO)
-        e.pack(side=tk.RIGHT, ipady=5, padx=(4,0))
+        e.pack(side=tk.RIGHT, ipady=5, padx=(4, 0))
         e.bind("<KeyRelease>", lambda _e: self._on_search())
         tk.Label(right_search, text="🔍", bg=COLOR_BG, fg=COLOR_SUBTEXT, font=ui_font(FS_BODY)).pack(side=tk.RIGHT)
 
-        # 筛选栏
         filter_bar = tk.Frame(self, bg=COLOR_BG)
-        filter_bar.pack(fill=tk.X, padx=24, pady=(2,6))
+        filter_bar.pack(fill=tk.X, padx=24, pady=(2, 6))
         self.filter_buttons = {}
         for label, key in [("全部猫咪", "all"), ("♂ 男孩", "male"), ("♀ 女孩", "female"),
                             ("❓ 未知", "unknown"), ("⭐ 喵星", "star"), ("🔍 失踪", "lost"), ("🏡 被领养", "adopted")]:
@@ -1619,41 +1729,34 @@ class App(tk.Tk):
             self.filter_buttons[key] = b
         self._update_filter_buttons()
 
-        # 主内容区（左侧列表 + 右侧标签面板）
         main_area = tk.Frame(self, bg=COLOR_BG)
-        main_area.pack(fill=tk.BOTH, expand=True, padx=20, pady=(8,14))
+        main_area.pack(fill=tk.BOTH, expand=True, padx=20, pady=(8, 14))
 
-        # 左侧猫咪列表
         list_area = tk.Frame(main_area, bg=COLOR_BG)
         list_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
         self.canvas = tk.Canvas(list_area, bg=COLOR_BG, highlightthickness=0)
         self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         sb = ttk.Scrollbar(list_area, orient="vertical", command=self.canvas.yview)
         sb.pack(side=tk.RIGHT, fill=tk.Y)
         self.canvas.configure(yscrollcommand=sb.set)
         self.list_frame = tk.Frame(self.canvas, bg=COLOR_BG)
-        self._list_window_id = self.canvas.create_window((0,0), window=self.list_frame, anchor="nw")
+        self._list_window_id = self.canvas.create_window((0, 0), window=self.list_frame, anchor="nw")
         self.list_frame.bind("<Configure>", lambda _e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfig(self._list_window_id, width=e.width))
 
-        # 右侧标签管理面板
-        right_panel = tk.Frame(main_area, bg=COLOR_CARD, width=350, highlightthickness=1, highlightbackground=COLOR_CARD_BORDER)
-        right_panel.pack(side=tk.RIGHT, fill=tk.Y, padx=(12,0))
+        right_panel = tk.Frame(main_area, bg=COLOR_CARD, width=300, highlightthickness=1, highlightbackground=COLOR_CARD_BORDER)
+        right_panel.pack(side=tk.RIGHT, fill=tk.Y, padx=(12, 0))
         right_panel.pack_propagate(False)
         self.tag_panel_frame = tk.Frame(right_panel, bg=COLOR_CARD)
         self.tag_panel_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 状态栏
         self.status_var = tk.StringVar(value="就绪")
         status = tk.Label(self, textvariable=self.status_var, bg=COLOR_DIVIDER, fg=COLOR_ACCENT_LIGHT,
                           font=ui_font(FS_SMALL), anchor="w", padx=18, pady=4)
         status.pack(fill=tk.X, side=tk.BOTTOM)
 
-        # 初始化标签面板
         self._render_tag_panel()
 
-    # ---------- 事件与渲染 ----------
     def _set_filter(self, key):
         self.current_filter = key
         self._update_filter_buttons()
@@ -1671,6 +1774,7 @@ class App(tk.Tk):
     def _add_cat(self):
         editor = CatEditor(self, self.store, cat=None,
                            on_saved=self._on_editor_saved,
+                           on_tags_applied=None,
                            tag_colors=list(self.tag_colors.keys()),
                            cat_tags=[])
         self.wait_window(editor)
@@ -1679,23 +1783,27 @@ class App(tk.Tk):
         cat_tags = self.cat_tags_map.get(cat["id"], [])
         editor = CatEditor(self, self.store, cat=cat,
                            on_saved=self._on_editor_saved,
+                           on_tags_applied=self._on_tags_applied_in_editor,
                            tag_colors=list(self.tag_colors.keys()),
                            cat_tags=cat_tags)
         self.wait_window(editor)
 
     def _on_editor_saved(self, actions, cat_id, tags):
-        """编辑器保存后的回调，更新标签映射并保存 JSON"""
         self.store.save()
         self.cat_tags_map[cat_id] = tags
         self._reload_from_excel()
         count, warns = regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH, self.cat_tags_map)
         actions.append(f"重生成 cats.json，共 {count} 只猫")
         msg = "\n".join("• " + a for a in actions)
-        if warns:
-            msg += "\n\n⚠️ 警告：\n" + "\n".join(warns[:10])
+        if warns: msg += "\n\n⚠️ 警告：\n" + "\n".join(warns[:10])
         messagebox.showinfo("应用成功", msg)
         self.status_var.set("已同步 Excel 与 cats.json")
         self._order_dirty = False
+
+    def _on_tags_applied_in_editor(self, cat_id, tags):
+        self.cat_tags_map[cat_id] = tags
+        self._sync_tags_to_json()
+        self.status_var.set(f"标签已更新：{cat_id}")
 
     def _reload_from_excel(self):
         try:
@@ -1711,10 +1819,8 @@ class App(tk.Tk):
     def _filtered(self):
         rs = list(self.rows)
         f = self.current_filter
-        if f in GENDER_OPTIONS:
-            rs = [r for r in rs if r["gender"] == f]
-        elif f in ("star", "lost", "adopted"):
-            rs = [r for r in rs if r["status"] == f]
+        if f in GENDER_OPTIONS: rs = [r for r in rs if r["gender"] == f]
+        elif f in ("star", "lost", "adopted"): rs = [r for r in rs if r["status"] == f]
         if self.search_term:
             t = self.search_term
             rs = [r for r in rs if t in r["name"].lower() or t in r["pic_name"].lower()
@@ -1723,30 +1829,25 @@ class App(tk.Tk):
 
     def _load_small_thumb(self, cat):
         path = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}" / f"{cat['pic_name']}_01_thumb.jpg"
-        if path in self.thumb_cache:
-            return self.thumb_cache[path]
+        if path in self.thumb_cache: return self.thumb_cache[path]
         try:
-            if path.is_file():
-                img = Image.open(path).convert("RGB")
-            else:
-                img = Image.new("RGB", (ROW_THUMB_SIZE, ROW_THUMB_SIZE), "#dddddd")
+            if path.is_file(): img = Image.open(path).convert("RGB")
+            else: img = Image.new("RGB", (ROW_THUMB_SIZE, ROW_THUMB_SIZE), "#dddddd")
             img.thumbnail((ROW_THUMB_SIZE, ROW_THUMB_SIZE), Image.LANCZOS)
             ph = ImageTk.PhotoImage(img)
-        except Exception:
+        except:
             img = Image.new("RGB", (ROW_THUMB_SIZE, ROW_THUMB_SIZE), "#dddddd")
             ph = ImageTk.PhotoImage(img)
         self.thumb_cache[path] = ph
         return ph
 
     def _render(self):
-        for w in self.list_frame.winfo_children():
-            w.destroy()
+        for w in self.list_frame.winfo_children(): w.destroy()
         items = self._filtered()
         if not items:
             tk.Label(self.list_frame, text="没有符合条件的猫咪", bg=COLOR_BG, fg=COLOR_SUBTEXT,
                      font=ui_font(FS_BODY+1), pady=60).pack()
             return
-
         for i, cat in enumerate(items):
             row_bg = COLOR_CARD if i % 2 == 0 else "#fcfcf9"
             row_frame = tk.Frame(self.list_frame, bg=row_bg, height=64)
@@ -1754,7 +1855,7 @@ class App(tk.Tk):
             thumb = self._load_small_thumb(cat)
             avatar = tk.Label(row_frame, image=thumb, bg=row_bg, cursor="hand2")
             avatar.image = thumb
-            avatar.pack(side=tk.LEFT, padx=(8,12))
+            avatar.pack(side=tk.LEFT, padx=(8, 12))
             avatar.bind("<Double-Button-1>", lambda _e, c=cat: self._edit_cat(c))
 
             info_frame = tk.Frame(row_frame, bg=row_bg)
@@ -1770,7 +1871,6 @@ class App(tk.Tk):
             if status_label:
                 tk.Label(line1, text=" " + status_label, bg=row_bg, fg=COLOR_SUBTEXT,
                          font=ui_font(FS_SMALL)).pack(side=tk.LEFT, padx=4)
-
             line2 = tk.Frame(info_frame, bg=row_bg)
             line2.pack(fill=tk.X, anchor="w")
             n = cat["affection"]
@@ -1779,12 +1879,11 @@ class App(tk.Tk):
             desc = (cat["desc"] or "···")[:30]
             tk.Label(line2, text=" " + desc, bg=row_bg, fg=COLOR_SUBTEXT, font=ui_font(FS_SMALL)).pack(side=tk.LEFT)
 
-            # 操作按钮
             btn_frame = tk.Frame(row_frame, bg=row_bg)
             btn_frame.pack(side=tk.RIGHT, padx=4)
             move_var = tk.StringVar(value="1")
             tk.Entry(btn_frame, textvariable=move_var, width=4, font=ui_font(FS_SMALL), relief=tk.FLAT,
-                     bg="#f0f0f0", justify="center").pack(side=tk.LEFT, padx=(2,0))
+                     bg="#f0f0f0", justify="center").pack(side=tk.LEFT, padx=(2, 0))
             for text, cmd in [("▲", "up"), ("▼", "down")]:
                 tk.Button(btn_frame, text=text, font=ui_font(FS_SMALL, "bold"), bg=COLOR_HOVER, fg=COLOR_ACCENT,
                           relief=tk.FLAT, padx=6, cursor="hand2",
@@ -1792,50 +1891,38 @@ class App(tk.Tk):
                           ).pack(side=tk.LEFT, padx=1)
             tk.Button(btn_frame, text="✏️ 编辑", font=ui_font(FS_SMALL, "bold"), bg=COLOR_HOVER, fg=COLOR_ACCENT,
                       relief=tk.FLAT, padx=8, cursor="hand2", command=lambda c=cat: self._edit_cat(c)
-                      ).pack(side=tk.LEFT, padx=(4,0))
+                      ).pack(side=tk.LEFT, padx=(4, 0))
             tk.Button(btn_frame, text="🗑️ 删除", font=ui_font(FS_SMALL, "bold"), bg=COLOR_DANGER, fg="white",
                       relief=tk.FLAT, padx=8, cursor="hand2", command=lambda c=cat: self._delete_cat(c)
-                      ).pack(side=tk.LEFT, padx=(4,0))
+                      ).pack(side=tk.LEFT, padx=(4, 0))
             tk.Frame(self.list_frame, bg=COLOR_DIVIDER, height=1).pack(fill=tk.X)
 
     def _move_row(self, index, step_str, direction):
-        try:
-            step = int(step_str)
-        except ValueError:
-            messagebox.showwarning("输入错误", "请输入整数")
-            return
+        try: step = int(step_str)
+        except: messagebox.showwarning("输入错误", "请输入整数"); return
         if step < 0: step = -step; direction = "down" if direction == "up" else "up"
         filtered = self._filtered()
         cat = filtered[index]
         real_index = self.rows.index(cat)
-        if direction == "up":
-            new_index = max(0, real_index - step)
-        else:
-            new_index = min(len(self.rows)-1, real_index + step)
+        new_index = max(0, real_index - step) if direction == "up" else min(len(self.rows)-1, real_index + step)
         if new_index == real_index: return
-        item = self.rows.pop(real_index)
-        self.rows.insert(new_index, item)
+        self.rows.pop(real_index)
+        self.rows.insert(new_index, cat)
         self.status_var.set(f"已将 {cat['id']} {cat['name']} 移到第 {new_index+1} 位，点击「应用变更」保存")
         self._order_dirty = True
         self._render()
 
     def _delete_cat(self, cat):
-        if not messagebox.askyesno("⚠️ 永久删除", f"确定要删除 {cat['id']} {cat['name']} 吗？\n\n此操作不可撤销！"):
-            return
+        if not messagebox.askyesno("⚠️ 永久删除", f"确定要删除 {cat['id']} {cat['name']} 吗？"): return
         folder = CLASSIFIED_DIR / f"{cat['id']} {cat['name']}"
-        if folder.exists():
-            shutil.rmtree(folder)
+        if folder.exists(): shutil.rmtree(folder)
         row_idx = cat.get("_row")
-        if row_idx:
-            self.store.delete_row(row_idx)
-            self.store.save()
-        # 移除标签
+        if row_idx: self.store.delete_row(row_idx); self.store.save()
         self.cat_tags_map.pop(cat["id"], None)
         self._reload_from_excel()
         regenerate_cats_json(self.rows, CLASSIFIED_DIR, JSON_PATH, self.cat_tags_map)
         self.status_var.set(f"已删除 {cat['id']} {cat['name']}")
 
-    # ---------- 预览服务器 ----------
     def _toggle_server(self):
         if self.http_server: self._stop_server(); return
         try:
@@ -1846,16 +1933,14 @@ class App(tk.Tk):
                     if s.connect_ex(('localhost', port)) != 0: break
                     port += 1
             class QuietHandler(SimpleHTTPRequestHandler):
-                def __init__(self, *args, **kwargs):
-                    super().__init__(*args, directory=str(BASE_DIR), **kwargs)
+                def __init__(self, *args, **kwargs): super().__init__(*args, directory=str(BASE_DIR), **kwargs)
                 def log_message(self, format, *args): pass
             self.http_server = HTTPServer(('localhost', port), QuietHandler)
             self.http_server_thread = threading.Thread(target=self.http_server.serve_forever, daemon=True)
             self.http_server_thread.start()
-            url = f"http://localhost:{port}/index.html"
-            webbrowser.open(url)
+            webbrowser.open(f"http://localhost:{port}/index.html")
             self.preview_btn.config(text="🛑 停止服务器", bg=COLOR_DANGER)
-            self.status_var.set(f"预览服务器运行中：{url}")
+            self.status_var.set(f"预览服务器运行中：http://localhost:{port}/index.html")
         except Exception as e:
             messagebox.showerror("启动失败", str(e))
 
