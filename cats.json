@@ -10,11 +10,9 @@
     "desc": "校门口超级亲人的橘",
     "story": "校门口超级亲人的橘，经常在外卖车上睡觉，有很多人喂，于2025年年中失踪，小道消息是被领养了",
     "otherPhotos": [
-      {
-        "thumb": "classified/01 丑橘(暂用名)/ugly_orange_02_thumb.jpg",
-        "hd": "classified/01 丑橘(暂用名)/ugly_orange_02.jpg"
-      }
-    ]
+      { "thumb": "classified/01 丑橘(暂用名)/ugly_orange_02_thumb.jpg", "hd": "classified/01 丑橘(暂用名)/ugly_orange_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "02",
@@ -27,11 +25,9 @@
     "desc": "超级怕人的潦草三花",
     "story": "特别潦草的三花妈，生活环境总是可以被她搞得乱七八糟",
     "otherPhotos": [
-      {
-        "thumb": "classified/02 草草/grass_grass_02_thumb.jpg",
-        "hd": "classified/02 草草/grass_grass_02.jpg"
-      }
-    ]
+      { "thumb": "classified/02 草草/grass_grass_02_thumb.jpg", "hd": "classified/02 草草/grass_grass_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "03",
@@ -43,7 +39,8 @@
     "status": "normal",
     "desc": "在减肥的雀猫",
     "story": "小时候是一只怎么吃也吃不胖的高精力小猫，现在是吃一点点就胖的高精力小猫",
-    "otherPhotos": []
+    "otherPhotos": [],
+    "tags": []
   },
   {
     "id": "04",
@@ -56,15 +53,10 @@
     "desc": "蜕变的典范",
     "story": "以前他还很瘦，一见人就哈气。现在发现人类是个益虫，成功完成了蜕变。",
     "otherPhotos": [
-      {
-        "thumb": "classified/04 奶牛哥/milk_cow_brother_02_thumb.jpg",
-        "hd": "classified/04 奶牛哥/milk_cow_brother_02.jpg"
-      },
-      {
-        "thumb": "classified/04 奶牛哥/milk_cow_brother_03_thumb.jpg",
-        "hd": "classified/04 奶牛哥/milk_cow_brother_03.jpg"
-      }
-    ]
+      { "thumb": "classified/04 奶牛哥/milk_cow_brother_02_thumb.jpg", "hd": "classified/04 奶牛哥/milk_cow_brother_02.jpg" },
+      { "thumb": "classified/04 奶牛哥/milk_cow_brother_03_thumb.jpg", "hd": "classified/04 奶牛哥/milk_cow_brother_03.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "05",
@@ -77,19 +69,11 @@
     "desc": "三小只的妈妈",
     "story": "生下了橘头、头套、黑头三小只，现在越吃越胖，天天睡大觉。",
     "otherPhotos": [
-      {
-        "thumb": "classified/05 猫妈/cat_mom_02_thumb.jpg",
-        "hd": "classified/05 猫妈/cat_mom_02.jpg"
-      },
-      {
-        "thumb": "classified/05 猫妈/cat_mom_03_thumb.jpg",
-        "hd": "classified/05 猫妈/cat_mom_03.jpg"
-      },
-      {
-        "thumb": "classified/05 猫妈/cat_mom_04_thumb.jpg",
-        "hd": "classified/05 猫妈/cat_mom_04.jpg"
-      }
-    ]
+      { "thumb": "classified/05 猫妈/cat_mom_02_thumb.jpg", "hd": "classified/05 猫妈/cat_mom_02.jpg" },
+      { "thumb": "classified/05 猫妈/cat_mom_03_thumb.jpg", "hd": "classified/05 猫妈/cat_mom_03.jpg" },
+      { "thumb": "classified/05 猫妈/cat_mom_04_thumb.jpg", "hd": "classified/05 猫妈/cat_mom_04.jpg" }
+    ],
+    "tags": ["猫妈和三小头"]
   },
   {
     "id": "06",
@@ -102,15 +86,10 @@
     "desc": "三小只里最亲人的",
     "story": "三小只里最亲人的橘，从小胆子最大，可以偷偷地摸，从国交中心被救下来以后，更加的亲人。于2026.3.21凌晨在马路上回到喵星。",
     "otherPhotos": [
-      {
-        "thumb": "classified/06 橘头/orange_head_02_thumb.jpg",
-        "hd": "classified/06 橘头/orange_head_02.jpg"
-      },
-      {
-        "thumb": "classified/06 橘头/orange_head_03_thumb.jpg",
-        "hd": "classified/06 橘头/orange_head_03.jpg"
-      }
-    ]
+      { "thumb": "classified/06 橘头/orange_head_02_thumb.jpg", "hd": "classified/06 橘头/orange_head_02.jpg" },
+      { "thumb": "classified/06 橘头/orange_head_03_thumb.jpg", "hd": "classified/06 橘头/orange_head_03.jpg" }
+    ],
+    "tags": ["猫妈和三小头"]
   },
   {
     "id": "07",
@@ -123,19 +102,11 @@
     "desc": "三小只里最皮的",
     "story": "三小只里面最调皮的，怎么吃也吃不胖，喜欢抢兄弟的饭吃，吃一会儿就跑出去玩，傻傻的。因为绝完育带着头套直接溜了，故取名头套。",
     "otherPhotos": [
-      {
-        "thumb": "classified/07 头套/head_tao_02_thumb.jpg",
-        "hd": "classified/07 头套/head_tao_02.jpg"
-      },
-      {
-        "thumb": "classified/07 头套/head_tao_03_thumb.jpg",
-        "hd": "classified/07 头套/head_tao_03.jpg"
-      },
-      {
-        "thumb": "classified/07 头套/head_tao_04_thumb.jpg",
-        "hd": "classified/07 头套/head_tao_04.jpg"
-      }
-    ]
+      { "thumb": "classified/07 头套/head_tao_02_thumb.jpg", "hd": "classified/07 头套/head_tao_02.jpg" },
+      { "thumb": "classified/07 头套/head_tao_03_thumb.jpg", "hd": "classified/07 头套/head_tao_03.jpg" },
+      { "thumb": "classified/07 头套/head_tao_04_thumb.jpg", "hd": "classified/07 头套/head_tao_04.jpg" }
+    ],
+    "tags": ["猫妈和三小头"]
   },
   {
     "id": "08",
@@ -148,15 +119,10 @@
     "desc": "三小只里最高冷的",
     "story": "三小只里最傲娇的，从小就不屑于亲人，但是人一来或人一走就第一个赶去欢迎。因为头在三只里面是最黑的，故取名黑头。",
     "otherPhotos": [
-      {
-        "thumb": "classified/08 黑头/black_head_02_thumb.jpg",
-        "hd": "classified/08 黑头/black_head_02.jpg"
-      },
-      {
-        "thumb": "classified/08 黑头/black_head_03_thumb.jpg",
-        "hd": "classified/08 黑头/black_head_03.jpg"
-      }
-    ]
+      { "thumb": "classified/08 黑头/black_head_02_thumb.jpg", "hd": "classified/08 黑头/black_head_02.jpg" },
+      { "thumb": "classified/08 黑头/black_head_03_thumb.jpg", "hd": "classified/08 黑头/black_head_03.jpg" }
+    ],
+    "tags": ["猫妈和三小头"]
   },
   {
     "id": "09",
@@ -169,19 +135,11 @@
     "desc": "战斗力最强的大橘",
     "story": "每天晚上都会从校外游荡过来，抢猫妈的饭吃、欺负三小只、和猫猫打架，只对古典纹好，罪大恶极。",
     "otherPhotos": [
-      {
-        "thumb": "classified/09 老橘/big_orange_one_02_thumb.jpg",
-        "hd": "classified/09 老橘/big_orange_one_02.jpg"
-      },
-      {
-        "thumb": "classified/09 老橘/big_orange_one_03_thumb.jpg",
-        "hd": "classified/09 老橘/big_orange_one_03.jpg"
-      },
-      {
-        "thumb": "classified/09 老橘/big_orange_one_04_thumb.jpg",
-        "hd": "classified/09 老橘/big_orange_one_04.jpg"
-      }
-    ]
+      { "thumb": "classified/09 老橘/big_orange_one_02_thumb.jpg", "hd": "classified/09 老橘/big_orange_one_02.jpg" },
+      { "thumb": "classified/09 老橘/big_orange_one_03_thumb.jpg", "hd": "classified/09 老橘/big_orange_one_03.jpg" },
+      { "thumb": "classified/09 老橘/big_orange_one_04_thumb.jpg", "hd": "classified/09 老橘/big_orange_one_04.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "10",
@@ -194,19 +152,11 @@
     "desc": "怕人的古典纹狸花",
     "story": "狸花帮的一员，在校园里四处游荡的古典纹，特别瘦小，对大多数猫不错，但是人一靠近就哈气，养熟需要耐心。",
     "otherPhotos": [
-      {
-        "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_02_thumb.jpg",
-        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_02.jpg"
-      },
-      {
-        "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_03_thumb.jpg",
-        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_03.jpg"
-      },
-      {
-        "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_04_thumb.jpg",
-        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_04.jpg"
-      }
-    ]
+      { "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_02_thumb.jpg", "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_02.jpg" },
+      { "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_03_thumb.jpg", "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_03.jpg" },
+      { "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_04_thumb.jpg", "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_04.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "11",
@@ -219,11 +169,9 @@
     "desc": "很像宕机猫",
     "story": "曾经住在河边桥底下的一只奶牛，像著名网图宕机猫，2026年年初失踪",
     "otherPhotos": [
-      {
-        "thumb": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02_thumb.jpg",
-        "hd": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02.jpg"
-      }
-    ]
+      { "thumb": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02_thumb.jpg", "hd": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "12",
@@ -236,19 +184,11 @@
     "desc": "怕人的猫妈",
     "story": "狸花帮的一员，生下了大约四只小猫仔，但是目前见不到任何一只崽子。",
     "otherPhotos": [
-      {
-        "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03.jpg"
-      },
-      {
-        "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04.jpg"
-      },
-      {
-        "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_05_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_05.jpg"
-      }
-    ]
+      { "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03_thumb.jpg", "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03.jpg" },
+      { "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04_thumb.jpg", "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04.jpg" },
+      { "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_05_thumb.jpg", "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_05.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "13",
@@ -261,15 +201,10 @@
     "desc": "怕人的猫妈",
     "story": "生下了五小只特别好看的小猫崽，特别怕人，一见人靠近崽子就哈气，2026.3.18傍晚在非机动车道上去世。",
     "otherPhotos": [
-      {
-        "thumb": "classified/13 奶牛猫妈/cow_cat_mom_02_thumb.jpg",
-        "hd": "classified/13 奶牛猫妈/cow_cat_mom_02.jpg"
-      },
-      {
-        "thumb": "classified/13 奶牛猫妈/cow_cat_mom_03_thumb.jpg",
-        "hd": "classified/13 奶牛猫妈/cow_cat_mom_03.jpg"
-      }
-    ]
+      { "thumb": "classified/13 奶牛猫妈/cow_cat_mom_02_thumb.jpg", "hd": "classified/13 奶牛猫妈/cow_cat_mom_02.jpg" },
+      { "thumb": "classified/13 奶牛猫妈/cow_cat_mom_03_thumb.jpg", "hd": "classified/13 奶牛猫妈/cow_cat_mom_03.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "14",
@@ -282,11 +217,9 @@
     "desc": "五小只里胆子最大的",
     "story": "奶牛猫妈生的五小只里胆子最大的。",
     "otherPhotos": [
-      {
-        "thumb": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02_thumb.jpg",
-        "hd": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02.jpg"
-      }
-    ]
+      { "thumb": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02_thumb.jpg", "hd": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "15",
@@ -299,11 +232,9 @@
     "desc": "五小只里面最早独立的",
     "story": "奶牛猫妈生的五小只里最早就远走高飞的，和白手套口水巾1号相比丑一点，喜欢趴在电动车上。因为很早就不和他的兄弟们一起玩了，所以没有留下比较高清的照片。于2026年5月失踪。",
     "otherPhotos": [
-      {
-        "thumb": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02_thumb.jpg",
-        "hd": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02.jpg"
-      }
-    ]
+      { "thumb": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02_thumb.jpg", "hd": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "16",
@@ -316,11 +247,9 @@
     "desc": "五小只里最霸道的",
     "story": "奶牛猫妈生的五小只里最霸道的，和他妈一样喜欢哈气，胸前有一个黑色的领结，特别霸道，特别护食。",
     "otherPhotos": [
-      {
-        "thumb": "classified/16 黑老大/black_boss_02_thumb.jpg",
-        "hd": "classified/16 黑老大/black_boss_02.jpg"
-      }
-    ]
+      { "thumb": "classified/16 黑老大/black_boss_02_thumb.jpg", "hd": "classified/16 黑老大/black_boss_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "17",
@@ -333,15 +262,10 @@
     "desc": "五小只里最好看的",
     "story": "奶牛猫妈生的五小只里面最好看的一只，年纪轻轻就已怀孕，已绝育。",
     "otherPhotos": [
-      {
-        "thumb": "classified/17 五月/May_02_thumb.jpg",
-        "hd": "classified/17 五月/May_02.jpg"
-      },
-      {
-        "thumb": "classified/17 五月/May_03_thumb.jpg",
-        "hd": "classified/17 五月/May_03.jpg"
-      }
-    ]
+      { "thumb": "classified/17 五月/May_02_thumb.jpg", "hd": "classified/17 五月/May_02.jpg" },
+      { "thumb": "classified/17 五月/May_03_thumb.jpg", "hd": "classified/17 五月/May_03.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "18",
@@ -354,15 +278,10 @@
     "desc": "五小只里胆子最小的",
     "story": "奶牛猫妈生的五小只里胆子最小的，别人都在吃东西，就他在最后面。",
     "otherPhotos": [
-      {
-        "thumb": "classified/18 六月/June_02_thumb.jpg",
-        "hd": "classified/18 六月/June_02.jpg"
-      },
-      {
-        "thumb": "classified/18 六月/June_03_thumb.jpg",
-        "hd": "classified/18 六月/June_03.jpg"
-      }
-    ]
+      { "thumb": "classified/18 六月/June_02_thumb.jpg", "hd": "classified/18 六月/June_02.jpg" },
+      { "thumb": "classified/18 六月/June_03_thumb.jpg", "hd": "classified/18 六月/June_03.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "19",
@@ -374,7 +293,8 @@
     "status": "normal",
     "desc": "贪吃的话痨",
     "story": "突然出现在猫妈地盘里的一只话痨，喜欢被人摸下巴",
-    "otherPhotos": []
+    "otherPhotos": [],
+    "tags": []
   },
   {
     "id": "20",
@@ -387,15 +307,10 @@
     "desc": "一直在蹭饭的路上",
     "story": "在学校里转来转去，就为了蹭一口饭吃，是猫妈的垃圾桶。",
     "otherPhotos": [
-      {
-        "thumb": "classified/20 贪吃哥/like_eat_brother_02_thumb.jpg",
-        "hd": "classified/20 贪吃哥/like_eat_brother_02.jpg"
-      },
-      {
-        "thumb": "classified/20 贪吃哥/like_eat_brother_03_thumb.jpg",
-        "hd": "classified/20 贪吃哥/like_eat_brother_03.jpg"
-      }
-    ]
+      { "thumb": "classified/20 贪吃哥/like_eat_brother_02_thumb.jpg", "hd": "classified/20 贪吃哥/like_eat_brother_02.jpg" },
+      { "thumb": "classified/20 贪吃哥/like_eat_brother_03_thumb.jpg", "hd": "classified/20 贪吃哥/like_eat_brother_03.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "21",
@@ -408,11 +323,9 @@
     "desc": "猕猴桃",
     "story": "千里迢迢带着他的干女儿头孢来学校蹭饭，因为长得很像头套和黑头，所以取名叫头3。",
     "otherPhotos": [
-      {
-        "thumb": "classified/21 头3/head_three_02_thumb.jpg",
-        "hd": "classified/21 头3/head_three_02.jpg"
-      }
-    ]
+      { "thumb": "classified/21 头3/head_three_02_thumb.jpg", "hd": "classified/21 头3/head_three_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "22",
@@ -425,11 +338,9 @@
     "desc": "哈气就是喵喵",
     "story": "千里迢迢跟着他的“干父亲”头3来学校蹭饭，因为他是头三的“干宝宝”，所以叫头孢（宝）。比较亲人，可以偷偷地摸，但是哈气和喵喵的代码写到了一起，哈气就是喵喵，喵喵就是哈气。",
     "otherPhotos": [
-      {
-        "thumb": "classified/22 头孢/tou_baby_02_thumb.jpg",
-        "hd": "classified/22 头孢/tou_baby_02.jpg"
-      }
-    ]
+      { "thumb": "classified/22 头孢/tou_baby_02_thumb.jpg", "hd": "classified/22 头孢/tou_baby_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "23",
@@ -441,7 +352,8 @@
     "status": "normal",
     "desc": "渣猫",
     "story": "特别标准的一只几把猫，和小咪草草都很要好。",
-    "otherPhotos": []
+    "otherPhotos": [],
+    "tags": []
   },
   {
     "id": "24",
@@ -453,7 +365,8 @@
     "status": "lost",
     "desc": "普通的玄猫",
     "story": "仅仅两次出现过的黑猫",
-    "otherPhotos": []
+    "otherPhotos": [],
+    "tags": []
   },
   {
     "id": "25",
@@ -466,11 +379,9 @@
     "desc": "亲人的三花",
     "story": "突然出现的一只亲人的三花，不喜欢被人摸背和屁股。",
     "otherPhotos": [
-      {
-        "thumb": "classified/25 袁小花/yuan_small_flower_02_thumb.jpg",
-        "hd": "classified/25 袁小花/yuan_small_flower_02.jpg"
-      }
-    ]
+      { "thumb": "classified/25 袁小花/yuan_small_flower_02_thumb.jpg", "hd": "classified/25 袁小花/yuan_small_flower_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "26",
@@ -483,11 +394,9 @@
     "desc": "貌美的奶牛",
     "story": "突然出现的一只长得很像希特勒，但是眼睛很好看的奶牛，和小花是情侣。",
     "otherPhotos": [
-      {
-        "thumb": "classified/26 袁小牛/yuan_small_cow_02_thumb.jpg",
-        "hd": "classified/26 袁小牛/yuan_small_cow_02.jpg"
-      }
-    ]
+      { "thumb": "classified/26 袁小牛/yuan_small_cow_02_thumb.jpg", "hd": "classified/26 袁小牛/yuan_small_cow_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "27",
@@ -499,7 +408,8 @@
     "status": "normal",
     "desc": "高精力和低精力并存",
     "story": "突然出现的一只有橘色点点的小猫，高精力的时候特别贪玩，萎靡不振的时候在椅子上睁着眼睛睡觉。",
-    "otherPhotos": []
+    "otherPhotos": [],
+    "tags": []
   },
   {
     "id": "28",
@@ -512,11 +422,9 @@
     "desc": "普通的三花",
     "story": "突然出现的一只怕人的三花，常常过来蹭饭。",
     "otherPhotos": [
-      {
-        "thumb": "classified/28 怕人三花(暂用名)/pa_ren_san_hua_02_thumb.jpg",
-        "hd": "classified/28 怕人三花(暂用名)/pa_ren_san_hua_02.jpg"
-      }
-    ]
+      { "thumb": "classified/28 怕人三花(暂用名)/pa_ren_san_hua_02_thumb.jpg", "hd": "classified/28 怕人三花(暂用名)/pa_ren_san_hua_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "29",
@@ -529,19 +437,11 @@
     "desc": "普通的狸花",
     "story": "一只普通的怕人狸花，背上有纹，有口水巾",
     "otherPhotos": [
-      {
-        "thumb": "classified/29 狸花1号(暂用名)/li_hua_one_02_thumb.jpg",
-        "hd": "classified/29 狸花1号(暂用名)/li_hua_one_02.jpg"
-      },
-      {
-        "thumb": "classified/29 狸花1号(暂用名)/li_hua_one_03_thumb.jpg",
-        "hd": "classified/29 狸花1号(暂用名)/li_hua_one_03.jpg"
-      },
-      {
-        "thumb": "classified/29 狸花1号(暂用名)/li_hua_one_04_thumb.jpg",
-        "hd": "classified/29 狸花1号(暂用名)/li_hua_one_04.jpg"
-      }
-    ]
+      { "thumb": "classified/29 狸花1号(暂用名)/li_hua_one_02_thumb.jpg", "hd": "classified/29 狸花1号(暂用名)/li_hua_one_02.jpg" },
+      { "thumb": "classified/29 狸花1号(暂用名)/li_hua_one_03_thumb.jpg", "hd": "classified/29 狸花1号(暂用名)/li_hua_one_03.jpg" },
+      { "thumb": "classified/29 狸花1号(暂用名)/li_hua_one_04_thumb.jpg", "hd": "classified/29 狸花1号(暂用名)/li_hua_one_04.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "30",
@@ -554,11 +454,9 @@
     "desc": "普通的狸花",
     "story": "一只普通的怕人狸花，看起来比较壮实，嘴巴比较白，经常蹭饭。",
     "otherPhotos": [
-      {
-        "thumb": "classified/30 狸花2号(暂用名)/li_hua_two_02_thumb.jpg",
-        "hd": "classified/30 狸花2号(暂用名)/li_hua_two_02.jpg"
-      }
-    ]
+      { "thumb": "classified/30 狸花2号(暂用名)/li_hua_two_02_thumb.jpg", "hd": "classified/30 狸花2号(暂用名)/li_hua_two_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "31",
@@ -571,11 +469,9 @@
     "desc": "普通的狸花",
     "story": "一只普通的怕人小狸花，古典纹，前狸花帮的一员，2026年年初失踪",
     "otherPhotos": [
-      {
-        "thumb": "classified/31 狸花3号(暂用名)/li_hua_three_02_thumb.jpg",
-        "hd": "classified/31 狸花3号(暂用名)/li_hua_three_02.jpg"
-      }
-    ]
+      { "thumb": "classified/31 狸花3号(暂用名)/li_hua_three_02_thumb.jpg", "hd": "classified/31 狸花3号(暂用名)/li_hua_three_02.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "32",
@@ -587,7 +483,8 @@
     "status": "lost",
     "desc": "普通的狸花",
     "story": "一只普通的亲人狸花，以前陪伴小咪长大，眼屎很多，2025年9月失踪",
-    "otherPhotos": []
+    "otherPhotos": [],
+    "tags": []
   },
   {
     "id": "33",
@@ -600,23 +497,12 @@
     "desc": "普通的狸花",
     "story": "一只尝尝到处蹭饭的狸花，2026年5月出现在校门口，喜欢蹭饭，和贪吃哥是好朋猫，是个gay",
     "otherPhotos": [
-      {
-        "thumb": "classified/33 狸花5号(暂用名)/li_hua_five_02_thumb.jpg",
-        "hd": "classified/33 狸花5号(暂用名)/li_hua_five_02.jpg"
-      },
-      {
-        "thumb": "classified/33 狸花5号(暂用名)/li_hua_five_03_thumb.jpg",
-        "hd": "classified/33 狸花5号(暂用名)/li_hua_five_03.jpg"
-      },
-      {
-        "thumb": "classified/33 狸花5号(暂用名)/li_hua_five_04_thumb.jpg",
-        "hd": "classified/33 狸花5号(暂用名)/li_hua_five_04.jpg"
-      },
-      {
-        "thumb": "classified/33 狸花5号(暂用名)/li_hua_five_05_thumb.jpg",
-        "hd": "classified/33 狸花5号(暂用名)/li_hua_five_05.jpg"
-      }
-    ]
+      { "thumb": "classified/33 狸花5号(暂用名)/li_hua_five_02_thumb.jpg", "hd": "classified/33 狸花5号(暂用名)/li_hua_five_02.jpg" },
+      { "thumb": "classified/33 狸花5号(暂用名)/li_hua_five_03_thumb.jpg", "hd": "classified/33 狸花5号(暂用名)/li_hua_five_03.jpg" },
+      { "thumb": "classified/33 狸花5号(暂用名)/li_hua_five_04_thumb.jpg", "hd": "classified/33 狸花5号(暂用名)/li_hua_five_04.jpg" },
+      { "thumb": "classified/33 狸花5号(暂用名)/li_hua_five_05_thumb.jpg", "hd": "classified/33 狸花5号(暂用名)/li_hua_five_05.jpg" }
+    ],
+    "tags": []
   },
   {
     "id": "34",
@@ -628,7 +514,8 @@
     "status": "lost",
     "desc": "普通的白猫",
     "story": "和古典纹猫妈一起的白猫，2026年年初失踪。",
-    "otherPhotos": []
+    "otherPhotos": [],
+    "tags": []
   },
   {
     "id": "35",
@@ -640,23 +527,22 @@
     "status": "lost",
     "desc": "普通的狸花",
     "story": "大肚子怕人狸花，很像古典纹的放大版，只是左后腿多了一块纹，2026年年初失踪。",
-    "otherPhotos": []
+    "otherPhotos": [],
+    "tags": []
   },
   {
     "id": "36",
-    "name": "大橘1号(暂用名)",
-    "gender": "unknown",
-    "avatar": "classified/36 大橘1号(暂用名)/big_orange_two_01_thumb.jpg",
-    "avatar_hd": "classified/36 大橘1号(暂用名)/big_orange_two_01.jpg",
+    "name": "竹马(暂用名)",
+    "gender": "male",
+    "avatar": "classified/36 竹马(暂用名)/big_orange_one_01_thumb.jpg",
+    "avatar_hd": "classified/36 竹马(暂用名)/big_orange_one_01.jpg",
     "affection": 1,
     "status": "normal",
     "desc": "普通的大橘",
-    "story": "喜欢小只古典纹，毛色介于橘和奶油色中间，曾经被古典纹喜欢过，可是后来古典纹已经喜欢上了老橘，就不喜欢他了，明明是他先来的啊。",
+    "story": "喜欢小只古典纹，毛色介于橘和奶油色中间，曾经被古典纹喜欢过，可是后来古典纹喜欢上了老橘，就不喜欢他了，明明是他先来的啊。",
     "otherPhotos": [
-      {
-        "thumb": "classified/36 大橘1号(暂用名)/big_orange_two_02_thumb.jpg",
-        "hd": "classified/36 大橘1号(暂用名)/big_orange_two_02.jpg"
-      }
-    ]
+      { "thumb": "classified/36 竹马(暂用名)/big_orange_one_02_thumb.jpg", "hd": "classified/36 竹马(暂用名)/big_orange_one_02.jpg" }
+    ],
+    "tags": ["惨"]
   }
 ]

@@ -7,6 +7,11 @@ SUAT-cats 管理器
 集成：基本信息编辑、故事编辑、图片预览、缩略图编辑、新增猫咪、删除猫咪、自动同步前端（Excel + cats.json）。
 关闭时若有未保存的顺序变更会提醒。
 依赖：Pillow、openpyxl
+
+修改说明（支持编辑已有猫咪的图名）：
+- CatEditor._build：移除已有猫咪图名输入框的 disabled 状态，调整提示文字。
+- CatEditor._save：编辑已有猫咪时，若图名变化，先在旧文件夹内重命名所有图片文件，
+  失败则回滚并阻止保存，成功后继续原有流程。
 """
 import os
 import re
@@ -600,7 +605,7 @@ class ThumbEditor(tk.Toplevel):
 
 
 # ============================================================
-# CatEditor（修改了图片添加流程）
+# CatEditor（修改：支持编辑已有猫咪的图名）
 # ============================================================
 class CatEditor(tk.Toplevel):
     def __init__(self, master, store, cat=None, on_saved=None):
@@ -731,8 +736,9 @@ class CatEditor(tk.Toplevel):
 
         label(body, "图名", 1, 0)
         e_pic = entry(body, self.var_pic, 1, 1)
-        if not self.is_new:
-            e_pic.config(state="disabled")
+        # ---------- 修改点 1：图名输入框始终可编辑 ----------
+        # 原代码：if not self.is_new: e_pic.config(state="disabled")
+        # 现在不再禁用，但添加提示文字
 
         label(body, "概要", 1, 2)
         entry(body, self.var_desc, 1, 3)
@@ -763,9 +769,17 @@ class CatEditor(tk.Toplevel):
         self.var_affection.trace_add("write", lambda *_: self._update_paw_preview())
         self._update_paw_preview()
 
+        # 提示文字，根据新增/编辑显示不同内容
         if self.is_new:
             tk.Label(body,
-                     text="提示：图名与编号保存后不可修改。图名只能包含 英文/数字/下划线。",
+                     text="提示：编号与图名保存后不可修改。图名只能包含 英文/数字/下划线。",
+                     bg=COLOR_CARD, fg=COLOR_SUBTEXT, font=ui_font(FS_TINY),
+                     wraplength=520, justify="left"
+                     ).grid(row=4, column=0, columnspan=4, sticky="w", padx=4, pady=(8, 0))
+        else:
+            # ---------- 修改点 2：编辑时提示可以修改图名，但谨慎操作 ----------
+            tk.Label(body,
+                     text="提示：图名修改后将重命名所有相关图片文件，请谨慎操作。只能包含英文/数字/下划线。",
                      bg=COLOR_CARD, fg=COLOR_SUBTEXT, font=ui_font(FS_TINY),
                      wraplength=520, justify="left"
                      ).grid(row=4, column=0, columnspan=4, sticky="w", padx=4, pady=(8, 0))
@@ -1234,6 +1248,7 @@ class CatEditor(tk.Toplevel):
             self._refresh_existing_photos()
         self._mark_dirty()
 
+    # ---------- 修改点 3：_save 中支持图名变更 ----------
     def _save(self):
         try:
             cat_id = self.var_id.get().strip().zfill(2)
@@ -1262,6 +1277,7 @@ class CatEditor(tk.Toplevel):
             folder = CLASSIFIED_DIR / f"{cat_id} {name}"
 
             if self.is_new:
+                # 新增流程保持不变
                 if folder.exists():
                     messagebox.showerror("失败", f"文件夹已存在：{folder.name}")
                     return
@@ -1288,6 +1304,46 @@ class CatEditor(tk.Toplevel):
                 })
                 actions.append(f"追加 Excel 行 编号={cat_id}")
             else:
+                # ---------- 编辑已有猫咪 ----------
+                # 1. 如果图名发生变化，先在旧文件夹内重命名所有图片文件
+                old_pic = self.cat["pic_name"]
+                if pic != old_pic:
+                    old_folder = CLASSIFIED_DIR / f"{self.cat['id']} {self.cat['name']}"
+                    if not old_folder.is_dir():
+                        messagebox.showerror("失败", f"猫咪文件夹不存在: {old_folder.name}")
+                        return
+
+                    # 收集需要重命名的文件
+                    rename_ops = []  # (旧路径, 新路径)
+                    try:
+                        for f in old_folder.iterdir():
+                            m = re.match(rf"^{re.escape(old_pic)}_(\d{{2}})(?:_thumb)?\.jpg$",
+                                         f.name, re.IGNORECASE)
+                            if m:
+                                seq = m.group(1)
+                                is_thumb = "_thumb" in f.name
+                                new_name = f"{pic}_{seq}{'_thumb' if is_thumb else ''}.jpg"
+                                new_path = old_folder / new_name
+                                rename_ops.append((f, new_path))
+
+                        # 执行重命名
+                        for old_path, new_path in rename_ops:
+                            old_path.rename(new_path)
+
+                        actions.append(f"图名重命名: {old_pic} → {pic} ({len(rename_ops)} 个文件)")
+                    except Exception as e:
+                        # 回滚已经重命名的文件
+                        for (old_path, new_path) in reversed(rename_ops):
+                            if new_path.exists():
+                                try:
+                                    new_path.rename(old_path)
+                                except Exception:
+                                    pass
+                        messagebox.showerror("图名修改失败",
+                                             f"重命名图片时出错，已回滚所有更改：{e}")
+                        return
+
+                # 2. 如果姓名发生变化，重命名文件夹（旧逻辑）
                 old_folder = self._folder()
                 if name != self.cat["name"] and old_folder.is_dir():
                     if folder.exists():
@@ -1295,13 +1351,15 @@ class CatEditor(tk.Toplevel):
                         return
                     old_folder.rename(folder)
                     actions.append(f"重命名文件夹: {old_folder.name} → {folder.name}")
+
+                # 3. 更新 Excel
                 row_idx = self.store.find_row_by_id(cat_id)
                 if row_idx is None:
                     messagebox.showerror("失败", f"Excel 中找不到编号 {cat_id}")
                     return
                 self.store.update_row(row_idx, {
                     "name": name, "gender": gender, "affection": affection,
-                    "status": status, "desc": desc, "story": story,
+                    "status": status, "desc": desc, "story": story, "pic": pic,
                 })
                 actions.append(f"更新 Excel 行 编号={cat_id}")
 
