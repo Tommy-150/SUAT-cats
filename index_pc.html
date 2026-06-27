@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SUAT 🐱</title>
+    <!-- 引入 marked 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Noto+Sans+SC:wght@400;700;800&family=LXGW+WenKai+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,6 +25,36 @@
 
         .loading-text { text-align: center; font-size: 1.2rem; color: #888; margin-top: 100px; grid-column: 1 / -1; }
         .error-text { text-align: center; font-size: 1.2rem; color: red; margin-top: 100px; grid-column: 1 / -1; }
+
+        /* 顶部按钮行：左右两端对齐 */
+        .top-link-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .top-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 24px;
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #555;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: all 0.3s ease;
+        }
+        .top-link:hover {
+            background: rgba(74,74,74,0.08);
+            border-color: #ccc;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
 
         .header { text-align: center; margin-bottom: 40px; }
         .header h1 { font-size: 2.5rem; font-weight: 800; color: #4A4A4A; letter-spacing: 2px; }
@@ -69,7 +101,6 @@
         .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
         .filter-btn.active { background: #4A4A4A; color: #fff; box-shadow: 0 8px 20px rgba(74,74,74,0.2); }
 
-        /* Tag按钮专属：选中时右上角小勾，背景由内联样式或默认 active 决定 */
         .filter-btn.tag-btn.active {
             box-shadow: 0 4px 15px rgba(0,0,0,0.06);
         }
@@ -107,13 +138,19 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
 
+        /* ===== 卡片核心样式 ===== */
         .card {
             background: rgba(255,255,255,0.7); backdrop-filter: blur(15px); border-radius: 24px;
             padding: 30px 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-            border: 1px solid rgba(255,255,255,0.8); transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
             position: relative; overflow: hidden; cursor: pointer;
+            opacity: 0;
         }
-        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
 
         .card::after {
             content: "🔍 偷看这只喵";
@@ -147,7 +184,6 @@
         .affection { font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 10px; }
         .paw-empty { opacity: 0.2; }
 
-        /* 卡片内Tag样式（新增） */
         .card-tags-row {
             display: flex;
             flex-wrap: wrap;
@@ -180,10 +216,12 @@
         .card.status-adopted .status-icon { opacity: 1; transform: scale(1); }
         .card.status-adopted .name { color: #2d6a2d; }
 
-        .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to   { opacity: 1; }
         }
 
         /* Modal 弹窗样式 */
@@ -282,6 +320,92 @@
         .spinner.hidden { display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* 编者留言弹窗 */
+        .editor-modal .modal-content {
+            max-width: 600px;
+            padding: 30px;
+        }
+        .editor-modal .modal-story {
+            text-align: left;
+        }
+        .editor-modal .modal-story h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4A4A4A;
+        }
+
+        /* ===== GitHub 风格 Markdown 样式 ===== */
+        .markdown-body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            color: #24292f;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        .markdown-body h1 { font-size: 2em; border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; }
+        .markdown-body h2 { font-size: 1.5em; border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; }
+        .markdown-body h3 { font-size: 1.25em; }
+        .markdown-body p { margin-bottom: 16px; }
+        .markdown-body ul, .markdown-body ol { margin-bottom: 16px; padding-left: 2em; }
+        .markdown-body li { margin-bottom: 4px; }
+        .markdown-body code {
+            background-color: rgba(175,184,193,0.2);
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 85%;
+        }
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            margin-bottom: 16px;
+        }
+        .markdown-body pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+        }
+        .markdown-body blockquote {
+            border-left: 4px solid #d0d7de;
+            padding: 0 1em;
+            color: #57606a;
+            margin-bottom: 16px;
+        }
+        .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .markdown-body table th, .markdown-body table td {
+            border: 1px solid #d0d7de;
+            padding: 6px 13px;
+        }
+        .markdown-body table th {
+            background-color: #f6f8fa;
+            font-weight: 600;
+        }
+        .markdown-body img {
+            max-width: 100%;
+            border-radius: 6px;
+        }
+        .markdown-body a {
+            color: #0969da;
+            text-decoration: none;
+        }
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
         /* 敏感词遮蔽样式 */
         .blocked-word {
             display: inline;
@@ -316,12 +440,19 @@
 </head>
 <body>
 
+    <!-- 顶部按钮行 -->
+    <div class="top-link-row">
+        <a href="index_mobile.html" class="top-link" title="前往手机版页面">📱 移动版</a>
+        <a href="#" class="top-link" id="editorLink" title="编者留言">✉️ 编者留言</a>
+    </div>
+
     <div class="header">
         <h1>SUAT 🐱</h1>
         <p>记录每一次相遇与告别</p>
     </div>
 
     <div class="filters">
+        <!-- 筛选部分保持不变 -->
         <div class="filter-group">
             <div class="filter-toggle" id="genderToggle">
                 <span>性别</span>
@@ -354,7 +485,6 @@
                 <span class="toggle-symbol" id="tagSymbol">+</span>
             </div>
             <div class="filter-options" id="tagOptions">
-                <!-- 动态生成Tag按钮 -->
             </div>
         </div>
 
@@ -380,6 +510,7 @@
         <p class="loading-text" id="loadingText">正在读取猫咪档案...</p>
     </div>
 
+    <!-- 猫咪故事弹窗 -->
     <div class="modal-overlay" id="storyModal">
         <div class="modal-content" id="modalContent">
             <button class="close-btn" id="closeModal">✕</button>
@@ -408,6 +539,17 @@
         </div>
     </div>
 
+    <!-- 编者留言弹窗 -->
+    <div class="modal-overlay editor-modal" id="editorModal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeEditorModal">✕</button>
+            <div class="modal-story">
+                <h2>✉️ 编者留言</h2>
+                <div id="editorMessage" class="markdown-body">正在加载...</div>
+            </div>
+        </div>
+    </div>
+
     <div class="lightbox" id="lightbox">
         <button class="lightbox-close" id="lightboxClose">✕</button>
         <div class="spinner" id="lightboxSpinner"></div>
@@ -415,6 +557,7 @@
     </div>
 
     <script>
+        // ==================== 原有代码：完全不变 ====================
         const grid = document.getElementById('catGrid');
         const loadingText = document.getElementById('loadingText');
         const modal = document.getElementById('storyModal');
@@ -563,7 +706,6 @@
                 card.style.animationDelay = `${index * 0.1}s`;
                 const safeDesc = maskSensitiveWords(escapeHtml(cat.desc));
 
-                // ---- 开始构建卡片 Tag 行（新增） ----
                 let cardTagsHTML = '';
                 if (cat.tags && cat.tags.length > 0) {
                     cardTagsHTML = `
@@ -652,6 +794,7 @@
             if (e.key === 'Escape') {
                 if (lightbox.classList.contains('active')) closeLightbox();
                 else if (modal.classList.contains('active')) closeModal();
+                else if (document.getElementById('editorModal').classList.contains('active')) closeEditorModal();
             }
         });
 
@@ -686,7 +829,6 @@
         lightboxClose.addEventListener('click', closeLightbox);
         lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
 
-        // 筛选交互
         const genderToggle = document.getElementById('genderToggle');
         const genderSymbol = document.getElementById('genderSymbol');
         const genderOptions = document.getElementById('genderOptions');
@@ -752,7 +894,6 @@
             sortSymbol.textContent = isOpen ? '−' : '+';
         });
 
-        // Tag筛选交互
         const tagFilterGroup = document.getElementById('tagFilterGroup');
         const tagToggle = document.getElementById('tagToggle');
         const tagSymbol = document.getElementById('tagSymbol');
@@ -798,6 +939,43 @@
             updateTagButtonStates();
         }
 
+        // ==================== 编者留言功能（使用 marked） ====================
+        function openEditorModal() {
+            const editorModal = document.getElementById('editorModal');
+            const editorMessage = document.getElementById('editorMessage');
+            editorMessage.innerHTML = '正在加载...';
+            editorModal.classList.add('active');
+            document.body.classList.add('modal-open');
+
+            fetch('README.md')
+                .then(response => {
+                    if (!response.ok) throw new Error('文件不存在');
+                    return response.text();
+                })
+                .then(md => {
+                    // 使用 marked.parse 进行 Markdown 转换
+                    editorMessage.innerHTML = marked.parse(md);
+                })
+                .catch(() => {
+                    editorMessage.innerHTML = '<p>暂时没有留言。</p>';
+                });
+        }
+
+        function closeEditorModal() {
+            document.getElementById('editorModal').classList.remove('active');
+            document.body.classList.remove('modal-open');
+        }
+
+        document.getElementById('editorLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            openEditorModal();
+        });
+        document.getElementById('closeEditorModal').addEventListener('click', closeEditorModal);
+        document.getElementById('editorModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('editorModal')) closeEditorModal();
+        });
+
+        // ==================== 数据加载 ====================
         Promise.all([
             fetch('ban_words.json').then(r => r.ok ? r.json() : Promise.reject()).catch(() => null),
             fetch('tag_color.json').then(r => r.ok ? r.json() : Promise.reject()).catch(() => null)
