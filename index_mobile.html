@@ -99,7 +99,7 @@
             box-shadow: 0 4px 12px rgba(74, 74, 74, 0.2);
         }
 
-        /* 标签按钮激活样式：背景色由内联样式控制，仅显示右上角小勾 */
+        /* Tag按钮激活样式：背景色由内联样式控制，仅显示右上角小勾 */
         .filter-btn.tag-btn.active {
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
@@ -122,7 +122,7 @@
             border: 1px solid #e0e0e0;
             line-height: 1;
         }
-        /* “全部标签”按钮不显示小勾 */
+        /* “全部Tag”按钮不显示小勾 */
         .filter-btn.tag-btn[data-tag="all"].active::after {
             display: none;
         }
@@ -197,7 +197,7 @@
 
         .click-hint { margin-top: 14px; font-size: 0.85rem; color: #999; font-weight: 600; }
 
-        /* 卡片内标签行样式 */
+        /* 卡片内Tag行样式 */
         .card-tags-row {
             display: flex;
             flex-wrap: wrap;
@@ -506,10 +506,10 @@
             </div>
         </div>
 
-        <!-- 标签筛选组 -->
+        <!-- Tag筛选组 -->
         <div class="filter-group" id="tagFilterGroup" style="display: none;">
             <div class="filter-toggle" id="tagToggle">
-                <span>标签</span>
+                <span>Tag</span>
                 <span class="toggle-symbol" id="tagSymbol">+</span>
             </div>
             <div class="filter-options" id="tagOptions">
@@ -589,7 +589,7 @@
             const modalStoryText = document.getElementById('modalStoryText');
             const tagFilterGroup = document.getElementById('tagFilterGroup');
             const tagOptions = document.getElementById('tagOptions');
-            const modalTagsRow = document.getElementById('modalTagsRow'); // 弹窗标签容器
+            const modalTagsRow = document.getElementById('modalTagsRow'); // 弹窗Tag容器
 
             let catsData = [];
             let currentGenderFilter = 'all';
@@ -800,7 +800,7 @@
                     card.style.animationDelay = `${index * 0.05}s`;
                     const safeDesc = maskSensitiveWords(escapeHtml(cat.desc));
 
-                    // 构建卡片标签行
+                    // 构建卡片Tag行
                     let cardTagsHTML = '';
                     if (cat.tags && cat.tags.length > 0) {
                         cardTagsHTML = `
@@ -838,7 +838,7 @@
                 document.getElementById('modalGender').innerHTML = `<span class="gender ${cat.gender}">${getGenderText(cat.gender)}</span>`;
                 document.getElementById('modalAffection').innerHTML = `亲人指数: ${getPaws(cat.affection)}`;
 
-                // 弹窗标签行
+                // 弹窗Tag行
                 if (cat.tags && cat.tags.length > 0) {
                     modalTagsRow.classList.remove('hidden');
                     modalTagsRow.innerHTML = cat.tags.map(t => {
@@ -986,7 +986,7 @@
                 sortSymbol.textContent = isOpen ? '−' : '+';
             });
 
-            // ==================== 标签筛选交互 ====================
+            // ==================== Tag筛选交互 ====================
             const tagToggle = document.getElementById('tagToggle');
             const tagSymbol = document.getElementById('tagSymbol');
             tagToggle.addEventListener('click', () => {
@@ -1014,7 +1014,7 @@
                     return;
                 }
                 tagFilterGroup.style.display = '';
-                let html = '<button class="filter-btn tag-btn active" data-tag="all">全部标签</button>';
+                let html = '<button class="filter-btn tag-btn active" data-tag="all">全部Tag</button>';
                 allTags.forEach(tag => {
                     const color = tagColors[tag] || '';
                     const style = color ? `background-color:${color} !important; color:#fff !important;` : '';
