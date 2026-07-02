@@ -5,7 +5,7 @@ SUAT-cats 管理器（增强版：标签管理、批量打标签、窗口自适�
 ========================================================
 行列表视图，支持上移/下移步数调整顺序，内建预览服务器。
 集成：基本信息编辑、故事编辑、图片预览、缩略图编辑、新增猫咪、删除猫咪、
-     标签管理（增删改、查看关联猫、批量添加标签）、自动同步前端（Excel + cats.json）。
+     标签管理（增删改、查看关联猫、批量添加标签）、敏感词管理、自动同步前端（Excel + cats.json）。
 关闭时若有未保存的顺序变更会提醒。
 依赖：Pillow、openpyxl
 """
@@ -117,6 +117,9 @@ TAG_COLOR_PATH = BASE_DIR / "tag_color.json"
 CLASSIFIED_DIR = BASE_DIR / "classified"
 INDEX_HTML = BASE_DIR / "index.html"
 TEMP_THUMB_DIR = BASE_DIR / ".tmp_thumbs"
+
+# ===敏感词管理===
+BAN_WORDS_PATH = BASE_DIR / "ban_words.json"
 
 THUMB_SUFFIX = "_thumb"
 THUMB_OUTPUT_SIZE = 300
@@ -797,6 +800,108 @@ class TagManageWindow(tk.Toplevel):
         messagebox.showinfo("成功", "标签信息与分配已更新", parent=self)
         # 刷新猫咪列表（反映新的标签分配和名称）
         self._populate_cats_list()
+
+# ============================================================
+# 敏感词管理窗口
+# ============================================================
+class BanWordsEditor(tk.Toplevel):
+    def __init__(self, master, json_path):
+        super().__init__(master)
+        self.json_path = json_path
+        self.title("敏感词管理")
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        w, h = int(sw * 0.55), int(sh * 0.65)      # 宽度取屏幕 55%，高度 65%
+        x, y = (sw - w) // 2, (sh - h) // 2        # 居中
+        self.geometry(f"{w}x{h}+{x}+{y}")
+        self.minsize(600, 500)                     # 最小尺寸防止过小
+        self.configure(bg=COLOR_BG)
+        self.transient(master)
+        self.grab_set()
+
+        self.words = self._load()
+
+        # 标题
+        tk.Label(self, text="敏感词列表", font=ui_font(FS_BODY+2, "bold"),
+                 bg=COLOR_BG, fg=COLOR_ACCENT).pack(pady=(14, 6))
+
+        # 列表区
+        list_frame = tk.Frame(self, bg=COLOR_BG)
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=4)
+
+        self.listbox = tk.Listbox(list_frame, font=ui_font(FS_BODY), activestyle="dotbox",
+                                  selectbackground=COLOR_HOVER, selectforeground=COLOR_TEXT,
+                                  relief=tk.FLAT, bg="white", highlightthickness=1,
+                                  highlightbackground=COLOR_DIVIDER)
+        self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=self.listbox.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.listbox.config(yscrollcommand=scrollbar.set)
+        self._refresh_list()
+
+        # 输入与按钮
+        ctrl = tk.Frame(self, bg=COLOR_BG)
+        ctrl.pack(fill=tk.X, padx=12, pady=10)
+
+        self.entry_var = tk.StringVar()
+        tk.Entry(ctrl, textvariable=self.entry_var, font=ui_font(FS_BODY), width=28,
+                 relief=tk.FLAT, bg="#fafafa", highlightthickness=1,
+                 highlightbackground=COLOR_DIVIDER, highlightcolor=COLOR_INFO).pack(side=tk.LEFT, padx=(0, 6))
+
+        tk.Button(ctrl, text="添加", font=ui_font(FS_SMALL, "bold"), bg=COLOR_OK, fg="white",
+                  relief=tk.FLAT, padx=10, pady=5, cursor="hand2", command=self._add).pack(side=tk.LEFT, padx=2)
+        tk.Button(ctrl, text="删除选中", font=ui_font(FS_SMALL, "bold"), bg=COLOR_DANGER, fg="white",
+                  relief=tk.FLAT, padx=10, pady=5, cursor="hand2", command=self._remove).pack(side=tk.LEFT, padx=2)
+
+        # 底部保存按钮
+        tk.Button(self, text="💾 保存", font=ui_font(FS_BODY, "bold"), bg=COLOR_ACCENT, fg="white",
+                  relief=tk.FLAT, padx=24, pady=8, cursor="hand2", command=self._save).pack(pady=(4, 16))
+
+    def _load(self):
+        if not self.json_path.exists():
+            return []
+        try:
+            with open(self.json_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return data.get("words", [])
+        except Exception:
+            return []
+
+    def _refresh_list(self):
+        self.listbox.delete(0, tk.END)
+        for w in self.words:
+            self.listbox.insert(tk.END, w)
+
+    def _add(self):
+        new_word = self.entry_var.get().strip()
+        if not new_word:
+            messagebox.showwarning("提示", "请输入敏感词", parent=self)
+            return
+        if new_word in self.words:
+            messagebox.showwarning("提示", "该词已存在", parent=self)
+            return
+        self.words.append(new_word)
+        self.entry_var.set("")
+        self._refresh_list()
+
+    def _remove(self):
+        sel = self.listbox.curselection()
+        if not sel:
+            messagebox.showwarning("提示", "请先选中一个词", parent=self)
+            return
+        idx = sel[0]
+        removed = self.words.pop(idx)
+        self._refresh_list()
+
+    def _save(self):
+        try:
+            with open(self.json_path, 'w', encoding='utf-8') as f:
+                json.dump({"words": self.words}, f, ensure_ascii=False, indent=2)
+            messagebox.showinfo("成功", "敏感词已保存", parent=self)
+            self.destroy()
+        except Exception as e:
+            messagebox.showerror("保存失败", str(e), parent=self)
+
 
 # ============================================================
 # CatEditor（窗口自适应，增加应用标签按钮）
@@ -1669,6 +1774,10 @@ class App(tk.Tk):
         self._sync_tags_to_json()
         self.status_var.set(f"已删除标签: {', '.join(to_delete)}")
 
+    # ---------- 敏感词管理 ----------
+    def _open_ban_words(self):
+        BanWordsEditor(self, BAN_WORDS_PATH)
+
     # ---------- UI 构建 ----------
     def _configure_ttk_styles(self):
         style = ttk.Style(self)
@@ -1702,6 +1811,8 @@ class App(tk.Tk):
             return tk.Button(parent, text=text, command=cmd, font=ui_font(FS_BODY, "bold"), bg=color, fg="white",
                              relief=tk.FLAT, borderwidth=0, padx=14, pady=7, cursor="hand2")
         primary(bar, "➕ 新增猫咪", COLOR_ACCENT, self._add_cat).pack(side=tk.LEFT, padx=(0, 6))
+        # ===敏感词管理按钮===
+        primary(bar, "🛡️ 敏感词", "#9B59B6", self._open_ban_words).pack(side=tk.LEFT, padx=4)
         primary(bar, "🔄 刷新", COLOR_INFO, self._load_all_data).pack(side=tk.LEFT, padx=4)
         primary(bar, "💾 应用变更", COLOR_WARN, self._apply_changes).pack(side=tk.LEFT, padx=4)
         self.preview_btn = tk.Button(bar, text="🖥️ 预览前端", font=ui_font(FS_BODY, "bold"), bg=COLOR_OK, fg="white",
