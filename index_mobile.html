@@ -122,14 +122,16 @@
         }
         .filter-btn:active { transform: scale(0.95); }
 
-        .filter-btn:not(.tag-btn).active {
+        /* ===== 修改 1：让所有激活按钮统一深色背景（不再排除 tag-btn） ===== */
+        .filter-btn.active {
             background: #4A4A4A;
             color: #fff;
             box-shadow: 0 4px 12px rgba(74, 74, 74, 0.2);
         }
 
+        /* Tag 按钮激活时：保持绿勾，但背景已由上面统一深色 */
         .filter-btn.tag-btn.active {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* 弱阴影覆盖，与 PC 版一致 */
         }
         .filter-btn.tag-btn.active::after {
             content: '✓';
@@ -150,6 +152,7 @@
             border: 1px solid #e0e0e0;
             line-height: 1;
         }
+        /* 隐藏“全部Tag”的绿勾 */
         .filter-btn.tag-btn[data-tag="all"].active::after {
             display: none;
         }
@@ -732,7 +735,7 @@
             // ==================== 哈希状态管理 ====================
             let modalActive = false;
             let lightboxActive = false;
-            let editorActive = false;        // 新增
+            let editorActive = false;
             let exitHintShown = false;
             let exitToastTimer = null;
             let ignoreHashChange = false;
@@ -804,7 +807,6 @@
             window.addEventListener('hashchange', function(e) {
                 if (ignoreHashChange) return;
                 const newHash = getCurrentHash();
-                // 处理 lightbox
                 if (lightboxActive && newHash !== 'lightbox') {
                     closeLightboxUI();
                     if (modalActive && newHash !== 'modal') closeModalUI();
@@ -812,19 +814,16 @@
                     resetExitHint();
                     return;
                 }
-                // 处理 modal
                 if (modalActive && newHash !== 'modal' && newHash !== 'lightbox') {
                     closeModalUI();
                     resetExitHint();
                     return;
                 }
-                // 处理 editor
                 if (editorActive && newHash !== 'editor' && newHash !== 'lightbox') {
                     closeEditorUI();
                     resetExitHint();
                     return;
                 }
-                // 如果没有任何弹窗打开
                 if (!lightboxActive && !modalActive && !editorActive) {
                     if (exitHintShown) resetExitHint();
                     else { showExitToast(); setHash('home'); }
@@ -1057,7 +1056,6 @@
 
             // ==================== 编者留言功能 ====================
             function openEditorModal() {
-                // 如果已有其他弹窗，先关闭它们，保证状态干净
                 if (lightboxActive) closeLightboxUI();
                 if (modalActive) closeModalUI();
 
@@ -1094,7 +1092,6 @@
                 openLightbox(currentHDUrl);
             });
 
-            // 编者留言事件
             editorLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 openEditorModal();
