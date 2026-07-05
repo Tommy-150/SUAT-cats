@@ -190,6 +190,8 @@
             justify-content: center;
             gap: 6px;
             margin: 10px 0 12px;
+            min-height: 28px;
+            align-items: center;
         }
         .card-tag {
             display: inline-block;
@@ -716,6 +718,8 @@
                                 return `<span class="card-tag" style="${style}">${escapeHtml(t)}</span>`;
                             }).join('')}
                         </div>`;
+                } else {
+                    cardTagsHTML = '<div class="card-tags-row"><span style="color:#aaa;font-size:0.75rem;">还没有tag</span></div>';
                 }
 
                 card.innerHTML = `

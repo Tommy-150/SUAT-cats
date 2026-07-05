@@ -8,7 +8,7 @@
     "affection": 5,
     "status": "lost",
     "desc": "校门口超级亲人的橘",
-    "story": "校门口超级亲人的橘，经常在外卖车上睡觉，有很多人喂，于2025年年中失踪，小道消息是被领养了",
+    "story": "校门口超级亲人的橘，经常在外卖桌子上睡觉，被很多人喜欢，于2025年年中失踪，小道消息是被领养了。",
     "tags": [],
     "otherPhotos": [
       {
@@ -47,7 +47,7 @@
     "affection": 5,
     "status": "normal",
     "desc": "在减肥的雀猫",
-    "story": "小时候是一只怎么吃也吃不胖的高精力小猫，现在是吃一点点就胖的高精力小猫",
+    "story": "小时候是一只怎么吃也吃不胖的高精力小猫，现在是吃一点点就胖的高精力小猫，喜欢到处探险惹事欺负小虫。",
     "tags": [
       "已绝育"
     ],
@@ -261,7 +261,7 @@
     "gender": "female",
     "avatar": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_01_thumb.jpg",
     "avatar_hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_01.jpg",
-    "affection": 1,
+    "affection": 2,
     "status": "normal",
     "desc": "怕人的猫妈",
     "story": "狸花帮的一员，生下了大约四只小猫仔，但是目前见不到任何一只崽子。",
@@ -435,10 +435,10 @@
     "gender": "male",
     "avatar": "classified/20 贪吃哥/like_eat_brother_01_thumb.jpg",
     "avatar_hd": "classified/20 贪吃哥/like_eat_brother_01.jpg",
-    "affection": 3,
+    "affection": 4,
     "status": "normal",
     "desc": "一直在蹭饭的路上",
-    "story": "在学校里转来转去，就为了蹭一口饭吃，是猫妈的垃圾桶。",
+    "story": "在学校里转来转去，就为了蹭一口饭吃，是猫妈的垃圾桶， 喜欢抢二头的饭。",
     "tags": [
       "已绝育"
     ],
@@ -486,12 +486,7 @@
     "tags": [
       "已绝育"
     ],
-    "otherPhotos": [
-      {
-        "thumb": "classified/22 头孢/tou_baby_02_thumb.jpg",
-        "hd": "classified/22 头孢/tou_baby_02.jpg"
-      }
-    ]
+    "otherPhotos": []
   },
   {
     "id": "23",
@@ -662,10 +657,10 @@
     "gender": "male",
     "avatar": "classified/32 狸花5号(暂用名)/li_hua_five_01_thumb.jpg",
     "avatar_hd": "classified/32 狸花5号(暂用名)/li_hua_five_01.jpg",
-    "affection": 3,
+    "affection": 4,
     "status": "lost",
     "desc": "普通的狸花",
-    "story": "一只尝尝到处蹭饭的狸花，2026年5月出现在校门口，喜欢蹭饭，和贪吃哥是好朋猫，是个gay",
+    "story": "一只尝尝到处蹭饭的狸花，2026年5月出现在校门口，喜欢蹭饭，和贪吃哥是好朋猫，抢二头的地盘，是个gay",
     "tags": [],
     "otherPhotos": [
       {
