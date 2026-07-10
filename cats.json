@@ -8,7 +8,7 @@
     "affection": 5,
     "status": "adopted",
     "desc": "校门口超级亲人的橘",
-    "story": "校门口超级亲人的橘，经常在外卖桌子上睡觉，被很多人喜欢，于2025年年中失踪，小道消息是被领养了。",
+    "story": "校门口超级亲人的橘。经常在外卖桌子上睡觉，见人就来蹭。已经被领养了。",
     "tags": [],
     "otherPhotos": [
       {
@@ -268,16 +268,16 @@
     "tags": [],
     "otherPhotos": [
       {
+        "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02_thumb.jpg",
+        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02.jpg"
+      },
+      {
         "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03_thumb.jpg",
         "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03.jpg"
       },
       {
         "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04_thumb.jpg",
         "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04.jpg"
-      },
-      {
-        "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_05_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_05.jpg"
       }
     ]
   },
@@ -486,7 +486,12 @@
     "tags": [
       "已绝育"
     ],
-    "otherPhotos": []
+    "otherPhotos": [
+      {
+        "thumb": "classified/22 头孢/tou_baby_02_thumb.jpg",
+        "hd": "classified/22 头孢/tou_baby_02.jpg"
+      }
+    ]
   },
   {
     "id": "23",
@@ -512,7 +517,7 @@
     "affection": 5,
     "status": "normal",
     "desc": "亲人的三花",
-    "story": "突然出现的一只亲人的三花，不喜欢被人摸背和屁股。",
+    "story": "突然出现的一只亲人的三花，喜欢被人摸脸，不喜欢被人摸背和屁股。",
     "tags": [
       "已绝育"
     ],
@@ -520,6 +525,10 @@
       {
         "thumb": "classified/24 袁小花/yuan_small_flower_02_thumb.jpg",
         "hd": "classified/24 袁小花/yuan_small_flower_02.jpg"
+      },
+      {
+        "thumb": "classified/24 袁小花/yuan_small_flower_03_thumb.jpg",
+        "hd": "classified/24 袁小花/yuan_small_flower_03.jpg"
       }
     ]
   },
@@ -701,7 +710,7 @@
     "avatar": "classified/34 古典纹猫妈(暂用名)/gu_dian_wen_cat_mom_01_thumb.jpg",
     "avatar_hd": "classified/34 古典纹猫妈(暂用名)/gu_dian_wen_cat_mom_01.jpg",
     "affection": 1,
-    "status": "lost",
+    "status": "normal",
     "desc": "普通的狸花",
     "story": "大肚子怕人狸花，很像古典纹的放大版，只是左后腿多了一块纹，2026年年初失踪。",
     "tags": [],
@@ -722,6 +731,10 @@
       {
         "thumb": "classified/35 漂亮橘/big_orange_one_02_thumb.jpg",
         "hd": "classified/35 漂亮橘/big_orange_one_02.jpg"
+      },
+      {
+        "thumb": "classified/35 漂亮橘/big_orange_one_03_thumb.jpg",
+        "hd": "classified/35 漂亮橘/big_orange_one_03.jpg"
       }
     ]
   }
