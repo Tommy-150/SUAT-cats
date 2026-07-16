@@ -1,3 +1,33 @@
+"""
+Excel 转 cats.json（旧版数据迁移工具）
+
+## 使用说明
+
+### 功能
+从 `统计信息.xlsx` 读取猫咪基本信息，结合 `classified/` 下的图片文件，
+生成 `cats.json`。**新版本已弃用 Excel，此工具仅用于历史数据迁移。**
+
+### 运行
+```bash
+python excel_to_json.py
+```
+
+### 需要的基础文件
+```
+SUAT-cats/
+├── 统计信息.xlsx        ← 必须（列：编号/姓名/性别/亲人指数/状态/概要/故事/图名）
+├── classified/          ← 猫咪图片
+├── tag_color.json       ← 可选（标签颜色映射）
+├── excel_to_json.py     ← 就是这个文件
+└── (输出 → cats.json)
+```
+
+### 依赖
+```bash
+pip install pandas openpyxl
+```
+"""
+
 import pandas as pd
 import os
 import json

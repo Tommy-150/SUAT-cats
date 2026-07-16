@@ -2,7 +2,7 @@
 
 ## 写在前面
 ### 为什么制作这个网站
-记录SUAT的猫猫，给SUAT的猫猫制作一个花名册。
+记录 SUAT 的猫猫，给 SUAT 的猫猫制作一个花名册。
 
 ### 我也想上传图片/修改文案/完善猫猫信息等
 VX搜索“无蔗糖”并添加好友，因为制作网站时间仓促、人数不多，网站难免有些瑕疵。欢迎屏幕前的各位帮编者完善猫猫信息！！！
@@ -27,37 +27,35 @@ GitHub可以提供免费的网站托管服务，也就是说在这上面建一�
 ### 项目地址
 [点我跳转](https://github.com/Tommy-150/SUAT-cats)
 
-### 目录核心文件
-ban_words.json - 禁用一些敏感词
+### 目录核心文件夹和文件
+classified - 猫猫图片
 
-cats.json - 猫猫所有信息（重要）
+data - 猫猫所有数据（重要）
 
-index_mobile.html - 手机端前段
+demo - 一些测试基础功能的 html
 
-index_pc.html - 电脑端前段
+old_tool - 一些老工具
 
-index.html - 把用户导向pc或电脑
+static - 所有猫猫的缩率图变为一张雪碧图
 
-tag_color.json - 设置tag的颜色
+app_manager.html - 猫猫控制台前端（重要）
 
-preview_web.py - 预览网页
+app.py - 猫猫控制台后端（重要）
 
-cats_manager.py - 控制台（重要）
+SUATCatManager.exe - 猫猫控制台 EXE （重要）
+
+build.py - 把 app.py 打包为 EXE 
+
 
 ### 使用方法
-大部分功能操作都集成到了 cats_manager.py 里面
+大部分功能操作都集成到了 SUATCatManager.exe 里面
 
-不出意外千万不要碰 cats_manager.py 以外的任何文件！！！
+## SUATCatManager.exe 使用说明
 
-运行需要这些依赖：
-```bash
-pip install Pillow openpyxl pywebview
-```
+### SUATCatManager.exe 是什么
+`SUATCatManager.exe` 是一个在 Windows 电脑上双击即用的猫猫管理器，适合完全不懂代码的维护者。
 
-## 打包版 EXE 使用说明
-
-### 是什么
-`SUATCatManager.exe` 是一个开箱即用的独立可执行文件，放在项目文件夹里双击就能运行管理器，不需要安装 Python 或任何依赖。适合完全不懂代码的维护者。
+但是目前还没有好办法来让维护者部署修改到 GitHub 网页上，所以还是建议有想法的人和现任维护者沟通，以完善猫猫网站。
 
 ### 打包技术原理
 使用 **PyInstaller** 将 Python 脚本和所有依赖打包成单个 .exe：
@@ -75,12 +73,7 @@ pip install Pillow openpyxl pywebview
 | 不需要的 | 不需要 Python、不需要 pip、不需要装任何东西 |
 
 ### 如何重新打包
-如果改了 `app.py` 或 `app_manager.html`，重新生成 exe：
-```bash
-pip install pyinstaller pywebview
-pyinstaller --onefile --windowed --name SUATCatManager app.py
-# exe 生成在 dist/ 目录，复制到项目根目录即可
-```
+运行 bulid.py
 
 ## 特别鸣谢
 deepseek-v4-pro完成了大部分代码

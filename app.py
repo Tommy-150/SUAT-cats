@@ -4,146 +4,35 @@ import json
 import shutil
 import re
 import glob
+import atexit
 import threading
 from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 import webview
-from openpyxl import load_workbook
 from PIL import Image
 
 # ================= 路径处理 =================
 def get_base_dir():
     if getattr(sys, 'frozen', False):
-        # exe 同目录：可写数据（classified/、Excel、JSON 等）
-        return Path(sys.executable).parent
+        exe_dir = Path(sys.executable).parent
+        # onedir 模式：exe 在 SUATCatManager/ 子文件夹，数据在上级
+        if (exe_dir / "_internal").is_dir() or exe_dir.name == "SUATCatManager":
+            return exe_dir.parent
+        return exe_dir
     return Path(__file__).resolve().parent
 
 def get_resource_dir():
     if getattr(sys, 'frozen', False):
-        # 打包资源目录（只读）：HTML、JS 等
         return Path(sys._MEIPASS)
     return Path(__file__).resolve().parent
 
 BASE_DIR = get_base_dir()
-EXCEL_PATH = BASE_DIR / "统计信息.xlsx"
-TAG_COLOR_PATH = BASE_DIR / "tag_color.json"
-BAN_WORDS_PATH = BASE_DIR / "ban_words.json"
-CATS_JSON_PATH = BASE_DIR / "cats.json"
+DATA_DIR = BASE_DIR / "data"
+TAG_COLOR_PATH = DATA_DIR / "tag_color.json"
+BAN_WORDS_PATH = DATA_DIR / "ban_words.json"
+CATS_JSON_PATH = DATA_DIR / "cats.json"
 CLASSIFIED_DIR = BASE_DIR / "classified"
-
-# ================= Excel 读写 =================
-class ExcelStore:
-    def __init__(self, path):
-        self.path = path
-        self.wb = load_workbook(path)
-        self.ws = self.wb.active
-        self.col_idx = {}
-        headers = {}
-        for c in range(1, self.ws.max_column + 1):
-            v = self.ws.cell(row=1, column=c).value
-            if v:
-                headers[str(v).strip()] = c
-        mapping = {
-            "id": "编号", "name": "姓名", "gender": "性别",
-            "affection": "亲人指数", "status": "状态", "desc": "概要",
-            "story": "故事", "pic": "图名"
-        }
-        for key, kw in mapping.items():
-            for h, c in headers.items():
-                if kw in h:
-                    self.col_idx[key] = c
-                    break
-
-    def all_rows(self):
-        rows = []
-        for r in range(2, self.ws.max_row + 1):
-            raw_id = self.ws.cell(row=r, column=self.col_idx["id"]).value
-            if raw_id is None or str(raw_id).strip() == "":
-                continue
-            rows.append({
-                "_row": r,
-                "id": self._fmt_id(raw_id),
-                "name": self._cell_str(r, "name"),
-                "gender": self._cell_str(r, "gender") or "unknown",
-                "affection": self._cell_int(r, "affection", 1),
-                "status": self._cell_str(r, "status") or "normal",
-                "desc": self._cell_str(r, "desc"),
-                "story": self._cell_str(r, "story"),
-                "pic_name": self._cell_str(r, "pic"),
-            })
-        return rows
-
-    @staticmethod
-    def _fmt_id(raw):
-        if isinstance(raw, (int, float)):
-            return f"{int(raw):02d}"
-        return str(raw).strip().zfill(2)
-
-    def _cell_str(self, r, key):
-        v = self.ws.cell(row=r, column=self.col_idx[key]).value
-        return "" if v is None else str(v).strip()
-
-    def _cell_int(self, r, key, default=1):
-        v = self.ws.cell(row=r, column=self.col_idx[key]).value
-        if v is None or str(v).strip() == "":
-            return default
-        try:
-            return int(v)
-        except:
-            return default
-
-    def find_row_by_id(self, cat_id):
-        for r in range(2, self.ws.max_row + 1):
-            raw = self.ws.cell(row=r, column=self.col_idx["id"]).value
-            if raw is None:
-                continue
-            if self._fmt_id(raw) == cat_id:
-                return r
-        return None
-
-    def update_row(self, row_index, fields):
-        for key, val in fields.items():
-            if key in self.col_idx:
-                self.ws.cell(row=row_index, column=self.col_idx[key]).value = val
-
-    def append_row(self, fields):
-        new_r = self.ws.max_row + 1
-        while self.ws.cell(row=new_r, column=self.col_idx["id"]).value not in (None, ""):
-            new_r += 1
-        self.update_row(new_r, fields)
-        return new_r
-
-    def delete_row(self, row_index):
-        self.ws.delete_rows(row_index, 1)
-
-    def rewrite_rows(self, rows):
-        while self.ws.max_row > 1:
-            self.ws.delete_rows(2)
-        for idx, cat in enumerate(rows, start=2):
-            self.ws.cell(row=idx, column=self.col_idx["id"]).value = int(cat["id"])
-            self.ws.cell(row=idx, column=self.col_idx["name"]).value = cat["name"]
-            self.ws.cell(row=idx, column=self.col_idx["gender"]).value = cat["gender"]
-            self.ws.cell(row=idx, column=self.col_idx["affection"]).value = cat["affection"]
-            self.ws.cell(row=idx, column=self.col_idx["status"]).value = cat["status"]
-            self.ws.cell(row=idx, column=self.col_idx["desc"]).value = cat["desc"]
-            self.ws.cell(row=idx, column=self.col_idx["story"]).value = cat["story"]
-            self.ws.cell(row=idx, column=self.col_idx["pic"]).value = cat["pic_name"]
-
-    def next_id(self):
-        max_id = 0
-        for r in range(2, self.ws.max_row + 1):
-            raw = self.ws.cell(row=r, column=self.col_idx["id"]).value
-            if raw is None:
-                continue
-            try:
-                max_id = max(max_id, int(str(raw).strip()))
-            except:
-                pass
-        return f"{max_id + 1:02d}"
-
-    def save(self):
-        self.wb.save(self.path)
 
 # ================= 图片处理 =================
 def auto_thumbnail(src_path, dst_path, size=300):
@@ -172,42 +61,15 @@ def next_seq_for(folder, pic_name):
 # ================= API 类 =================
 class ManagerAPI:
     def __init__(self):
-        self._store = ExcelStore(EXCEL_PATH)
         self._tag_colors = self._load_json(TAG_COLOR_PATH)
         self._ban_words = self._load_json(BAN_WORDS_PATH).get("words", [])
-        self._cat_tags_map = {}
-        self._load_cats_json()
         self._ensure_dir()
-
-    def _load_cats_json(self):
-        if CATS_JSON_PATH.exists():
-            with open(CATS_JSON_PATH, 'r', encoding='utf-8') as f:
-                cats = json.load(f)
-            for cat in cats:
-                self._cat_tags_map[cat['id']] = cat.get('tags', [])
-
-    def _save_cats_json(self):
-        if not CATS_JSON_PATH.exists():
-            return
-        with open(CATS_JSON_PATH, 'r', encoding='utf-8') as f:
-            cats = json.load(f)
-        for cat in cats:
-            cat['tags'] = self._cat_tags_map.get(cat['id'], [])
-        with open(CATS_JSON_PATH, 'w', encoding='utf-8') as f:
-            json.dump(cats, f, ensure_ascii=False, indent=2)
-
-    def _cleanup_temp(self):
-        temp_dir = BASE_DIR / ".tmp_thumbs"
-        if temp_dir.is_dir():
-            for f in temp_dir.iterdir():
-                if f.is_file():
-                    try:
-                        f.unlink()
-                    except Exception:
-                        pass
+        self._cats = self._load_cats()
+        atexit.register(self._cleanup_all)
 
     def _ensure_dir(self):
         CLASSIFIED_DIR.mkdir(parents=True, exist_ok=True)
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     def _load_json(self, path):
         if not path.exists():
@@ -219,22 +81,102 @@ class ManagerAPI:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-    # ---------- 公开 API ----------
-    def get_cats(self):
-        cats = []
-        rows = self._store.all_rows()
-        for row in rows:
-            cat_id = row["id"]
-            name = row["name"]
-            pic = row["pic_name"]
-            folder = CLASSIFIED_DIR / f"{cat_id} {name}"
-            avatar = ""
-            avatar_hd = ""
-            if (folder / f"{pic}_01_thumb.jpg").is_file():
-                avatar = f"classified/{cat_id} {name}/{pic}_01_thumb.jpg"
-            if (folder / f"{pic}_01.jpg").is_file():
-                avatar_hd = f"classified/{cat_id} {name}/{pic}_01.jpg"
-            other_photos = []
+    def _load_cats(self):
+        if not CATS_JSON_PATH.exists():
+            return []
+        with open(CATS_JSON_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _save_cats(self):
+        with open(CATS_JSON_PATH, "w", encoding="utf-8") as f:
+            json.dump(self._cats, f, ensure_ascii=False, indent=2)
+
+    def _cleanup_temp(self):
+        """清理临时文件目录（保留目录本身）"""
+        temp_dir = BASE_DIR / ".tmp_thumbs"
+        if temp_dir.is_dir():
+            for f in temp_dir.iterdir():
+                if f.is_file():
+                    try:
+                        f.unlink()
+                    except Exception:
+                        pass
+
+    def _update_sprite(self):
+        """照片变更后自动更新雪碧图"""
+        try:
+            from PIL import Image as PILImage
+            sd = BASE_DIR / "static"
+            sd.mkdir(parents=True, exist_ok=True)
+            cats = self._cats
+            if not cats:
+                return
+            TS, COLS = 300, 7
+            rows = (len(cats) + COLS - 1) // COLS
+            canvas = PILImage.new("RGB", (COLS * TS, rows * TS), "#F7F5F0")
+            positions = {}
+            for i, cat in enumerate(cats):
+                col = i % COLS
+                r = i // COLS
+                x, y = col * TS, r * TS
+                positions[cat["id"]] = {"x": x, "y": y}
+                av = cat.get("avatar", "")
+                if av:
+                    lp = BASE_DIR / av
+                    if lp.is_file():
+                        im = PILImage.open(lp).convert("RGB")
+                        im = im.resize((TS, TS), PILImage.LANCZOS)
+                        canvas.paste(im, (x, y))
+            canvas.save(sd / "sprite_thumb.jpg", "JPEG", quality=85, optimize=True)
+            js = "const SPRITE_MAP = {\n"
+            for cid, pos in positions.items():
+                js += f'  "{cid}": {{ x: {pos["x"]}, y: {pos["y"]} }},\n'
+            js += "};\n"
+            (sd / "sprite_map.js").write_text(js, encoding="utf-8")
+        except Exception:
+            pass
+
+    def _cleanup_all(self):
+        """完全清理：删除整个临时文件夹和 __pycache__"""
+        for d in [BASE_DIR / ".tmp_thumbs", BASE_DIR / "__pycache__"]:
+            if d.is_dir():
+                try:
+                    shutil.rmtree(d, ignore_errors=True)
+                except Exception:
+                    pass
+
+    def _find_cat(self, cat_id):
+        for c in self._cats:
+            if c["id"] == cat_id:
+                return c
+        return None
+
+    def _next_id(self):
+        max_id = 0
+        for c in self._cats:
+            try:
+                max_id = max(max_id, int(c["id"]))
+            except:
+                pass
+        return f"{max_id + 1:02d}"
+
+    def _build_cat_data(self, cat):
+        """从 cats.json 条目 + 文件系统构建完整的猫数据"""
+        cat_id = cat["id"]
+        name = cat["name"]
+        pic = cat.get("pic_name", "")
+        folder = CLASSIFIED_DIR / f"{cat_id} {name}"
+        folder_json = f"classified/{cat_id} {name}"
+
+        avatar = ""
+        avatar_hd = ""
+        if pic and (folder / f"{pic}_01_thumb.jpg").is_file():
+            avatar = f"{folder_json}/{pic}_01_thumb.jpg"
+        if pic and (folder / f"{pic}_01.jpg").is_file():
+            avatar_hd = f"{folder_json}/{pic}_01.jpg"
+
+        other_photos = []
+        if pic and folder.is_dir():
             pattern = str(folder / f"{pic}_[0-9][0-9].jpg")
             for fpath in sorted(glob.glob(pattern)):
                 m = re.match(rf"^{re.escape(pic)}_(\d{{2}})\.jpg$", os.path.basename(fpath))
@@ -244,28 +186,30 @@ class ManagerAPI:
                 if seq < 2:
                     continue
                 seq_str = f"{seq:02d}"
-                thumb_file = folder / f"{pic}_{seq_str}_thumb.jpg"
                 other_photos.append({
-                    "thumb": f"classified/{cat_id} {name}/{pic}_{seq_str}_thumb.jpg",
-                    "hd": f"classified/{cat_id} {name}/{pic}_{seq_str}.jpg",
+                    "thumb": f"{folder_json}/{pic}_{seq_str}_thumb.jpg",
+                    "hd": f"{folder_json}/{pic}_{seq_str}.jpg",
                     "seq": seq,
                 })
-            tags = self._cat_tags_map.get(cat_id, [])
-            cats.append({
-                "id": cat_id,
-                "name": name,
-                "gender": row["gender"],
-                "avatar": avatar,
-                "avatar_hd": avatar_hd,
-                "affection": row["affection"],
-                "status": row["status"],
-                "desc": row["desc"],
-                "story": row["story"],
-                "tags": tags,
-                "otherPhotos": other_photos,
-                "pic_name": pic,
-            })
-        return cats
+
+        return {
+            "id": cat_id,
+            "name": name,
+            "gender": cat.get("gender", "unknown"),
+            "avatar": avatar,
+            "avatar_hd": avatar_hd,
+            "affection": cat.get("affection", 1),
+            "status": cat.get("status", "normal"),
+            "desc": cat.get("desc", ""),
+            "story": cat.get("story", ""),
+            "tags": cat.get("tags", []),
+            "otherPhotos": other_photos,
+            "pic_name": pic,
+        }
+
+    # ---------- 公开 API ----------
+    def get_cats(self):
+        return [self._build_cat_data(c) for c in self._cats]
 
     def save_cat(self, form):
         cat_id = str(form.get("id", "")).strip().zfill(2)
@@ -275,27 +219,12 @@ class ManagerAPI:
             return {"success": False, "message": "姓名和图名不能为空"}
         if not re.match(r"^[A-Za-z0-9_]+$", pic_name):
             return {"success": False, "message": "图名只能含英文/数字/下划线"}
-        fields = {
-            "name": name,
-            "gender": form.get("gender", "unknown"),
-            "affection": int(form.get("affection", 1)),
-            "status": form.get("status", "normal"),
-            "desc": form.get("desc", ""),
-            "story": form.get("story", ""),
-            "pic": pic_name,
-        }
-        row_idx = self._store.find_row_by_id(cat_id)
-        if row_idx:
-            # 获取旧数据
-            old_rows = self._store.all_rows()
-            old_name = ""
-            old_pic = ""
-            for r in old_rows:
-                if r["id"] == cat_id:
-                    old_name = r.get("name", "")
-                    old_pic = r.get("pic_name", "")
-                    break
-            # 检测图名变化 → 重命名图片文件
+
+        existing = self._find_cat(cat_id)
+        if existing:
+            old_name = existing.get("name", "")
+            old_pic = existing.get("pic_name", "")
+            # 图名变化 → 重命名文件
             if old_pic and old_pic != pic_name:
                 old_folder = CLASSIFIED_DIR / f"{cat_id} {old_name}"
                 if old_folder.is_dir():
@@ -318,7 +247,7 @@ class ManagerAPI:
                                 except Exception:
                                     pass
                         return {"success": False, "message": f"图名重命名失败: {e}"}
-            # 检测名字变化 → 重命名文件夹
+            # 名字变化 → 重命名文件夹
             if old_name and old_name != name:
                 old_folder = CLASSIFIED_DIR / f"{cat_id} {old_name}"
                 new_folder = CLASSIFIED_DIR / f"{cat_id} {name}"
@@ -326,33 +255,44 @@ class ManagerAPI:
                     return {"success": False, "message": f"目标文件夹已存在: {new_folder.name}"}
                 if old_folder.is_dir():
                     old_folder.rename(new_folder)
-            self._store.update_row(row_idx, fields)
+            # 更新已有条目
+            existing.update({
+                "name": name,
+                "gender": form.get("gender", "unknown"),
+                "affection": int(form.get("affection", 1)),
+                "status": form.get("status", "normal"),
+                "desc": form.get("desc", ""),
+                "story": form.get("story", ""),
+                "pic_name": pic_name,
+                "tags": form.get("tags", []),
+            })
         else:
             if not cat_id or cat_id == '00':
-                cat_id = self._store.next_id()
-                fields["id"] = int(cat_id)
-            self._store.append_row({**fields, "id": int(cat_id)})
+                cat_id = self._next_id()
+            new_cat = {
+                "id": cat_id,
+                "name": name,
+                "gender": form.get("gender", "unknown"),
+                "affection": int(form.get("affection", 1)),
+                "status": form.get("status", "normal"),
+                "desc": form.get("desc", ""),
+                "story": form.get("story", ""),
+                "pic_name": pic_name,
+                "tags": form.get("tags", []),
+            }
+            self._cats.append(new_cat)
             folder = CLASSIFIED_DIR / f"{cat_id} {name}"
             folder.mkdir(parents=True, exist_ok=True)
-        tags = form.get("tags", [])
-        self._cat_tags_map[cat_id] = tags
-        # 完整重建 cats.json
-        self._regenerate_json()
-        self._store.save()
+        self._save_cats()
         self._cleanup_temp()
         return {"success": True}
 
     def delete_cat(self, cat_id):
         cat_id = str(cat_id).strip().zfill(2)
-        row_idx = self._store.find_row_by_id(cat_id)
-        if row_idx:
-            self._store.delete_row(row_idx)
-            self._store.save()
+        self._cats = [c for c in self._cats if c["id"] != cat_id]
+        self._save_cats()
         for folder in CLASSIFIED_DIR.glob(f"{cat_id} *"):
             shutil.rmtree(folder, ignore_errors=True)
-        if cat_id in self._cat_tags_map:
-            del self._cat_tags_map[cat_id]
-        self._regenerate_json()
         self._cleanup_temp()
         return {"success": True}
 
@@ -366,6 +306,7 @@ class ManagerAPI:
         Image.open(source_path).convert("RGB").save(dst, "JPEG", quality=95)
         thumb_dst = folder / f"{pic_name}_{seq:02d}_thumb.jpg"
         auto_thumbnail(dst, thumb_dst)
+        self._update_sprite()
         self._cleanup_temp()
         return {"success": True, "seq": seq, "thumb": f"classified/{cat_id} {name}/{pic_name}_{seq:02d}_thumb.jpg"}
 
@@ -377,24 +318,19 @@ class ManagerAPI:
         return self._tag_colors
 
     def save_tag_colors(self, data):
-        # 检测重命名的标签，传播到 cat_tags_map
         old_keys = set(self._tag_colors.keys())
         new_keys = set(data.keys())
         removed = old_keys - new_keys
         added = new_keys - old_keys
-        # 如果 key 数量相同但内容不同，可能是重命名
         if len(removed) == 1 and len(added) == 1:
             old_tag = removed.pop()
             new_tag = added.pop()
-            for cat_id in list(self._cat_tags_map.keys()):
-                if old_tag in self._cat_tags_map[cat_id]:
-                    self._cat_tags_map[cat_id] = [
-                        new_tag if t == old_tag else t
-                        for t in self._cat_tags_map[cat_id]
-                    ]
+            for cat in self._cats:
+                if old_tag in cat.get("tags", []):
+                    cat["tags"] = [new_tag if t == old_tag else t for t in cat["tags"]]
+            self._save_cats()
         self._tag_colors = data
         self._save_json(TAG_COLOR_PATH, data)
-        self._regenerate_json()
         return {"success": True}
 
     def get_ban_words(self):
@@ -419,11 +355,11 @@ class ManagerAPI:
                 file_path = folder / f"{base_name}{ext}"
                 if file_path.exists():
                     file_path.unlink()
+            self._update_sprite()
             self._cleanup_temp()
             return {"success": True}
         return {"success": False, "message": "未找到照片"}
 
-    # ===== 裁剪缩略图 =====
     def crop_thumbnail(self, cat_id, pic_name, seq, crop_box):
         cat_id = str(cat_id).strip().zfill(2)
         for folder in CLASSIFIED_DIR.glob(f"{cat_id} *"):
@@ -439,54 +375,47 @@ class ManagerAPI:
                 cropped = img.crop((left, top, right, bottom))
                 cropped = cropped.resize((300, 300), Image.LANCZOS)
                 cropped.save(thumb_path, "JPEG", quality=90, optimize=True)
+                self._update_sprite()
                 self._cleanup_temp()
                 return {"success": True}
             except Exception as e:
                 return {"success": False, "message": str(e)}
         return {"success": False, "message": "未找到文件夹"}
 
-    # ===== 新增：应用排序（重新编号）=====
     def apply_sort_order(self, ordered_ids):
-        rows = self._store.all_rows()
-        if len(ordered_ids) != len(rows):
-            return {"success": False, "message": "排序列表与数据库不匹配"}
-        # 旧 ID → tags 映射
-        id_to_tags = {}
-        for r in rows:
-            id_to_tags[r["id"]] = self._cat_tags_map.get(r["id"], [])
-        # 按 ordered_ids 重新排列
-        id_to_row = {r["id"]: r for r in rows}
-        ordered_rows = [id_to_row[cid] for cid in ordered_ids if cid in id_to_row]
-        # 重新编号 + 文件夹重命名
+        if len(ordered_ids) != len(self._cats):
+            return {"success": False, "message": "排序列表与数据不匹配"}
+        id_to_cat = {c["id"]: c for c in self._cats}
+        ordered = []
         rename_ops = []
-        new_tag_map = {}
-        for idx, row in enumerate(ordered_rows, start=1):
-            old_id = row["id"]
+        for idx, cid in enumerate(ordered_ids, start=1):
+            cat = id_to_cat.get(cid)
+            if not cat:
+                return {"success": False, "message": f"找不到猫咪: {cid}"}
+            old_id = cat["id"]
             new_id = f"{idx:02d}"
-            row["id"] = new_id
-            new_tag_map[new_id] = id_to_tags.get(old_id, [])
+            cat["id"] = new_id
+            ordered.append(cat)
             if old_id != new_id:
-                old_folder = CLASSIFIED_DIR / f"{old_id} {row['name']}"
-                new_folder = CLASSIFIED_DIR / f"{new_id} {row['name']}"
+                old_folder = CLASSIFIED_DIR / f"{old_id} {cat['name']}"
+                new_folder = CLASSIFIED_DIR / f"{new_id} {cat['name']}"
                 if old_folder.is_dir() and not new_folder.exists():
                     rename_ops.append((old_folder, new_folder))
         for old_f, new_f in rename_ops:
             old_f.rename(new_f)
-        self._cat_tags_map = new_tag_map
-        self._store.rewrite_rows(ordered_rows)
-        self._store.save()
-        self._regenerate_json()
+        self._cats = ordered
+        self._save_cats()
         self._cleanup_temp()
-        return {"success": True, "count": len(ordered_rows)}
+        return {"success": True, "count": len(ordered)}
 
-    # ===== 新增：独立应用标签 =====
     def apply_tags(self, cat_id, tags):
         cat_id = str(cat_id).strip().zfill(2)
-        self._cat_tags_map[cat_id] = tags
-        self._regenerate_json()
+        cat = self._find_cat(cat_id)
+        if cat:
+            cat["tags"] = tags
+            self._save_cats()
         return {"success": True}
 
-    # ===== 新增：保存编者留言 =====
     def save_readme(self, content):
         readme_path = BASE_DIR / "README.md"
         try:
@@ -495,7 +424,6 @@ class ManagerAPI:
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    # ===== 新增：替换主图（文件交换）=====
     def swap_to_main(self, cat_id, pic_name, seq):
         cat_id = str(cat_id).strip().zfill(2)
         target_seq = int(seq)
@@ -515,6 +443,7 @@ class ManagerAPI:
                         if tmp_file.is_file():
                             tmp_file.rename(b_file)
                 swap_pair(1, target_seq)
+                self._update_sprite()
                 self._cleanup_temp()
                 return {"success": True}
             except Exception as e:
@@ -530,25 +459,20 @@ class ManagerAPI:
             return {"success": True}
         return {"success": False, "message": "文件夹不存在"}
 
-    # ===== 新增：行顺序移动 =====
     def move_row(self, cat_id, direction, step=1):
         cat_id = str(cat_id).strip().zfill(2)
         step = int(step)
-        rows = self._store.all_rows()
-        idx = next((i for i, r in enumerate(rows) if r["id"] == cat_id), None)
+        idx = next((i for i, c in enumerate(self._cats) if c["id"] == cat_id), None)
         if idx is None:
             return {"success": False, "message": "未找到该猫咪"}
-        new_idx = max(0, idx - step) if direction == "up" else min(len(rows) - 1, idx + step)
+        new_idx = max(0, idx - step) if direction == "up" else min(len(self._cats) - 1, idx + step)
         if new_idx == idx:
             return {"success": True, "message": "已在边界"}
-        rows.insert(new_idx, rows.pop(idx))
-        # 重建 Excel
-        self._store.rewrite_rows(rows)
-        self._store.save()
-        self._regenerate_json()
+        self._cats.insert(new_idx, self._cats.pop(idx))
+        self._save_cats()
+        self._cleanup_temp()
         return {"success": True}
 
-    # ===== 新增：多文件选择对话框 =====
     def open_file_dialog_multi(self):
         result = webview.windows[0].create_file_dialog(
             webview.OPEN_DIALOG, allow_multiple=True,
@@ -556,7 +480,6 @@ class ManagerAPI:
         )
         return list(result) if result else []
 
-    # ===== 新增：批量上传图片 =====
     def upload_images(self, source_paths, cat_id, name, pic_name):
         results = []
         for src in source_paths:
@@ -564,7 +487,6 @@ class ManagerAPI:
             results.append(r)
         return {"success": True, "results": results}
 
-    # ===== 新增：重命名图名（修改所有文件）=====
     def rename_pic_name(self, cat_id, name, old_pic, new_pic):
         cat_id = str(cat_id).strip().zfill(2)
         if not re.match(r"^[A-Za-z0-9_]+$", new_pic):
@@ -586,65 +508,6 @@ class ManagerAPI:
                 return {"success": False, "message": str(e)}
         return {"success": False, "message": "未找到文件夹"}
 
-    # ===== 新增：完整重建 cats.json =====
-    def regenerate_cats_json(self):
-        return self._regenerate_json()
-
-    def _regenerate_json(self):
-        warnings = []
-        cats = []
-        rows = self._store.all_rows()
-        for row in rows:
-            cat_id = row["id"]
-            name = row["name"]
-            pic = row["pic_name"]
-            folder = CLASSIFIED_DIR / f"{cat_id} {name}"
-            folder_json = f"classified/{cat_id} {name}"
-            if not folder.is_dir():
-                warnings.append(f"[{cat_id}] 文件夹缺失: {cat_id} {name}")
-                continue
-            if not pic:
-                warnings.append(f"[{cat_id}] 图名为空")
-                continue
-            avatar = f"{folder_json}/{pic}_01_thumb.jpg"
-            avatar_hd = f"{folder_json}/{pic}_01.jpg"
-            if not (folder / f"{pic}_01.jpg").is_file():
-                warnings.append(f"[{cat_id}] 缺头像原图 {pic}_01.jpg")
-            if not (folder / f"{pic}_01_thumb.jpg").is_file():
-                warnings.append(f"[{cat_id}] 缺头像缩略图 {pic}_01_thumb.jpg")
-            other_photos = []
-            pattern = str(folder / f"{pic}_[0-9][0-9].jpg")
-            for fpath in sorted(glob.glob(pattern)):
-                m = re.match(rf"^{re.escape(pic)}_(\d{{2}})\.jpg$", os.path.basename(fpath))
-                if not m:
-                    continue
-                seq = int(m.group(1))
-                if seq < 2:
-                    continue
-                seq_str = f"{seq:02d}"
-                thumb_file = folder / f"{pic}_{seq_str}_thumb.jpg"
-                if not thumb_file.is_file():
-                    warnings.append(f"[{cat_id}] 缺缩略图 {thumb_file.name}")
-                other_photos.append({
-                    "thumb": f"{folder_json}/{pic}_{seq_str}_thumb.jpg",
-                    "hd": f"{folder_json}/{pic}_{seq_str}.jpg",
-                })
-            tags = self._cat_tags_map.get(cat_id, [])
-            cats.append({
-                "id": cat_id, "name": name,
-                "gender": row["gender"] or "unknown",
-                "avatar": avatar, "avatar_hd": avatar_hd,
-                "affection": row["affection"],
-                "status": row["status"] or "normal",
-                "desc": row["desc"], "story": row["story"],
-                "tags": tags,
-                "otherPhotos": other_photos,
-            })
-        with open(CATS_JSON_PATH, "w", encoding="utf-8") as f:
-            json.dump(cats, f, ensure_ascii=False, indent=2)
-        return {"success": True, "count": len(cats), "warnings": warnings}
-
-    # ===== 新增：获取照片健康状态 =====
     def get_photo_health(self, cat_id, pic_name):
         cat_id = str(cat_id).strip().zfill(2)
         for folder in CLASSIFIED_DIR.glob(f"{cat_id} *"):
@@ -660,7 +523,6 @@ class ManagerAPI:
             return {"success": True, "issues": issues}
         return {"success": False, "message": "未找到文件夹"}
 
-    # ===== 新增：清理临时文件 =====
     def cleanup_temp_files(self):
         temp_dir = BASE_DIR / ".tmp_thumbs"
         deleted = []
@@ -676,19 +538,11 @@ class ManagerAPI:
                         pass
         return {"success": True, "deleted": len(deleted), "size_freed": size_freed, "files": deleted[:50]}
 
-    # ===== 新增：扫描孤立文件 =====
     def scan_orphan_files(self):
         orphans = []
         if not CLASSIFIED_DIR.is_dir():
             return {"success": True, "orphans": []}
-        # 收集所有合法的图片文件名模式
-        rows = self._store.all_rows()
-        valid_patterns = set()
-        for row in rows:
-            pic = row["pic_name"]
-            if pic:
-                valid_patterns.add(pic)
-        # 扫描 classified 下所有文件夹
+        valid_pics = set(c.get("pic_name", "") for c in self._cats if c.get("pic_name"))
         for folder in sorted(CLASSIFIED_DIR.iterdir()):
             if not folder.is_dir():
                 continue
@@ -696,21 +550,16 @@ class ManagerAPI:
                 if not f.is_file():
                     continue
                 name = f.name
-                # 检查是否为有效猫图片（匹配任一 pic_name_xx.jpg 格式）
-                matched = False
-                for pic in valid_patterns:
-                    if re.match(rf"^{re.escape(pic)}_\d{{2}}(_thumb)?\.jpe?g$", name, re.IGNORECASE):
-                        matched = True
-                        break
-                    # 也匹配 tmpswap 文件
-                    if name.endswith('.tmpswap'):
-                        matched = True
-                        break
+                matched = name.endswith('.tmpswap')
+                if not matched:
+                    for pic in valid_pics:
+                        if re.match(rf"^{re.escape(pic)}_\d{{2}}(_thumb)?\.jpe?g$", name, re.IGNORECASE):
+                            matched = True
+                            break
                 if not matched:
                     orphans.append(str(f.relative_to(CLASSIFIED_DIR)))
         return {"success": True, "orphans": orphans}
 
-    # ===== 新增：删除孤立文件 =====
     def delete_orphan_files(self, paths):
         deleted = []
         for rel_path in paths:
@@ -726,12 +575,24 @@ class ManagerAPI:
 # ================= HTTP 服务器 =================
 def start_http_server():
     base_dir = get_base_dir()
-    # 确保必要目录存在
+    res_dir = get_resource_dir()
     (base_dir / 'classified').mkdir(parents=True, exist_ok=True)
-    
+
+    # 前端静态文件已被打包进 exe，从资源目录(_MEIPASS)读取，
+    # 保证即使 exe 同目录缺少这些文件也能正常打开；
+    # 其余内容(classified/、data/ 等可编辑数据)仍从磁盘 base_dir 读写。
+    FRONTEND_FILES = {"app_manager.html", "marked.min.js"}
+
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=str(base_dir), **kwargs)
+        def translate_path(self, path):
+            rel = path.split("?", 1)[0].split("#", 1)[0].lstrip("/")
+            if rel in FRONTEND_FILES:
+                cand = res_dir / rel
+                if cand.is_file():
+                    return str(cand)
+            return super().translate_path(path)
         def log_message(self, format, *args):
             pass
     server = HTTPServer(('127.0.0.1', 0), Handler)
@@ -742,14 +603,21 @@ def start_http_server():
 
 # ================= 主入口 =================
 if __name__ == '__main__':
-    api = ManagerAPI()
-    url, server = start_http_server()
-    window = webview.create_window(
-        title='🐱 SUAT 猫咪管理器',
-        url=url,
-        js_api=api,
-        width=1200,
-        height=800,
-        min_size=(900, 600)
-    )
-    webview.start()
+    import traceback, ctypes
+    try:
+        api = ManagerAPI()
+        url, server = start_http_server()
+        window = webview.create_window(
+            title='🐱 SUAT 猫咪管理器',
+            url=url,
+            js_api=api,
+            width=1200,
+            height=800,
+            min_size=(900, 600)
+        )
+        webview.start()
+    except Exception as e:
+        err = f"{e}\n{traceback.format_exc()}"
+        ctypes.windll.user32.MessageBoxW(0, err, "SUAT启动失败", 0x10)
+        (BASE_DIR / "_crash.log").write_text(err, encoding="utf-8")
+        raise

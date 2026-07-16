@@ -1,6 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""增量转换：扫描原始 JPG，缺少 _thumb 的才处理"""
+"""
+增量转换：扫描原始 JPG，缺少 _thumb 的才处理
+
+## 使用说明
+
+### 功能
+扫描 `classified/` 下所有猫咪文件夹，对没有 `_thumb.jpg` 的原图自动生成 300x300 缩略图。
+已存在的缩略图不会重复生成（增量模式）。
+
+### 运行
+```bash
+python auto_thumb.py
+```
+
+### 需要的基础文件
+```
+SUAT-cats/
+├── classified/          ← 猫咪图片（必须有，按 {id} {name}/ 组织）
+│   ├── 01 丑橘/
+│   │   ├── ugly_orange_01.jpg
+│   │   └── ...
+│   └── ...
+├── auto_thumb.py        ← 就是这个文件
+└── (无其他依赖)
+```
+
+### 依赖
+```bash
+pip install Pillow
+```
+"""
 
 import os
 from PIL import Image

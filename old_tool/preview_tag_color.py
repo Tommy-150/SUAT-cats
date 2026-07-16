@@ -1,3 +1,30 @@
+"""
+标签颜色预览工具
+
+## 使用说明
+
+### 功能
+打开一个 Tkinter 窗口，以可视化方式预览 `data/tag_color.json` 中的所有标签及其颜色。
+可用于快速检查颜色搭配是否合理。
+
+### 运行
+```bash
+python preview_tag_color.py
+```
+
+### 需要的基础文件
+```
+SUAT-cats/
+├── data/
+│   └── tag_color.json   ← 标签颜色数据
+├── preview_tag_color.py ← 就是这个文件
+└── (无其他依赖)
+```
+
+### 依赖
+无（仅使用 Python 内置 tkinter）
+"""
+
 import json
 import tkinter as tk
 import os
