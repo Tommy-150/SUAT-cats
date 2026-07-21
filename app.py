@@ -255,6 +255,24 @@ class ManagerAPI:
                     return {"success": False, "message": f"目标文件夹已存在: {new_folder.name}"}
                 if old_folder.is_dir():
                     old_folder.rename(new_folder)
+            # 同步 JSON 中所有图片路径（avatar / avatar_hd / otherPhotos）
+            if (old_name and old_name != name) or (old_pic and old_pic != pic_name):
+                old_dir = f"{cat_id} {old_name}"
+                new_dir = f"{cat_id} {name}"
+                def _fix_path(p):
+                    if not p:
+                        return p
+                    s = p
+                    if old_name and old_name != name:
+                        s = s.replace(f"classified/{old_dir}/", f"classified/{new_dir}/")
+                    if old_pic and old_pic != pic_name:
+                        s = re.sub(rf"{re.escape(old_pic)}_(\d{{2}})", rf"{pic_name}_\1", s)
+                    return s
+                existing["avatar"] = _fix_path(existing.get("avatar", ""))
+                existing["avatar_hd"] = _fix_path(existing.get("avatar_hd", ""))
+                for photo in existing.get("otherPhotos", []):
+                    photo["thumb"] = _fix_path(photo.get("thumb", ""))
+                    photo["hd"] = _fix_path(photo.get("hd", ""))
             # 更新已有条目
             existing.update({
                 "name": name,

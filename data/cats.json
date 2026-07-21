@@ -454,10 +454,10 @@
     "gender": "male",
     "avatar": "classified/20 贪吃哥/like_eat_brother_01_thumb.jpg",
     "avatar_hd": "classified/20 贪吃哥/like_eat_brother_01.jpg",
-    "affection": 4,
+    "affection": 3,
     "status": "normal",
     "desc": "一直在蹭饭的路上",
-    "story": "在学校里转来转去，就为了蹭一口饭吃，是猫妈的垃圾桶， 喜欢抢二头的饭。",
+    "story": "在学校里转来转去，就为了蹭一口饭吃，是猫妈的垃圾桶， 喜欢抢二头的饭。是个给",
     "tags": [
       "已绝育"
     ],
@@ -695,32 +695,34 @@
     "id": "32",
     "name": "花卷",
     "gender": "male",
-    "avatar": "classified/32 狸花5号(暂用名)/li_hua_five_01_thumb.jpg",
-    "avatar_hd": "classified/32 狸花5号(暂用名)/li_hua_five_01.jpg",
-    "affection": 4,
-    "status": "lost",
+    "avatar": "classified/32 花卷/flower_juan_01_thumb.jpg",
+    "avatar_hd": "classified/32 花卷/flower_juan_01.jpg",
+    "affection": 3,
+    "status": "normal",
     "desc": "普通的狸花",
-    "story": "一只尝尝到处蹭饭的狸花，2026年5月出现在校门口，喜欢蹭饭，和贪吃哥是好朋猫，抢二头的地盘，是个gay",
-    "tags": [],
+    "story": "一只尝尝到处蹭饭的狸花，2026年5月出现在校门口，喜欢蹭饭，和贪吃哥是好朋猫，抢二头的地盘。是个给",
+    "tags": [
+      "已绝育"
+    ],
     "otherPhotos": [
       {
-        "thumb": "classified/32 狸花5号(暂用名)/li_hua_five_02_thumb.jpg",
-        "hd": "classified/32 狸花5号(暂用名)/li_hua_five_02.jpg"
+        "thumb": "classified/32 花卷/flower_juan_02_thumb.jpg",
+        "hd": "classified/32 花卷/flower_juan_02.jpg"
       },
       {
-        "thumb": "classified/32 狸花5号(暂用名)/li_hua_five_03_thumb.jpg",
-        "hd": "classified/32 狸花5号(暂用名)/li_hua_five_03.jpg"
+        "thumb": "classified/32 花卷/flower_juan_03_thumb.jpg",
+        "hd": "classified/32 花卷/flower_juan_03.jpg"
       },
       {
-        "thumb": "classified/32 狸花5号(暂用名)/li_hua_five_04_thumb.jpg",
-        "hd": "classified/32 狸花5号(暂用名)/li_hua_five_04.jpg"
+        "thumb": "classified/32 花卷/flower_juan_04_thumb.jpg",
+        "hd": "classified/32 花卷/flower_juan_04.jpg"
       },
       {
-        "thumb": "classified/32 狸花5号(暂用名)/li_hua_five_05_thumb.jpg",
-        "hd": "classified/32 狸花5号(暂用名)/li_hua_five_05.jpg"
+        "thumb": "classified/32 花卷/flower_juan_05_thumb.jpg",
+        "hd": "classified/32 花卷/flower_juan_05.jpg"
       }
     ],
-    "pic_name": "hua_juan"
+    "pic_name": "flower_juan"
   },
   {
     "id": "33",
@@ -745,7 +747,7 @@
     "affection": 1,
     "status": "normal",
     "desc": "普通的狸花",
-    "story": "大肚子怕人狸花，很像古典纹的放大版，只是左后腿多了一块纹，2026年年初失踪。",
+    "story": "大肚子怕人狸花，很像古典纹的放大版，只是左后腿多了一块纹，",
     "tags": [],
     "otherPhotos": [],
     "pic_name": "gu_dian_wen_cat_mom"
