@@ -419,6 +419,7 @@
     <div style="display: flex; gap: 12px;">
         <button class="top-link" id="manageTagsBtn">🏷️ 管理标签</button>
         <button class="top-link" id="banWordsBtn">🛡️ 敏感词管理</button>
+        <button class="top-link" id="compressBtn">🗜️ 一键压缩图片大小</button>
     </div>
     <button class="top-link" id="editorLink">✉️ 编者留言</button>
 </div>
@@ -1486,6 +1487,34 @@
     }
 
     if (api) loadAllData(); else window.addEventListener('pywebviewready', loadAllData);
+
+    // ========== 一键压缩 ==========
+    document.getElementById('compressBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('compressBtn');
+        btn.textContent = '⏳ 压缩中...';
+        btn.disabled = true;
+        try {
+            const res = await api.compress_all_images();
+            if (!res.success) {
+                alert('压缩失败：' + (res.message || '未知错误'));
+                return;
+            }
+            const mb = (n) => (n / 1024 / 1024).toFixed(1);
+            let msg = `压缩完成！\n\n`;
+            msg += `处理 ${res.compressed.length} 张图片\n`;
+            msg += `原始: ${mb(res.before_total)}MB → 压缩后: ${mb(res.after_total)}MB\n`;
+            msg += `节省: ${res.saved_pct}%`;
+            if (res.errors.length > 0) {
+                msg += `\n\n${res.errors.length} 个错误:\n${res.errors.slice(0,5).join('\n')}`;
+            }
+            alert(msg);
+        } catch (e) {
+            alert('压缩失败: ' + e);
+        } finally {
+            btn.textContent = '🗜️ 压缩图片';
+            btn.disabled = false;
+        }
+    });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {

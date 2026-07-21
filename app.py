@@ -590,6 +590,63 @@ class ManagerAPI:
                     pass
         return {"success": True, "deleted": deleted}
 
+    def compress_all_images(self):
+        """一键压缩 classified/ 下所有 >1000×1000 的大图，跳过缩略图"""
+        THRESHOLD = 1000
+        QUALITY = 80
+        before_total = 0
+        after_total = 0
+        compressed = []
+        errors = []
+
+        if not CLASSIFIED_DIR.is_dir():
+            return {"success": False, "message": "classified 文件夹不存在"}
+
+        for folder in sorted(CLASSIFIED_DIR.iterdir()):
+            if not folder.is_dir():
+                continue
+            for f in sorted(folder.iterdir()):
+                if not f.is_file() or f.suffix.lower() not in (".jpg", ".jpeg"):
+                    continue
+                if "_thumb" in f.name or f.name.endswith(".tmpswap"):
+                    continue
+                try:
+                    from PIL import Image as PILImage
+                    img = PILImage.open(f)
+                    w, h = img.size
+                    old_size = f.stat().st_size
+                    if w <= THRESHOLD and h <= THRESHOLD:
+                        continue
+                    before_total += old_size
+                    tmp = f.with_suffix(".tmp_compress")
+                    if img.mode in ("RGBA", "P"):
+                        img = img.convert("RGB")
+                    img.save(tmp, "JPEG", quality=QUALITY, optimize=True, progressive=True)
+                    new_size = tmp.stat().st_size
+                    if new_size < old_size:
+                        tmp.replace(f)
+                        after_total += new_size
+                        compressed.append({
+                            "file": str(f.relative_to(CLASSIFIED_DIR)),
+                            "before": old_size,
+                            "after": new_size,
+                            "ratio": round((1 - new_size / old_size) * 100),
+                        })
+                    else:
+                        tmp.unlink()
+                        after_total += old_size
+                except Exception as e:
+                    errors.append(str(f.relative_to(CLASSIFIED_DIR)) + ": " + str(e))
+
+        return {
+            "success": True,
+            "compressed": compressed,
+            "errors": errors,
+            "before_total": before_total,
+            "after_total": after_total,
+            "saved_pct": round((1 - after_total / before_total) * 100) if before_total else 0,
+        }
+
 # ================= HTTP 服务器 =================
 def start_http_server():
     base_dir = get_base_dir()
