@@ -774,5 +774,90 @@
       }
     ],
     "pic_name": "big_orange_one"
+  },
+  {
+    "id": "36",
+    "name": "猫妈2号（暂用名）",
+    "gender": "female",
+    "affection": 5,
+    "status": "normal",
+    "desc": "带着她的孩子新来的猫妈",
+    "story": "8月的一个晚上，一只小狸花突然出现在奶牛猫妈孩子的窝边，过了两天，猫妈出现了。",
+    "pic_name": "miow_mum_two",
+    "tags": [],
+    "avatar": "classified/36 猫妈2号（暂用名）/miow_mum_two_01_thumb.jpg",
+    "avatar_hd": "classified/36 猫妈2号（暂用名）/miow_mum_two_01.jpg",
+    "otherPhotos": []
+  },
+  {
+    "id": "37",
+    "name": "小狸花（暂用名）",
+    "gender": "unknown",
+    "affection": 5,
+    "status": "normal",
+    "desc": "突然出现一只猫德满分的小狸花",
+    "story": "8 月的一个晚上，一只小狸花突然出现在奶牛猫妈孩子的窝边，猫德满分，和另外 4 只原住民形成鲜明对比。",
+    "pic_name": "little_lihua",
+    "tags": [],
+    "avatar": "classified/37 小狸花（暂用名）/little_lihua_01_thumb.jpg",
+    "avatar_hd": "classified/37 小狸花（暂用名）/little_lihua_01.jpg",
+    "otherPhotos": [
+      {
+        "thumb": "classified/37 小狸花（暂用名）/little_lihua_02_thumb.jpg",
+        "hd": "classified/37 小狸花（暂用名）/little_lihua_02.jpg"
+      }
+    ]
+  },
+  {
+    "id": "38",
+    "name": "松子",
+    "gender": "male",
+    "affection": 5,
+    "status": "adopted",
+    "desc": "在先行走失的一只小猫",
+    "story": "在先行走失的一只小猫，一只被曙光同学们养着，已经被领养了。",
+    "pic_name": "song_son",
+    "tags": [],
+    "avatar": "classified/38 松子/song_son_01_thumb.jpg",
+    "avatar_hd": "classified/38 松子/song_son_01.jpg",
+    "otherPhotos": []
+  },
+  {
+    "id": "39",
+    "name": "崽崽",
+    "gender": "male",
+    "affection": 4,
+    "status": "normal",
+    "desc": "在大雨中走失的小猫",
+    "story": "在大雨中走失的小猫，被猫妈丢失在滑板场的坑里，被袁庚的同学救助下来，有点胆小，但是熟悉了就可以随意把玩。",
+    "pic_name": "baby_baby",
+    "tags": [],
+    "avatar": "classified/39 崽崽/baby_baby_01_thumb.jpg",
+    "avatar_hd": "classified/39 崽崽/baby_baby_01.jpg",
+    "otherPhotos": [
+      {
+        "thumb": "classified/39 崽崽/baby_baby_02_thumb.jpg",
+        "hd": "classified/39 崽崽/baby_baby_02.jpg"
+      }
+    ]
+  },
+  {
+    "id": "40",
+    "name": "小橘咪",
+    "gender": "unknown",
+    "affection": 5,
+    "status": "normal",
+    "desc": "被遗弃在猫妈窝里的橘子",
+    "story": "眼睛还没睁开，就被遗弃在猫妈窝里的小橘子，不会喵喵，只会开摩托（打呼）。",
+    "pic_name": "little_orange",
+    "tags": [],
+    "avatar": "classified/40 小橘咪/little_orange_01_thumb.jpg",
+    "avatar_hd": "classified/40 小橘咪/little_orange_01.jpg",
+    "otherPhotos": [
+      {
+        "thumb": "classified/40 小橘咪/little_orange_02_thumb.jpg",
+        "hd": "classified/40 小橘咪/little_orange_02.jpg"
+      }
+    ]
   }
 ]

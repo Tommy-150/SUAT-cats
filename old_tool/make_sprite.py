@@ -59,9 +59,14 @@ def main():
         row = i // COLS
         x, y = col * THUMB_SIZE, row * THUMB_SIZE
         positions[cat["id"]] = {"x": x, "y": y}
-        avatar_path = cat.get("avatar", "")
-        # avatar 格式: "classified/01 丑橘/xxx_01_thumb.jpg"
-        local_path = BASE_DIR / avatar_path if avatar_path else None
+        # 从文件系统推导主图，不依赖 JSON 静态 avatar 字段
+        pic = cat.get("pic_name", "")
+        folder = CLASSIFIED / f"{cat['id']} {cat.get('name','')}"
+        local_path = None
+        if pic:
+            cand = folder / f"{pic}_01_thumb.jpg"
+            if cand.is_file():
+                local_path = cand
         if local_path and local_path.is_file():
             try:
                 img = Image.open(local_path).convert("RGB")
@@ -75,7 +80,10 @@ def main():
     print(f"\n雪碧图: {OUTPUT_IMG} ({canvas_w}×{canvas_h})")
 
     # 生成 JS 映射
-    js = "// 雪碧图位置映射  COL=7  SIZE=300\nconst SPRITE_MAP = {\n"
+    js = f"// 雪碧图位置映射  COL={COLS}  ROWS={rows}  SIZE={THUMB_SIZE}\n"
+    js += f"const SPRITE_COLS = {COLS};\n"
+    js += f"const SPRITE_ROWS = {rows};\n"
+    js += "const SPRITE_MAP = {\n"
     for cat_id, pos in positions.items():
         js += f'  "{cat_id}": {{ x: {pos["x"]}, y: {pos["y"]} }},\n'
     js += "};\n"

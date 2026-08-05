@@ -173,7 +173,7 @@
             width: 100%; height: 100%; border-radius: 24px; border: 4px solid #fff;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             background-image: url('../static/sprite_thumb.jpg');
-            background-size: 700% 500%;
+            background-size: 700% 600%;
             background-repeat: no-repeat;
         }
 
@@ -568,6 +568,14 @@
     </div>
 
     <script>
+        // ==================== 动态雪碧图尺寸 ====================
+        // sprite_map.js 同步加载，SPRITE_COLS/SPRITE_ROWS 已可用
+        if (typeof SPRITE_COLS !== 'undefined' && typeof SPRITE_ROWS !== 'undefined') {
+            const style = document.createElement('style');
+            style.textContent = `.sprite-avatar { background-size: ${SPRITE_COLS*100}% ${SPRITE_ROWS*100}%; }`;
+            document.head.appendChild(style);
+        }
+
         // ==================== 原有代码：完全不变 ====================
         const grid = document.getElementById('catGrid');
         const loadingText = document.getElementById('loadingText');
@@ -733,7 +741,7 @@
 
                 card.innerHTML = `
                     <div class="avatar-wrapper">
-                        <div class="sprite-avatar" style="background-position: ${((SPRITE_MAP[cat.id]?.x||0)/300*100/6).toFixed(1)}% ${((SPRITE_MAP[cat.id]?.y||0)/300*100/4).toFixed(1)}%;"></div>
+                        <div class="sprite-avatar" style="background-position: ${((SPRITE_MAP[cat.id]?.x||0)/300*100/(SPRITE_COLS-1)).toFixed(1)}% ${((SPRITE_MAP[cat.id]?.y||0)/300*100/(SPRITE_ROWS-1)).toFixed(1)}%;"></div>
                         <div class="status-icon">${getStatusIcon(cat.status)}</div>
                     </div>
                     <div class="name-row">
@@ -1016,7 +1024,7 @@
                 })
                 .catch(error => {
                     console.error('读取数据失败:', error);
-                    grid.innerHTML = '<p class="error-text">❌ 读取猫咪档案失败，请检查 cats.json 文件是否存在且格式正确。</p>';
+                    grid.innerHTML = '<p class="error-text">? 读取猫咪档案失败，可以试试用浏览器打开或刷新。</p>';
                 });
         });
     </script>

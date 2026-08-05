@@ -65,6 +65,9 @@ class ManagerAPI:
         self._ban_words = self._load_json(BAN_WORDS_PATH).get("words", [])
         self._ensure_dir()
         self._cats = self._load_cats()
+        # 启动自愈：文件系统为准，修复 JSON 里陈旧的图片路径
+        self._sync_cat_photos()
+        self._update_sprite()
         atexit.register(self._cleanup_all)
 
     def _ensure_dir(self):
@@ -103,8 +106,13 @@ class ManagerAPI:
                         pass
 
     def _update_sprite(self):
-        """照片变更后自动更新雪碧图"""
+        """照片变更后自动更新雪碧图。
+
+        先按文件系统同步 cats.json 图片路径（保证 JSON 与磁盘一致），
+        再重建雪碧图。所有照片写操作（上传/删除/裁剪/换主图）都调用本方法。
+        """
         try:
+            self._sync_cat_photos()
             from PIL import Image as PILImage
             sd = BASE_DIR / "static"
             sd.mkdir(parents=True, exist_ok=True)
@@ -120,15 +128,23 @@ class ManagerAPI:
                 r = i // COLS
                 x, y = col * TS, r * TS
                 positions[cat["id"]] = {"x": x, "y": y}
-                av = cat.get("avatar", "")
-                if av:
-                    lp = BASE_DIR / av
-                    if lp.is_file():
-                        im = PILImage.open(lp).convert("RGB")
-                        im = im.resize((TS, TS), PILImage.LANCZOS)
-                        canvas.paste(im, (x, y))
+                # 从文件系统推导主图（与 _build_cat_data 一致，不依赖 JSON 静态字段）
+                pic = cat.get("pic_name", "")
+                folder = BASE_DIR / "classified" / f"{cat['id']} {cat.get('name','')}"
+                av = ""
+                if pic:
+                    cand = folder / f"{pic}_01_thumb.jpg"
+                    if cand.is_file():
+                        av = str(cand)
+                if av and Path(av).is_file():
+                    im = PILImage.open(av).convert("RGB")
+                    im = im.resize((TS, TS), PILImage.LANCZOS)
+                    canvas.paste(im, (x, y))
             canvas.save(sd / "sprite_thumb.jpg", "JPEG", quality=85, optimize=True)
-            js = "const SPRITE_MAP = {\n"
+            js = f"// 雪碧图位置映射  COL={COLS}  ROWS={rows}  SIZE={TS}\n"
+            js += f"const SPRITE_COLS = {COLS};\n"
+            js += f"const SPRITE_ROWS = {rows};\n"
+            js += "const SPRITE_MAP = {\n"
             for cid, pos in positions.items():
                 js += f'  "{cid}": {{ x: {pos["x"]}, y: {pos["y"]} }},\n'
             js += "};\n"
@@ -207,6 +223,68 @@ class ManagerAPI:
             "pic_name": pic,
         }
 
+    def _sync_cat_photos(self):
+        """从文件系统推导每只猫的图片路径并写回 JSON，保持数据自洽。
+
+        原则：文件系统是唯一事实源。JSON 里的 avatar/avatar_hd/otherPhotos
+        只是缓存，任何磁盘文件变动后调用本方法即可自动对齐。
+        """
+        changed = False
+        for cat in self._cats:
+            cid = cat["id"]
+            name = cat.get("name", "")
+            pic = cat.get("pic_name", "")
+            folder = CLASSIFIED_DIR / f"{cid} {name}"
+            folder_json = f"classified/{cid} {name}"
+
+            avatar = cat.get("avatar", "")
+            avatar_hd = cat.get("avatar_hd", "")
+            other_photos = cat.get("otherPhotos", []) or []
+
+            # 主图
+            if pic and (folder / f"{pic}_01_thumb.jpg").is_file():
+                new_avatar = f"{folder_json}/{pic}_01_thumb.jpg"
+                if new_avatar != avatar:
+                    cat["avatar"] = new_avatar
+                    changed = True
+            elif avatar:
+                cat["avatar"] = ""
+                changed = True
+
+            if pic and (folder / f"{pic}_01.jpg").is_file():
+                new_avatar_hd = f"{folder_json}/{pic}_01.jpg"
+                if new_avatar_hd != avatar_hd:
+                    cat["avatar_hd"] = new_avatar_hd
+                    changed = True
+            elif avatar_hd:
+                cat["avatar_hd"] = ""
+                changed = True
+
+            # 补充图（seq >= 2）
+            new_photos = []
+            if pic and folder.is_dir():
+                import glob
+                pattern = str(folder / f"{pic}_[0-9][0-9].jpg")
+                for fpath in sorted(glob.glob(pattern)):
+                    m = re.match(rf"^{re.escape(pic)}_(\d{{2}})\.jpg$", os.path.basename(fpath))
+                    if not m:
+                        continue
+                    seq = int(m.group(1))
+                    if seq < 2:
+                        continue
+                    seq_str = f"{seq:02d}"
+                    new_photos.append({
+                        "thumb": f"{folder_json}/{pic}_{seq_str}_thumb.jpg",
+                        "hd": f"{folder_json}/{pic}_{seq_str}.jpg",
+                    })
+            if new_photos != other_photos:
+                cat["otherPhotos"] = new_photos
+                changed = True
+
+        if changed:
+            self._save_cats()
+        return changed
+
     # ---------- 公开 API ----------
     def get_cats(self):
         return [self._build_cat_data(c) for c in self._cats]
@@ -255,24 +333,6 @@ class ManagerAPI:
                     return {"success": False, "message": f"目标文件夹已存在: {new_folder.name}"}
                 if old_folder.is_dir():
                     old_folder.rename(new_folder)
-            # 同步 JSON 中所有图片路径（avatar / avatar_hd / otherPhotos）
-            if (old_name and old_name != name) or (old_pic and old_pic != pic_name):
-                old_dir = f"{cat_id} {old_name}"
-                new_dir = f"{cat_id} {name}"
-                def _fix_path(p):
-                    if not p:
-                        return p
-                    s = p
-                    if old_name and old_name != name:
-                        s = s.replace(f"classified/{old_dir}/", f"classified/{new_dir}/")
-                    if old_pic and old_pic != pic_name:
-                        s = re.sub(rf"{re.escape(old_pic)}_(\d{{2}})", rf"{pic_name}_\1", s)
-                    return s
-                existing["avatar"] = _fix_path(existing.get("avatar", ""))
-                existing["avatar_hd"] = _fix_path(existing.get("avatar_hd", ""))
-                for photo in existing.get("otherPhotos", []):
-                    photo["thumb"] = _fix_path(photo.get("thumb", ""))
-                    photo["hd"] = _fix_path(photo.get("hd", ""))
             # 更新已有条目
             existing.update({
                 "name": name,
@@ -302,6 +362,8 @@ class ManagerAPI:
             folder = CLASSIFIED_DIR / f"{cat_id} {name}"
             folder.mkdir(parents=True, exist_ok=True)
         self._save_cats()
+        # 文件系统为准，统一对齐图片路径（含新建/改名后）
+        self._sync_cat_photos()
         self._cleanup_temp()
         return {"success": True}
 
@@ -311,6 +373,7 @@ class ManagerAPI:
         self._save_cats()
         for folder in CLASSIFIED_DIR.glob(f"{cat_id} *"):
             shutil.rmtree(folder, ignore_errors=True)
+        self._update_sprite()
         self._cleanup_temp()
         return {"success": True}
 
@@ -423,6 +486,8 @@ class ManagerAPI:
             old_f.rename(new_f)
         self._cats = ordered
         self._save_cats()
+        # 排序改了 id 和文件夹名，重建雪碧图（内部自动同步路径）
+        self._update_sprite()
         self._cleanup_temp()
         return {"success": True, "count": len(ordered)}
 
@@ -488,6 +553,7 @@ class ManagerAPI:
             return {"success": True, "message": "已在边界"}
         self._cats.insert(new_idx, self._cats.pop(idx))
         self._save_cats()
+        self._update_sprite()
         self._cleanup_temp()
         return {"success": True}
 
