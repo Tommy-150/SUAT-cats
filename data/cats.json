@@ -13,7 +13,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/01 丑橘(暂用名)/ugly_orange_02_thumb.jpg",
-        "hd": "classified/01 丑橘(暂用名)/ugly_orange_02.jpg"
+        "hd": "classified/01 丑橘(暂用名)/ugly_orange_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "ugly_orange"
@@ -35,7 +36,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/02 草草/grass_grass_02_thumb.jpg",
-        "hd": "classified/02 草草/grass_grass_02.jpg"
+        "hd": "classified/02 草草/grass_grass_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "grass_grass"
@@ -72,11 +74,13 @@
     "otherPhotos": [
       {
         "thumb": "classified/04 奶牛哥/milk_cow_brother_02_thumb.jpg",
-        "hd": "classified/04 奶牛哥/milk_cow_brother_02.jpg"
+        "hd": "classified/04 奶牛哥/milk_cow_brother_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/04 奶牛哥/milk_cow_brother_03_thumb.jpg",
-        "hd": "classified/04 奶牛哥/milk_cow_brother_03.jpg"
+        "hd": "classified/04 奶牛哥/milk_cow_brother_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "milk_cow_brother"
@@ -98,15 +102,18 @@
     "otherPhotos": [
       {
         "thumb": "classified/05 猫妈/cat_mom_02_thumb.jpg",
-        "hd": "classified/05 猫妈/cat_mom_02.jpg"
+        "hd": "classified/05 猫妈/cat_mom_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/05 猫妈/cat_mom_03_thumb.jpg",
-        "hd": "classified/05 猫妈/cat_mom_03.jpg"
+        "hd": "classified/05 猫妈/cat_mom_03.jpg",
+        "seq": 3
       },
       {
         "thumb": "classified/05 猫妈/cat_mom_04_thumb.jpg",
-        "hd": "classified/05 猫妈/cat_mom_04.jpg"
+        "hd": "classified/05 猫妈/cat_mom_04.jpg",
+        "seq": 4
       }
     ],
     "pic_name": "cat_mom"
@@ -128,11 +135,13 @@
     "otherPhotos": [
       {
         "thumb": "classified/06 橘头/orange_head_02_thumb.jpg",
-        "hd": "classified/06 橘头/orange_head_02.jpg"
+        "hd": "classified/06 橘头/orange_head_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/06 橘头/orange_head_03_thumb.jpg",
-        "hd": "classified/06 橘头/orange_head_03.jpg"
+        "hd": "classified/06 橘头/orange_head_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "orange_head"
@@ -154,15 +163,18 @@
     "otherPhotos": [
       {
         "thumb": "classified/07 头套/head_tao_02_thumb.jpg",
-        "hd": "classified/07 头套/head_tao_02.jpg"
+        "hd": "classified/07 头套/head_tao_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/07 头套/head_tao_03_thumb.jpg",
-        "hd": "classified/07 头套/head_tao_03.jpg"
+        "hd": "classified/07 头套/head_tao_03.jpg",
+        "seq": 3
       },
       {
         "thumb": "classified/07 头套/head_tao_04_thumb.jpg",
-        "hd": "classified/07 头套/head_tao_04.jpg"
+        "hd": "classified/07 头套/head_tao_04.jpg",
+        "seq": 4
       }
     ],
     "pic_name": "head_tao"
@@ -184,11 +196,13 @@
     "otherPhotos": [
       {
         "thumb": "classified/08 黑头/black_head_02_thumb.jpg",
-        "hd": "classified/08 黑头/black_head_02.jpg"
+        "hd": "classified/08 黑头/black_head_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/08 黑头/black_head_03_thumb.jpg",
-        "hd": "classified/08 黑头/black_head_03.jpg"
+        "hd": "classified/08 黑头/black_head_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "black_head"
@@ -207,15 +221,18 @@
     "otherPhotos": [
       {
         "thumb": "classified/09 老橘/big_orange_one_02_thumb.jpg",
-        "hd": "classified/09 老橘/big_orange_one_02.jpg"
+        "hd": "classified/09 老橘/big_orange_one_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/09 老橘/big_orange_one_03_thumb.jpg",
-        "hd": "classified/09 老橘/big_orange_one_03.jpg"
+        "hd": "classified/09 老橘/big_orange_one_03.jpg",
+        "seq": 3
       },
       {
         "thumb": "classified/09 老橘/big_orange_one_04_thumb.jpg",
-        "hd": "classified/09 老橘/big_orange_one_04.jpg"
+        "hd": "classified/09 老橘/big_orange_one_04.jpg",
+        "seq": 4
       }
     ],
     "pic_name": "big_orange_one"
@@ -234,15 +251,18 @@
     "otherPhotos": [
       {
         "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_02_thumb.jpg",
-        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_02.jpg"
+        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_03_thumb.jpg",
-        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_03.jpg"
+        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_03.jpg",
+        "seq": 3
       },
       {
         "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_04_thumb.jpg",
-        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_04.jpg"
+        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_04.jpg",
+        "seq": 4
       }
     ],
     "pic_name": "gu_dian_wen"
@@ -261,7 +281,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02_thumb.jpg",
-        "hd": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02.jpg"
+        "hd": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "river_side_milk_cow"
@@ -280,15 +301,18 @@
     "otherPhotos": [
       {
         "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02.jpg"
+        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03.jpg"
+        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03.jpg",
+        "seq": 3
       },
       {
         "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04.jpg"
+        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04.jpg",
+        "seq": 4
       }
     ],
     "pic_name": "jian_zhou_cat_mum"
@@ -309,11 +333,13 @@
     "otherPhotos": [
       {
         "thumb": "classified/13 奶牛猫妈/cow_cat_mom_02_thumb.jpg",
-        "hd": "classified/13 奶牛猫妈/cow_cat_mom_02.jpg"
+        "hd": "classified/13 奶牛猫妈/cow_cat_mom_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/13 奶牛猫妈/cow_cat_mom_03_thumb.jpg",
-        "hd": "classified/13 奶牛猫妈/cow_cat_mom_03.jpg"
+        "hd": "classified/13 奶牛猫妈/cow_cat_mom_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "cow_cat_mom"
@@ -334,7 +360,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02_thumb.jpg",
-        "hd": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02.jpg"
+        "hd": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "white_glove_bib"
@@ -355,7 +382,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02_thumb.jpg",
-        "hd": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02.jpg"
+        "hd": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "white_glove_bib_two"
@@ -376,7 +404,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/16 悍匪/black_boss_02_thumb.jpg",
-        "hd": "classified/16 悍匪/black_boss_02.jpg"
+        "hd": "classified/16 悍匪/black_boss_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "black_boss"
@@ -398,11 +427,13 @@
     "otherPhotos": [
       {
         "thumb": "classified/17 五月/May_02_thumb.jpg",
-        "hd": "classified/17 五月/May_02.jpg"
+        "hd": "classified/17 五月/May_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/17 五月/May_03_thumb.jpg",
-        "hd": "classified/17 五月/May_03.jpg"
+        "hd": "classified/17 五月/May_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "May"
@@ -423,11 +454,13 @@
     "otherPhotos": [
       {
         "thumb": "classified/18 六月/June_02_thumb.jpg",
-        "hd": "classified/18 六月/June_02.jpg"
+        "hd": "classified/18 六月/June_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/18 六月/June_03_thumb.jpg",
-        "hd": "classified/18 六月/June_03.jpg"
+        "hd": "classified/18 六月/June_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "June"
@@ -464,11 +497,13 @@
     "otherPhotos": [
       {
         "thumb": "classified/20 贪吃哥/like_eat_brother_02_thumb.jpg",
-        "hd": "classified/20 贪吃哥/like_eat_brother_02.jpg"
+        "hd": "classified/20 贪吃哥/like_eat_brother_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/20 贪吃哥/like_eat_brother_03_thumb.jpg",
-        "hd": "classified/20 贪吃哥/like_eat_brother_03.jpg"
+        "hd": "classified/20 贪吃哥/like_eat_brother_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "like_eat_brother"
@@ -489,7 +524,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/21 头3/head_three_02_thumb.jpg",
-        "hd": "classified/21 头3/head_three_02.jpg"
+        "hd": "classified/21 头3/head_three_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "head_three"
@@ -510,7 +546,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/22 头孢/tou_baby_02_thumb.jpg",
-        "hd": "classified/22 头孢/tou_baby_02.jpg"
+        "hd": "classified/22 头孢/tou_baby_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "tou_baby"
@@ -547,11 +584,13 @@
     "otherPhotos": [
       {
         "thumb": "classified/24 袁小花/yuan_small_flower_02_thumb.jpg",
-        "hd": "classified/24 袁小花/yuan_small_flower_02.jpg"
+        "hd": "classified/24 袁小花/yuan_small_flower_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/24 袁小花/yuan_small_flower_03_thumb.jpg",
-        "hd": "classified/24 袁小花/yuan_small_flower_03.jpg"
+        "hd": "classified/24 袁小花/yuan_small_flower_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "yuan_small_flower"
@@ -572,7 +611,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/25 袁小牛/yuan_small_cow_02_thumb.jpg",
-        "hd": "classified/25 袁小牛/yuan_small_cow_02.jpg"
+        "hd": "classified/25 袁小牛/yuan_small_cow_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "yuan_small_cow"
@@ -607,7 +647,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/27 怕人三花(暂用名)/pa_ren_san_hua_02_thumb.jpg",
-        "hd": "classified/27 怕人三花(暂用名)/pa_ren_san_hua_02.jpg"
+        "hd": "classified/27 怕人三花(暂用名)/pa_ren_san_hua_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "pa_ren_san_hua"
@@ -626,15 +667,18 @@
     "otherPhotos": [
       {
         "thumb": "classified/28 狸花1号(暂用名)/li_hua_one_02_thumb.jpg",
-        "hd": "classified/28 狸花1号(暂用名)/li_hua_one_02.jpg"
+        "hd": "classified/28 狸花1号(暂用名)/li_hua_one_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/28 狸花1号(暂用名)/li_hua_one_03_thumb.jpg",
-        "hd": "classified/28 狸花1号(暂用名)/li_hua_one_03.jpg"
+        "hd": "classified/28 狸花1号(暂用名)/li_hua_one_03.jpg",
+        "seq": 3
       },
       {
         "thumb": "classified/28 狸花1号(暂用名)/li_hua_one_04_thumb.jpg",
-        "hd": "classified/28 狸花1号(暂用名)/li_hua_one_04.jpg"
+        "hd": "classified/28 狸花1号(暂用名)/li_hua_one_04.jpg",
+        "seq": 4
       }
     ],
     "pic_name": "li_hua_one"
@@ -653,7 +697,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/29 狸花2号(暂用名)/li_hua_two_02_thumb.jpg",
-        "hd": "classified/29 狸花2号(暂用名)/li_hua_two_02.jpg"
+        "hd": "classified/29 狸花2号(暂用名)/li_hua_two_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "li_hua_two"
@@ -672,7 +717,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/30 狸花3号(暂用名)/li_hua_three_02_thumb.jpg",
-        "hd": "classified/30 狸花3号(暂用名)/li_hua_three_02.jpg"
+        "hd": "classified/30 狸花3号(暂用名)/li_hua_three_02.jpg",
+        "seq": 2
       }
     ],
     "pic_name": "li_hua_three"
@@ -707,19 +753,23 @@
     "otherPhotos": [
       {
         "thumb": "classified/32 花卷/flower_juan_02_thumb.jpg",
-        "hd": "classified/32 花卷/flower_juan_02.jpg"
+        "hd": "classified/32 花卷/flower_juan_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/32 花卷/flower_juan_03_thumb.jpg",
-        "hd": "classified/32 花卷/flower_juan_03.jpg"
+        "hd": "classified/32 花卷/flower_juan_03.jpg",
+        "seq": 3
       },
       {
         "thumb": "classified/32 花卷/flower_juan_04_thumb.jpg",
-        "hd": "classified/32 花卷/flower_juan_04.jpg"
+        "hd": "classified/32 花卷/flower_juan_04.jpg",
+        "seq": 4
       },
       {
         "thumb": "classified/32 花卷/flower_juan_05_thumb.jpg",
-        "hd": "classified/32 花卷/flower_juan_05.jpg"
+        "hd": "classified/32 花卷/flower_juan_05.jpg",
+        "seq": 5
       }
     ],
     "pic_name": "flower_juan"
@@ -766,11 +816,13 @@
     "otherPhotos": [
       {
         "thumb": "classified/35 漂亮橘/big_orange_one_02_thumb.jpg",
-        "hd": "classified/35 漂亮橘/big_orange_one_02.jpg"
+        "hd": "classified/35 漂亮橘/big_orange_one_02.jpg",
+        "seq": 2
       },
       {
         "thumb": "classified/35 漂亮橘/big_orange_one_03_thumb.jpg",
-        "hd": "classified/35 漂亮橘/big_orange_one_03.jpg"
+        "hd": "classified/35 漂亮橘/big_orange_one_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "big_orange_one"
@@ -804,7 +856,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/37 小狸花（暂用名）/little_lihua_02_thumb.jpg",
-        "hd": "classified/37 小狸花（暂用名）/little_lihua_02.jpg"
+        "hd": "classified/37 小狸花（暂用名）/little_lihua_02.jpg",
+        "seq": 2
       }
     ]
   },
@@ -836,8 +889,29 @@
     "avatar_hd": "classified/39 袁小 7/yuan_liiittle_seven_01.jpg",
     "otherPhotos": [
       {
-        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_02_thumb.jpg",
-        "hd": "classified/39 袁小 7/yuan_liiittle_seven_02.jpg"
+        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_03_thumb.jpg",
+        "hd": "classified/39 袁小 7/yuan_liiittle_seven_03.jpg",
+        "seq": 3
+      },
+      {
+        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_04_thumb.jpg",
+        "hd": "classified/39 袁小 7/yuan_liiittle_seven_04.jpg",
+        "seq": 4
+      },
+      {
+        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_05_thumb.jpg",
+        "hd": "classified/39 袁小 7/yuan_liiittle_seven_05.jpg",
+        "seq": 5
+      },
+      {
+        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_06_thumb.jpg",
+        "hd": "classified/39 袁小 7/yuan_liiittle_seven_06.jpg",
+        "seq": 6
+      },
+      {
+        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_07_thumb.jpg",
+        "hd": "classified/39 袁小 7/yuan_liiittle_seven_07.jpg",
+        "seq": 7
       }
     ]
   },
@@ -856,7 +930,8 @@
     "otherPhotos": [
       {
         "thumb": "classified/40 小橘咪/little_orange_02_thumb.jpg",
-        "hd": "classified/40 小橘咪/little_orange_02.jpg"
+        "hd": "classified/40 小橘咪/little_orange_02.jpg",
+        "seq": 2
       }
     ]
   }
