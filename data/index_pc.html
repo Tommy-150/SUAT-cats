@@ -741,7 +741,7 @@
 
                 card.innerHTML = `
                     <div class="avatar-wrapper">
-                        <div class="sprite-avatar" style="background-position: ${((SPRITE_MAP[cat.id]?.x||0)/300*100/(SPRITE_COLS-1)).toFixed(1)}% ${((SPRITE_MAP[cat.id]?.y||0)/300*100/(SPRITE_ROWS-1)).toFixed(1)}%;"></div>
+                        <div class="sprite-avatar" style="background-position: ${((SPRITE_MAP[cat.id]?.x||0)/300*100/((SPRITE_COLS||7)-1)).toFixed(1)}% ${((SPRITE_MAP[cat.id]?.y||0)/300*100/((SPRITE_ROWS||5)-1)).toFixed(1)}%;"></div>
                         <div class="status-icon">${getStatusIcon(cat.status)}</div>
                     </div>
                     <div class="name-row">
