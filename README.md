@@ -23,9 +23,9 @@ GitHub可以提供免费的网站托管服务，也就是说在这上面建一�
 等编者（目前是"无蔗糖"）毕业了，我也会在这个文档后面写一些教程，教维护者如何添加猫猫、修改猫猫信息等等。
 
 # 下面的不必看啦
-## 代码使用教程（完善中）
-### 项目地址
-[点我跳转](https://github.com/Tommy-150/SUAT-cats)
+## 代码使用教程
+### 完整项目地址
+[点我跳转](https://github.com/Tommy-150/SUAT-cats-full)
 
 ### 目录核心文件夹和文件
 classified - 猫猫图片
@@ -65,12 +65,7 @@ build.py - 把 app.py 打包为 EXE
 3. **自解压引导**：exe 启动时，bootloader 在系统临时目录 `%TEMP%` 下创建 `_MEIxxxxx` 文件夹，把打包的所有文件解压进去，然后用内嵌的 Python 解释器运行
 4. **窗口模式**：`--windowed` 参数让 exe 不弹命令行黑窗，直接显示 pywebview 图形窗口
 
-### exe 运行需要什么
-| 依赖 | 说明 |
-|---|---|
-| Windows 10/11 | pywebview 调用系统内置的 Edge WebView2 渲染页面，Win10+ 自带 |
-| 项目文件夹 | exe 必须和 `classified/`、`统计信息.xlsx`、`cats.json` 等放在同一目录，程序读写都在 exe 所在目录 |
-| 不需要的 | 不需要 Python、不需要 pip、不需要装任何东西 |
+
 
 ### 如何重新打包
 运行 bulid.py
@@ -81,5 +76,3 @@ deepseek-v4-pro完成了大部分代码
 qwen3.7-max完成了demo1-4的部分，为我们的网页确定了主题
 
 GLM-5.2完成了cat_manager.py的部分内容
-
-（这一条用于占位，无实际意义）

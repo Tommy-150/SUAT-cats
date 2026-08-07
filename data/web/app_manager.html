@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUAT 猫咪管理器</title>
+    <script src="marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Noto+Sans+SC:wght@400;700;800&family=LXGW+WenKai+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Nunito', 'Noto Sans SC', 'LXGW WenKai TC', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+            background-color: #F7F5F0;
+            color: #333;
+            min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(255,200,150,0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(150,200,255,0.15) 0%, transparent 40%);
+            background-attachment: fixed;
+            padding: 40px 20px;
+        }
+        body.modal-open { overflow: hidden; }
+
+        .loading-text { text-align: center; font-size: 1.2rem; color: #888; margin-top: 100px; grid-column: 1 / -1; }
+        .error-text { text-align: center; font-size: 1.2rem; color: red; margin-top: 100px; grid-column: 1 / -1; }
+
+        .top-link-row {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+        }
+        .top-link {
+            display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px;
+            background: rgba(255,255,255,0.6); backdrop-filter: blur(10px); border-radius: 50px;
+            font-size: 0.95rem; font-weight: 700; color: #555; text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.8);
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .top-link:hover {
+            background: rgba(74,74,74,0.08); border-color: #ccc; transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 2.5rem; font-weight: 800; color: #4A4A4A; letter-spacing: 2px; }
+        .header p { color: #888; margin-top: 8px; font-size: 1.1rem; }
+
+        .filters { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 30px; }
+        .filter-group { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px; }
+
+        .filter-toggle {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 10px 26px; background: rgba(255,255,255,0.6); backdrop-filter: blur(10px);
+            border-radius: 50px; cursor: pointer; user-select: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+        .filter-toggle:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .filter-toggle span:first-child { font-size: 1.1rem; font-weight: 700; color: #555; }
+        .toggle-symbol {
+            display: inline-block; width: 24px; height: 24px; font-size: 1.5rem; line-height: 24px;
+            text-align: center; font-weight: 700; color: #666;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        .filter-toggle.open { background: rgba(74,74,74,0.08); border-color: #ccc; }
+        .filter-toggle.open .toggle-symbol { color: #4A4A4A; }
+
+        .filter-options {
+            display: none; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 14px;
+            padding: 8px 0; animation: fadeDown 0.3s ease;
+        }
+        .filter-options.show { display: flex; }
+
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .filter-btn {
+            padding: 10px 24px; border: none; border-radius: 50px;
+            background: rgba(255,255,255,0.6); backdrop-filter: blur(10px);
+            color: #666; font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.03); font-family: inherit;
+            position: relative;
+        }
+        .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .filter-btn.active { background: #4A4A4A; color: #fff; box-shadow: 0 8px 20px rgba(74,74,74,0.2); }
+
+        .filter-btn.tag-btn.active::after {
+            content: '✓'; position: absolute; top: -6px; right: -6px;
+            width: 22px; height: 22px; background: #ffffff; color: #4CAF50; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border: 1px solid #e0e0e0; z-index: 10;
+        }
+        .filter-btn.tag-btn[data-tag="all"].active::after { display: none; }
+
+        .filter-btn.sort-btn { display: inline-flex; align-items: center; gap: 6px; }
+        .sort-arrows { display: inline-flex; align-items: center; gap: 2px; font-size: 0.9rem; }
+        .sort-arrows .arrow-up, .sort-arrows .arrow-down { transition: opacity 0.3s; }
+        .filter-btn.sort-btn .arrow-up { opacity: 0.3; }
+        .filter-btn.sort-btn .arrow-down { opacity: 1; }
+        .filter-btn.sort-btn.asc .arrow-up { opacity: 1; }
+        .filter-btn.sort-btn.asc .arrow-down { opacity: 0.3; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
+
+        .card {
+            background: rgba(255,255,255,0.7); backdrop-filter: blur(15px); border-radius: 24px;
+            padding: 30px 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            position: relative; overflow: hidden; cursor: pointer;
+            opacity: 0;
+        }
+        .card:hover { transform: scale(1.05); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+        .card::after {
+            content: "✏️ 编辑这只喵";
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(247,245,240,0.92); backdrop-filter: blur(6px);
+            color: #4A4A4A; font-size: 1.3rem; font-weight: 700; letter-spacing: 2px;
+            display: flex; justify-content: center; align-items: flex-start; padding-top: 240px;
+            opacity: 0; transition: opacity 0.3s ease; border-radius: 24px; pointer-events: none; z-index: 5;
+        }
+        .card:hover::after { opacity: 1; }
+
+        .avatar-wrapper { width: 140px; height: 140px; margin: 0 auto 20px; position: relative; z-index: 10; border-radius: 24px; overflow: hidden; }
+        .avatar {
+            width: 100%; height: 100%; border-radius: 24px; object-fit: cover; border: 4px solid #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); transition: all 0.5s ease; display: block;
+        }
+
+        .status-icon {
+            position: absolute; bottom: 5px; right: 5px; width: 36px; height: 36px; background: #fff;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); opacity: 0; transform: scale(0.5); transition: all 0.3s ease; z-index: 11;
+        }
+
+        .name-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .name { font-size: 1.5rem; font-weight: 800; color: #333; }
+        .gender { font-size: 1.2rem; }
+        .gender.male { color: #5B8DEF; }
+        .gender.female { color: #FF7E93; }
+        .gender.unknown { color: #AAA; }
+
+        .affection { font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 10px; }
+        .paw-empty { opacity: 0.2; }
+
+        .card-tags-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 10px 0 12px; min-height: 28px; align-items: center; }
+        .card-tag { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; color: #fff; background: #ccc; }
+
+        .desc { font-size: 0.9rem; color: #888; line-height: 1.6; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
+
+        .card.status-star { border: 1px solid #e0e0e0; }
+        .card.status-star .avatar { filter: grayscale(100%); opacity: 0.8; }
+        .card.status-star .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-star .name { color: #888; }
+
+        .card.status-lost { border: 1px dashed #d0d0d0; }
+        .card.status-lost .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-lost .name { color: #999; }
+
+        .card.status-adopted { border: 1px solid #a0d2a0; }
+        .card.status-adopted .status-icon { opacity: 1; transform: scale(1); }
+        .card.status-adopted .name { color: #2d6a2d; }
+
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); display: flex;
+            justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: #fff; width: 90%; max-width: 700px; max-height: 85vh; border-radius: 24px; padding: 40px;
+            position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            transform: scale(0.9) translateY(20px); transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+            overflow-y: auto;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
+        .close-btn {
+            position: sticky; top: 0; align-self: flex-end; margin-left: auto; margin-bottom: -36px; z-index: 30;
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.6); backdrop-filter: blur(5px);
+            border: none; border-radius: 50%; font-size: 1.2rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; color: #666;
+            transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .close-btn:hover { background: rgba(74,74,74,0.08); transform: rotate(90deg); }
+
+        .edit-field { margin-bottom: 15px; }
+        .edit-field label { display: block; font-weight: 700; margin-bottom: 4px; color: #555; }
+        .edit-field input, .edit-field select, .edit-field textarea {
+            width: 100%; padding: 10px; border-radius: 12px;
+            border: 1px solid #ddd; font-family: inherit; font-size: 1rem;
+            background: #fafafa;
+        }
+        .edit-field input:focus, .edit-field select:focus, .edit-field textarea:focus { outline: none; border-color: #4A4A4A; }
+
+        .photo-section {
+            border: 2px solid #e0e0e0; border-radius: 16px; padding: 16px; margin-bottom: 20px;
+            position: relative;
+        }
+        .photo-section .section-title { font-weight: 700; margin-bottom: 12px; color: #555; }
+        .photo-container { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; }
+        .photo-item {
+            position: relative; width: 120px; height: 120px; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;
+        }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .photo-item:hover img { transform: scale(1.1); }
+
+        .tag-select-btn {
+            padding: 8px 16px; border-radius: 12px; background: #f2f2f2; border: 1px dashed #aaa;
+            cursor: pointer; font-size: 0.95rem;
+        }
+
+        .delete-btn-big {
+            background: #E57373; color: white; border: none; border-radius: 12px;
+            padding: 10px 24px; font-weight: 700; cursor: pointer; font-size: 0.95rem;
+        }
+
+        .color-presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+        .color-preset {
+            width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
+            transition: transform 0.2s; display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+        .color-preset:hover { transform: scale(1.2); }
+        .color-preset.selected { border-color: #333; }
+
+        .lightbox {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95);
+            z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .lightbox.active { opacity: 1; visibility: visible; }
+        .lightbox-close {
+            position: absolute; top: 30px; right: 30px; width: 44px; height: 44px; background: rgba(255,255,255,0.2);
+            border: none; border-radius: 50%; color: #fff; font-size: 1.5rem; cursor: pointer;
+        }
+        .lightbox-img {
+            max-width: 90%; max-height: 90vh; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            opacity: 0; transform: scale(0.95); transition: all 0.4s ease;
+        }
+        .lightbox-img.loaded { opacity: 1; transform: scale(1); }
+
+        .spinner {
+            width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #fff;
+            border-radius: 50%; position: absolute; animation: spin 0.8s linear infinite;
+        }
+        .spinner.hidden { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* === GitHub 风格 Markdown === */
+        .markdown-body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 16px; line-height: 1.6; word-wrap: break-word; color: #24292f;
+            text-align: left;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
+        .markdown-body h1 { font-size: 2em; border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; }
+        .markdown-body h2 { font-size: 1.5em; border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; }
+        .markdown-body h3 { font-size: 1.25em; }
+        .markdown-body p { margin-bottom: 16px; }
+        .markdown-body ul, .markdown-body ol { margin-bottom: 16px; padding-left: 2em; }
+        .markdown-body li { margin-bottom: 4px; }
+        .markdown-body code { background-color: rgba(175,184,193,0.2); padding: 0.2em 0.4em; border-radius: 6px; font-family: monospace; font-size: 85%; }
+        .markdown-body pre { background-color: #f6f8fa; border-radius: 6px; padding: 16px; overflow: auto; font-size: 85%; line-height: 1.45; margin-bottom: 16px; }
+        .markdown-body pre code { background-color: transparent; padding: 0; border-radius: 0; }
+        .markdown-body blockquote { border-left: 4px solid #d0d7de; padding: 0 1em; color: #57606a; margin-bottom: 16px; }
+        .markdown-body table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+        .markdown-body table th, .markdown-body table td { border: 1px solid #d0d7de; padding: 6px 13px; }
+        .markdown-body table th { background-color: #f6f8fa; font-weight: 600; }
+        .markdown-body img { max-width: 100%; border-radius: 6px; }
+        .markdown-body a { color: #0969da; text-decoration: none; }
+        .markdown-body a:hover { text-decoration: underline; }
+
+        /* 编者留言编辑区 */
+        .editor-edit-area { display: none; margin-top: 16px; }
+        .editor-edit-area.show { display: block; }
+        .editor-edit-area textarea {
+            width: 100%; height: 300px; padding: 12px; border-radius: 12px;
+            border: 1px solid #ddd; font-family: monospace; font-size: 0.9rem;
+            background: #fafafa; resize: vertical;
+        }
+        .editor-edit-area textarea:focus { outline: none; border-color: #4A4A4A; }
+
+        /* 排序模式：单列列表 */
+        .sort-list { display: flex; flex-direction: column; gap: 8px; }
+        .sort-list-row {
+            display: flex; align-items: center; gap: 14px; padding: 10px 16px;
+            background: var(--card-bg, #fff); border-radius: 12px;
+            border: 1px solid #ece7dc; transition: background 0.2s;
+        }
+        .sort-list-row:hover { background: #faf7ee; }
+        .sort-list-row .sl-thumb {
+            width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex-shrink: 0;
+        }
+        .sort-list-row .sl-info { flex: 1; min-width: 0; }
+        .sort-list-row .sl-name { font-weight: 600; font-size: 0.95rem; }
+        .sort-list-row .sl-meta { font-size: 0.8rem; color: #888; }
+        .sort-list-row .sl-step { width: 52px; text-align: center; padding: 4px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem; }
+        .sort-list-row .sl-step:focus { outline: none; border-color: #4A4A4A; }
+        .sort-list-row .sl-btn {
+            width: 32px; height: 32px; border-radius: 6px; border: none;
+            cursor: pointer; font-size: 1rem; display: flex; align-items: center;
+            justify-content: center; transition: background 0.2s;
+        }
+        .sort-list-row .sl-btn.up { background: #e8f5e9; color: #2e7d32; }
+        .sort-list-row .sl-btn.up:hover { background: #c8e6c9; }
+        .sort-list-row .sl-btn.down { background: #fce4ec; color: #c62828; }
+        .sort-list-row .sl-btn.down:hover { background: #f8bbd0; }
+        .sort-list-row .sl-btn.edit { background: #f0ece4; color: #4A4A4A; padding: 0 12px; width: auto; font-size: 0.85rem; }
+        .sort-list-row .sl-btn.edit:hover { background: #e0d8c8; }
+        .sort-list-row .sl-btn.delete { background: #ffebee; color: #c62828; padding: 0 12px; width: auto; font-size: 0.85rem; }
+        .sort-list-row .sl-btn.delete:hover { background: #ffcdd2; }
+
+        .blocked-word {
+            display: inline; background-color: #111111; color: transparent; border-radius: 3px;
+            padding: 1px 3px; margin: 0 1px; cursor: pointer;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px);
+        }
+        .blocked-word:hover { background-color: transparent; background-image: none; color: inherit; }
+
+        /* === 照片操作按钮 === */
+        .photo-action-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .photo-action-btn {
+            padding: 8px 18px; border-radius: 20px; border: none;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer;
+            font-family: inherit; transition: all 0.2s;
+        }
+        .photo-action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .crop-action { background: #D9A05B; color: white; }
+        .delete-action { background: #E57373; color: white; }
+        .swap-action { background: #7E57C2; color: white; }
+        .add-action { background: #5B8DEF; color: white; }
+
+        /* === 照片卡片列表 === */
+        .photo-list { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+        .photo-card {
+            width: 180px; background: #fafafa; border-radius: 14px; overflow: hidden;
+            border: 1px solid #e8e8e8; transition: box-shadow 0.2s;
+        }
+        .photo-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        .photo-card-thumb {
+            width: 100%; height: 150px; object-fit: cover; display: block; cursor: pointer;
+        }
+        .photo-card-label {
+            text-align: center; font-size: 0.8rem; color: #888; padding: 4px 0 2px;
+            font-weight: 700;
+        }
+        .photo-card-actions {
+            display: flex; flex-direction: column; gap: 4px; padding: 6px 8px 10px;
+        }
+        .photo-card-actions button {
+            width: 100%; padding: 6px 8px; border-radius: 10px; border: none;
+            font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: inherit;
+            white-space: nowrap; transition: opacity 0.2s;
+        }
+        .photo-card-actions button:hover { opacity: 0.85; }
+        .photo-card-actions .card-crop { background: #D9A05B; color: white; }
+        .photo-card-actions .card-swap { background: #7E57C2; color: white; }
+        .photo-card-actions .card-delete { background: #E57373; color: white; }
+
+        /* === 主图大预览 === */
+        .photo-item-large {
+            width: 200px; height: 200px; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .photo-item-large img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* 裁剪覆盖层 */
+        #cropOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 3000; display: flex; flex-direction: column;
+            opacity: 0; visibility: hidden; transition: 0.3s;
+        }
+        #cropOverlay.active { opacity: 1; visibility: visible; }
+        #cropToolbar {
+            display: flex; justify-content: flex-end; gap: 12px; padding: 16px; background: rgba(255,255,255,0.1);
+        }
+        /* 裁剪工具栏按钮统一奶油色调 */
+        #cropToolbar .filter-btn {
+            background: rgba(255,255,255,0.7);
+            color: #4A4A4A;
+            border: 1px solid rgba(255,255,255,0.9);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        #cropToolbar .filter-btn:hover {
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        #cropToolbar .filter-btn.active {
+            background: #4A4A4A;
+            color: #fff;
+        }
+        #cropContainer { flex: 1; position: relative; overflow: hidden; }
+        #cropImage { max-width: 100%; max-height: 100%; position: absolute; top: 0; left: 0; }
+        #cropBox {
+            position: absolute; border: 2px solid #D9A05B; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+            cursor: move;
+        }
+        .crop-handle {
+            position: absolute; width: 16px; height: 16px; background: #D9A05B; border: 2px solid white;
+            border-radius: 2px;
+        }
+        .handle-nw { top: -8px; left: -8px; cursor: nw-resize; }
+        .handle-ne { top: -8px; right: -8px; cursor: ne-resize; }
+        .handle-sw { bottom: -8px; left: -8px; cursor: sw-resize; }
+        .handle-se { bottom: -8px; right: -8px; cursor: se-resize; }
+    </style>
+</head>
+<body>
+
+<div class="top-link-row">
+    <div style="display: flex; gap: 12px;">
+        <button class="top-link" id="manageTagsBtn">🏷️ 管理标签</button>
+        <button class="top-link" id="banWordsBtn">🛡️ 敏感词管理</button>
+        <button class="top-link" id="compressBtn">🗜️ 一键压缩图片大小</button>
+    </div>
+    <button class="top-link" id="editorLink">✉️ 编者留言</button>
+</div>
+
+<div class="header">
+    <h1>🐱 猫猫管理器</h1>
+    <p>管理端 · 增删改查</p>
+</div>
+
+<!-- 搜索栏 -->
+<div style="display:flex; justify-content:center; margin-bottom:24px;">
+    <input type="text" id="searchInput" placeholder="🔍 搜索猫咪名称 / 描述 / 故事..." style="padding:14px 28px; border-radius:50px; border:1px solid rgba(255,255,255,0.8); background:rgba(255,255,255,0.7); backdrop-filter:blur(10px); width:480px; max-width:90vw; font-size:1rem; font-family:inherit;">
+</div>
+
+<!-- 筛选 -->
+<div class="filters">
+    <div class="filter-group">
+        <button class="filter-btn" id="sortModeToggle" style="padding:10px 16px; background:#f0ece4;">🔀 排序模式</button>
+    </div>
+    <div class="filter-group">
+        <div class="filter-toggle" id="genderToggle"><span>性别</span><span class="toggle-symbol" id="genderSymbol">+</span></div>
+        <div class="filter-options" id="genderOptions">
+            <button class="filter-btn gender-btn active" data-gender="all">全部性别</button>
+            <button class="filter-btn gender-btn" data-gender="male">♂ 男孩</button>
+            <button class="filter-btn gender-btn" data-gender="female">♀ 女孩</button>
+            <button class="filter-btn gender-btn" data-gender="unknown">❓ 未知性别</button>
+        </div>
+    </div>
+    <div class="filter-group">
+        <div class="filter-toggle" id="statusToggle"><span>状态</span><span class="toggle-symbol" id="statusSymbol">+</span></div>
+        <div class="filter-options" id="statusOptions">
+            <button class="filter-btn status-btn active" data-status="all">全部状态</button>
+            <button class="filter-btn status-btn" data-status="star">⭐ 喵星</button>
+            <button class="filter-btn status-btn" data-status="lost">🔍 失踪</button>
+            <button class="filter-btn status-btn" data-status="adopted">🏠 已领养</button>
+        </div>
+    </div>
+    <div class="filter-group" id="tagFilterGroup" style="display: none;">
+        <div class="filter-toggle" id="tagToggle"><span>Tag</span><span class="toggle-symbol" id="tagSymbol">+</span></div>
+        <div class="filter-options" id="tagOptions"></div>
+    </div>
+    <div class="filter-group">
+        <div class="filter-toggle" id="sortToggle"><span>排序</span><span class="toggle-symbol" id="sortSymbol">+</span></div>
+        <div class="filter-options" id="sortOptions">
+            <button class="filter-btn sort-btn active" id="sortDefault">默认排序</button>
+            <button class="filter-btn sort-btn" id="sortAffection">按亲密度 <span class="sort-arrows"><span class="arrow-up">▲</span><span class="arrow-down">▼</span></span></button>
+        </div>
+    </div>
+</div>
+
+<div class="grid" id="catGrid"><p class="loading-text">正在加载...</p></div>
+
+<!-- 编辑弹窗 -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content" id="editModalContent">
+        <button class="close-btn" id="closeEditModal">✕</button>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="edit-field"><label>姓名</label><input type="text" id="editName"></div>
+            <div class="edit-field"><label>图名</label><input type="text" id="editPicName"></div>
+            <div class="edit-field"><label>性别</label><select id="editGender">
+                <option value="male">♂ 男孩</option><option value="female">♀ 女孩</option><option value="unknown">❓ 未知</option>
+            </select></div>
+            <div class="edit-field"><label>状态</label><select id="editStatus">
+                <option value="normal">正常</option><option value="star">⭐ 喵星</option><option value="lost">🔍 失踪</option><option value="adopted">🏠 被领养</option>
+            </select></div>
+            <div class="edit-field"><label>亲人指数</label><input type="number" id="editAffection" min="1" max="5"></div>
+            <div class="edit-field"><label>概要</label><input type="text" id="editDesc"></div>
+        </div>
+        <div class="edit-field" style="margin-top:15px;"><label>📖 故事</label><textarea id="editStory" rows="6"></textarea></div>
+
+        <!-- 下半部分：标签 / 图片两栏 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <!-- 左栏：标签 -->
+            <div>
+                <div class="edit-field"><label>🏷️ 标签</label>
+                    <div id="selectedTagsDisplay" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;"></div>
+                    <div style="display:flex;gap:8px;">
+                        <button id="selectTagsBtn" class="tag-select-btn">📋 选择标签</button>
+                        <button id="applyTagsBtn" class="tag-select-btn" style="background:#81C784;color:white;">✅ 应用标签</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右栏：图片管理 -->
+            <div class="photo-section" style="margin-top:0;">
+                <span class="section-title">🖼️ 图片管理</span>
+                <!-- 照片列表 -->
+                <div class="photo-listbox" id="photoListbox" style="max-height: 240px; overflow-y: auto; background: #fafafa; border: 1px solid #ece7dc; border-radius: 8px; margin-bottom: 10px;">
+                    <span style="color:#888; padding:12px; display:block;">暂无照片</span>
+                </div>
+                <!-- 预览区 -->
+                <div id="photoPreviewArea" style="text-align:center; margin-bottom:10px; min-height:60px;">
+                    <img id="photoPreviewImg" src="" style="max-width:200px; max-height:200px; border-radius:8px; display:none;">
+                    <span id="photoPreviewLabel" style="color:#888; font-size:0.85rem;">点击列表项预览</span>
+                </div>
+                <!-- 操作按钮 -->
+                <div class="photo-action-row" style="flex-wrap:wrap;">
+                    <button class="photo-action-btn" id="photoBtnSwap" style="display:none;">🔄 设为主图</button>
+                    <button class="photo-action-btn crop-action" id="photoBtnCrop">✏️ 重裁缩略</button>
+                    <button class="photo-action-btn add-action" id="photoBtnAdd">➕ 补充图</button>
+                    <button class="photo-action-btn" id="photoBtnDelete" style="display:none;">🗑 删除</button>
+                    <button class="photo-action-btn crop-action" id="photoBtnFolder">📁 打开文件夹</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
+            <button id="deleteCatBtn" class="delete-btn-big">🗑️ 删除这只猫咪</button>
+            <div>
+                <button id="cancelEditBtn" class="filter-btn">取消</button>
+                <button id="saveEditBtn" class="filter-btn active" style="margin-left:10px;">💾 保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 标签选择弹窗 -->
+<div class="modal-overlay" id="tagSelectModal">
+    <div class="modal-content" style="max-width:400px;">
+        <button class="close-btn" id="closeTagSelectModal">✕</button>
+        <h3>选择标签</h3>
+        <div class="tag-check-list" id="tagCheckList"></div>
+        <div class="add-tag-row" style="display:flex; gap:10px; margin-top:10px;">
+            <input type="text" id="newTagInput" placeholder="添加新标签" style="flex:1; padding:8px; border-radius:8px; border:1px solid #ddd;">
+            <button id="addNewTagBtn" class="filter-btn active">添加</button>
+        </div>
+        <button id="confirmTagSelection" class="filter-btn active" style="width:100%; margin-top:15px;">确定</button>
+    </div>
+</div>
+
+<!-- 编者留言弹窗 -->
+<div class="modal-overlay" id="editorModal">
+    <div class="modal-content" style="max-width:750px;">
+        <button class="close-btn" id="closeEditorModal">✕</button>
+        <h2>✉️ 编者留言</h2>
+        <div id="editorMessage" class="markdown-body" style="min-height:100px;">正在加载...</div>
+        <div id="editorEditArea" style="display:none; margin-top: 15px;">
+            <textarea id="editorTextarea" style="width:100%;height:200px;border-radius:12px;border:1px solid #ddd;padding:12px;font-family:inherit;font-size:0.95rem;resize:vertical;"></textarea>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+                <button id="cancelEditorEdit" class="filter-btn">取消</button>
+                <button id="saveEditorEdit" class="filter-btn active">💾 保存</button>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:15px;" id="editorActions">
+            <button id="editEditorBtn" class="filter-btn">✏️ 编辑留言</button>
+        </div>
+    </div>
+</div>
+
+<!-- 标签管理弹窗 -->
+<div class="modal-overlay" id="tagModal">
+    <div class="modal-content">
+        <button class="close-btn" id="closeTagModal">✕</button>
+        <h2>🏷️ 管理标签</h2>
+        <div id="tagListContainer" style="margin-bottom:20px;"></div>
+        <div class="edit-field"><label>名称</label><input type="text" id="newTagName" placeholder="新标签名称"></div>
+        <div class="edit-field"><label>颜色</label>
+            <div class="color-presets" id="colorPresets"></div>
+        </div>
+        <button id="addTagBtn" class="filter-btn active" style="width:100%;">添加标签</button>
+    </div>
+</div>
+
+<!-- 敏感词管理弹窗 -->
+<div class="modal-overlay" id="banWordModal">
+    <div class="modal-content">
+        <button class="close-btn" id="closeBanWordModal">✕</button>
+        <h2>🛡️ 敏感词管理</h2>
+        <div id="banWordList" style="margin-bottom:20px;"></div>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="newBanWord" placeholder="新敏感词" style="flex:1; padding:8px; border-radius:8px; border:1px solid #ddd;">
+            <button id="addBanWordBtn" class="filter-btn active">添加</button>
+        </div>
+    </div>
+</div>
+
+<!-- 灯箱 -->
+<div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">✕</button>
+    <div class="spinner" id="lightboxSpinner"></div>
+    <img src="" class="lightbox-img" id="lightboxImg">
+</div>
+
+<!-- 裁剪覆盖层 -->
+<div id="cropOverlay">
+    <div id="cropToolbar">
+        <button id="cropResetBtn" class="filter-btn">↺ 重置</button>
+        <button id="cropCancelBtn" class="filter-btn">取消</button>
+        <button id="cropSaveBtn" class="filter-btn active">💾 保存</button>
+    </div>
+    <div id="cropContainer">
+        <img id="cropImage" src="" crossorigin="anonymous">
+        <div id="cropBox">
+            <div class="crop-handle handle-nw" data-dir="nw"></div>
+            <div class="crop-handle handle-ne" data-dir="ne"></div>
+            <div class="crop-handle handle-sw" data-dir="sw"></div>
+            <div class="crop-handle handle-se" data-dir="se"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== API 连接 ==========
+    let api = null;
+    if (window.pywebview && window.pywebview.api) {
+        api = window.pywebview.api;
+    } else {
+        window.addEventListener('pywebviewready', () => {
+            api = window.pywebview.api;
+            if (api) loadAllData();
+        });
+    }
+
+    // ========== 全局变量 ==========
+    let catsData = [];
+    let dataVersion = 0;
+    // 页面位于 data/web/ 下，图片相对路径(data/classified/...)需上溯两级；
+    // 绝对路径(http/data:/ 等)不加前缀。
+    function mediaUrl(url) { return url && !/^(data:|https?:|\/|\.\.\/)/.test(url) ? '../../' + url : url; }
+    function bust(url) { return url ? mediaUrl(url) + '?v=' + dataVersion : url; }
+    let currentGenderFilter = 'all';
+    let currentStatusFilter = 'all';
+    let currentSort = 'default';
+    let sortDirection = 'desc';
+    let activeTags = new Set();
+    let banWords = [];
+    let tagColors = {};
+    let currentEditingCat = null;
+    let currentSelectedTags = [];
+    let deleteSeqs = [];
+
+    // 裁剪相关
+    let cropTarget = null;
+    let cropImgOriginalWidth = 0;
+    let cropImgOriginalHeight = 0;
+    let cropBox = { x: 0, y: 0, size: 200 };
+    let cropScale = 1;
+    let resizeFixedX = 0, resizeFixedY = 0;
+
+    const PRESET_COLORS = [
+        "#F9A8D4", "#A78BFA", "#6EE7B7", "#FCA5A5",
+        "#D4A373", "#7F8C8D", "#A3B18A", "#B5838D",
+        "#FFB347", "#B5EAD7", "#C7CEEA", "#FF9AA2",
+        "#FF7E93", "#5B8DEF", "#81C784", "#FFB74D",
+        "#E57373", "#4A4A4A"
+    ];
+
+    // ========== 辅助函数 ==========
+    function escapeHtml(text) {
+        const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
+        return String(text).replace(/[&<>"']/g, c => map[c]);
+    }
+    function escapeRegex(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function maskSensitiveWords(text) {
+        if (!banWords.length) return text;
+        const sorted = [...banWords].sort((a,b) => b.length - a.length);
+        const pattern = sorted.map(escapeRegex).join('|');
+        return text.replace(new RegExp(pattern, 'gi'), m => `<span class="blocked-word">${m}</span>`);
+    }
+    function getPaws(level) {
+        let p = '';
+        for (let i=1; i<=5; i++) p += i <= level ? '🐾' : '<span class="paw-empty">🐾</span>';
+        return p;
+    }
+    function getStatusIcon(s) { if (s==='star') return '⭐'; if (s==='lost') return '🔍'; if (s==='adopted') return '🏠'; return ''; }
+    function getGenderDisplay(g) { if (g==='male') return '♂'; if (g==='female') return '♀'; return '❓'; }
+    function getAllTags(cats) {
+        const s = new Set();
+        cats.forEach(c => c.tags?.forEach(t => s.add(t)));
+        return [...s].sort((a,b) => a.localeCompare(b,'zh'));
+    }
+    function sortCats(cats) {
+        if (currentSort === 'affection') {
+            return [...cats].sort((a,b) => sortDirection==='desc' ? b.affection - a.affection : a.affection - b.affection);
+        }
+        return cats;
+    }
+
+    // ========== 渲染卡片 ==========
+    function renderCats() {
+        const grid = document.getElementById('catGrid');
+        grid.innerHTML = '';
+        let filtered = sortCats(catsData);
+        const term = document.getElementById('searchInput').value.trim().toLowerCase();
+        if (currentGenderFilter !== 'all') filtered = filtered.filter(c => c.gender === currentGenderFilter);
+        if (currentStatusFilter !== 'all') filtered = filtered.filter(c => c.status === currentStatusFilter);
+        if (activeTags.size > 0) filtered = filtered.filter(c => c.tags?.some(t => activeTags.has(t)));
+        if (term) filtered = filtered.filter(c =>
+            (c.name||'').toLowerCase().includes(term) ||
+            (c.desc||'').toLowerCase().includes(term) ||
+            (c.story||'').toLowerCase().includes(term) ||
+            c.id.includes(term)
+        );
+
+        if (!filtered.length && !sortMode) {
+            grid.innerHTML = '<p class="loading-text">没有符合条件的猫咪</p>';
+            return;
+        }
+
+        // 排序模式：单列列表
+        if (sortMode) {
+            grid.className = 'sort-list';
+
+            if (!sortOrder.length) {
+                grid.innerHTML = '<p class="loading-text">没有符合条件的猫咪</p>';
+                return;
+            }
+
+            // 按 sortOrder 构建显示列表
+            const orderedCats = [];
+            const catMap = {};
+            catsData.forEach(c => { catMap[c.id] = c; });
+            sortOrder.forEach(id => { if (catMap[id]) orderedCats.push(catMap[id]); });
+
+            // 新增行
+            const addRow = document.createElement('div');
+            addRow.className = 'sort-list-row fade-in';
+            addRow.style.border = '2px dashed #D9A05B';
+            addRow.innerHTML = `
+                <span style="font-size:2rem;color:#D9A05B;width:48px;text-align:center;">➕</span>
+                <div class="sl-info"><div class="sl-name" style="color:#D9A05B;">新增猫咪</div></div>
+                <button class="sl-btn edit" style="background:#D9A05B;color:white;">添加</button>
+            `;
+            addRow.querySelector('.sl-btn.edit').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal({ id: '', name: '', gender: 'unknown', affection: 3, status: 'normal', desc: '', story: '', tags: [], otherPhotos: [], avatar: '', avatar_hd: '', pic_name: '' });
+            });
+            grid.appendChild(addRow);
+
+            orderedCats.forEach((cat, idx) => {
+                const row = document.createElement('div');
+                row.className = 'sort-list-row fade-in';
+                row.style.animationDelay = `${idx * 0.05}s`;
+                const stepId = `step_${cat.id}`;
+                row.innerHTML = `
+                    <img src="${bust(cat.avatar)}" class="sl-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22><rect fill=%22%23ddd%22 width=%2248%22 height=%2248%22/></svg>'">
+                    <div class="sl-info">
+                        <div class="sl-name">${escapeHtml(cat.id)} ${escapeHtml(cat.name)} <span class="gender ${cat.gender}">${getGenderDisplay(cat.gender)}</span> <span style="color:#888;font-size:0.75rem;">${getStatusIcon(cat.status)}</span></div>
+                        <div class="sl-meta">${getPaws(cat.affection)} · ${maskSensitiveWords(escapeHtml(cat.desc)).substring(0, 50)}</div>
+                    </div>
+                    <input type="number" class="sl-step" id="${stepId}" value="1" min="1" max="99" title="移动步数">
+                    <button class="sl-btn up" title="上移">▲</button>
+                    <button class="sl-btn down" title="下移">▼</button>
+                    <button class="sl-btn edit">✏️</button>
+                    <button class="sl-btn delete">🗑️</button>
+                `;
+                row.addEventListener('click', (e) => {
+                    if (e.target.closest('button') || e.target.closest('input')) return;
+                    openEditModal(cat);
+                });
+                const stepEl = row.querySelector('.sl-step');
+                row.querySelector('.sl-btn.up').addEventListener('click', (e) => { e.stopPropagation(); sortListMoveRow(cat.id, 'up', stepEl); });
+                row.querySelector('.sl-btn.down').addEventListener('click', (e) => { e.stopPropagation(); sortListMoveRow(cat.id, 'down', stepEl); });
+                row.querySelector('.sl-btn.edit').addEventListener('click', (e) => { e.stopPropagation(); openEditModal(cat); });
+                row.querySelector('.sl-btn.delete').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (!confirm(`⚠️ 永久删除 ${cat.id} ${cat.name} 吗？`)) return;
+                    await api.delete_cat(cat.id);
+                    catsData = await api.get_cats();
+                    renderCats();
+                });
+                grid.appendChild(row);
+            });
+
+            return;
+        }
+
+        // 普通模式：网格
+        grid.className = 'grid';
+
+        // 新增猫咪卡片（第一个）
+        const addCard = document.createElement('div');
+        addCard.className = 'card fade-in';
+        addCard.style.animationDelay = '0s';
+        addCard.style.border = '2px dashed #D9A05B';
+        addCard.innerHTML = `
+            <div class="avatar-wrapper" style="background:#f0ece4; display:flex; align-items:center; justify-content:center;">
+                <span style="font-size:3rem; color:#D9A05B;">➕</span>
+            </div>
+            <div class="name-row"><span class="name" style="color:#D9A05B;">新增猫咪</span></div>
+            <div class="desc" style="border-top:none; padding-top:0;">点击添加新的猫咪档案</div>
+        `;
+        addCard.addEventListener('click', () => {
+            openEditModal({ id: '', name: '', gender: 'unknown', affection: 3, status: 'normal', desc: '', story: '', tags: [], otherPhotos: [], avatar: '', avatar_hd: '', pic_name: '' });
+        });
+        grid.appendChild(addCard);
+
+        filtered.forEach((cat, idx) => {
+            const card = document.createElement('div');
+            card.className = `card status-${cat.status||''} fade-in`;
+            card.style.animationDelay = `${idx*0.1}s`;
+            const tagsHTML = cat.tags?.length
+                ? `<div class="card-tags-row">${cat.tags.map(t => `<span class="card-tag" style="background:${tagColors[t]||'#ccc'};">${escapeHtml(t)}</span>`).join('')}</div>`
+                : '<div class="card-tags-row"><span style="color:#aaa;font-size:0.75rem;">还没有tag</span></div>';
+            card.innerHTML = `
+                <div class="avatar-wrapper">
+                    <img src="${bust(cat.avatar)}" alt="${cat.name}" class="avatar">
+                    <div class="status-icon">${getStatusIcon(cat.status)}</div>
+                </div>
+                <div class="name-row"><span class="name">${escapeHtml(cat.name)}</span><span class="gender ${cat.gender}">${getGenderDisplay(cat.gender)}</span></div>
+                <div class="affection">${getPaws(cat.affection)}</div>
+                ${tagsHTML}
+                <div class="desc">${maskSensitiveWords(escapeHtml(cat.desc))}</div>
+            `;
+            card.addEventListener('click', () => openEditModal(cat));
+            grid.appendChild(card);
+        });
+    }
+
+    // ========== 编辑弹窗 ==========
+    function openEditModal(cat) {
+        currentEditingCat = cat;
+        currentSelectedTags = [...(cat.tags||[])];
+        const ts = Date.now();
+        document.getElementById('editName').value = cat.name || '';
+        document.getElementById('editPicName').value = cat.pic_name || '';
+        document.getElementById('editGender').value = cat.gender;
+        document.getElementById('editStatus').value = cat.status;
+        document.getElementById('editAffection').value = cat.affection;
+        document.getElementById('editDesc').value = cat.desc || '';
+        document.getElementById('editStory').value = cat.story || '';
+        updateSelectedTagsDisplay();
+        renderPhotos(cat, ts);
+        deleteSeqs = [];
+        document.getElementById('editModal').classList.add('active');
+        document.body.classList.add('modal-open');
+    }
+
+    let selectedPhotoSeq = null; // 当前选中的照片序号
+
+    function renderPhotos(cat, ts) {
+        ts = ts || Date.now();
+        const listbox = document.getElementById('photoListbox');
+        listbox.innerHTML = '';
+        selectedPhotoSeq = null;
+        document.getElementById('photoPreviewImg').style.display = 'none';
+        document.getElementById('photoPreviewLabel').style.display = '';
+
+        // 收集所有照片（主图 + 其他）
+        const allPhotos = [];
+        if (cat.avatar) {
+            allPhotos.push({ seq: 1, thumb: cat.avatar, hd: cat.avatar_hd, isMain: true });
+        }
+        if (cat.otherPhotos) {
+            cat.otherPhotos.forEach(p => {
+                // seq 可能缺失（旧数据），从 thumb 文件名推导；推导不出则按 99 排序到末尾
+                let seq = p.seq;
+                if (!seq || seq < 2) {
+                    const m = (p.thumb || '').match(/_0?(\d+)_thumb\.jpg/);
+                    seq = m ? parseInt(m[1]) : 99;
+                }
+                if (seq > 1) allPhotos.push({ ...p, seq, isMain: false });
+            });
+        }
+        allPhotos.sort((a, b) => a.seq - b.seq);
+
+        if (allPhotos.length === 0) {
+            listbox.innerHTML = '<span style="color:#888; padding:12px; display:block;">暂无照片 — 请先用下方按钮添加</span>';
+        } else {
+            allPhotos.forEach(photo => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;border-bottom:1px solid #f0ece4;transition:background 0.15s;';
+                row.dataset.seq = photo.seq;
+                row.innerHTML = `
+                    <img src="${bust(photo.thumb)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
+                    <span style="flex:1;font-size:0.9rem;">${photo.isMain ? '[主图]' : '[补充]'} ${cat.pic_name}_${String(photo.seq).padStart(2,'0')}.jpg</span>
+                    ${photo.isMain ? '<span style="color:#D9A05B;font-size:0.8rem;">★</span>' : ''}
+                `;
+                row.addEventListener('click', () => {
+                    selectedPhotoSeq = photo.seq;
+                    listbox.querySelectorAll('div[data-seq]').forEach(r => r.style.background = '');
+                    row.style.background = '#faf7ee';
+                    const preview = document.getElementById('photoPreviewImg');
+                    preview.src = bust(photo.hd);
+                    preview.style.display = '';
+                    document.getElementById('photoPreviewLabel').style.display = 'none';
+                    updatePhotoButtons(photo);
+                });
+                listbox.appendChild(row);
+            });
+        }
+
+        updatePhotoButtons(null);
+    }
+
+    function updatePhotoButtons(photo) {
+        const swapBtn = document.getElementById('photoBtnSwap');
+        const cropBtn = document.getElementById('photoBtnCrop');
+        const delBtn = document.getElementById('photoBtnDelete');
+        if (photo) {
+            swapBtn.style.display = photo.seq > 1 ? '' : 'none';
+            cropBtn.textContent = '✏️ 重裁缩略';
+            delBtn.style.display = photo.seq > 1 ? '' : 'none'; // 主图不直接删除
+        } else {
+            swapBtn.style.display = 'none';
+            cropBtn.textContent = '✏️ 重裁缩略';
+            delBtn.style.display = 'none';
+        }
+    }
+
+    function updateSelectedTagsDisplay() {
+        const container = document.getElementById('selectedTagsDisplay');
+        container.innerHTML = currentSelectedTags.map(t => {
+            const color = tagColors[t] || '#ccc';
+            return `<span style="background:${color};color:#fff;padding:4px 10px;border-radius:20px;font-size:0.9rem;">${escapeHtml(t)} <span style="cursor:pointer;margin-left:4px;" onclick="removeTag('${t}')">×</span></span>`;
+        }).join('');
+    }
+    window.removeTag = function(tag) {
+        currentSelectedTags = currentSelectedTags.filter(t => t !== tag);
+        updateSelectedTagsDisplay();
+    };
+
+    function closeEditModal(forceClose = false) {
+        if (!forceClose) {
+            const isNew = !currentEditingCat || !currentEditingCat.id;
+            let changed = false;
+            if (currentEditingCat) {
+                const nameEl = document.getElementById('editName');
+                const storyEl = document.getElementById('editStory');
+                if (nameEl && nameEl.value !== (currentEditingCat.name || '')) changed = true;
+                if (storyEl && storyEl.value !== (currentEditingCat.story || '')) changed = true;
+                if (deleteSeqs.length > 0) changed = true;
+            }
+            if ((isNew || changed) && !confirm('你有未保存的修改，确定关闭吗？')) return;
+        }
+        document.getElementById('editModal').classList.remove('active');
+        document.body.classList.remove('modal-open');
+    }
+
+    document.getElementById('closeEditModal').addEventListener('click', () => closeEditModal(false));
+    document.getElementById('cancelEditBtn').addEventListener('click', () => closeEditModal(false));
+
+    document.getElementById('saveEditBtn').addEventListener('click', async () => {
+        if (!currentEditingCat) return;
+        const updated = {
+            id: currentEditingCat.id,
+            name: document.getElementById('editName').value.trim(),
+            pic_name: document.getElementById('editPicName').value.trim(),
+            gender: document.getElementById('editGender').value,
+            status: document.getElementById('editStatus').value,
+            affection: parseInt(document.getElementById('editAffection').value) || 1,
+            desc: document.getElementById('editDesc').value.trim(),
+            story: document.getElementById('editStory').value.trim(),
+            tags: currentSelectedTags
+        };
+        const res = await api.save_cat(updated);
+        if (res.success) {
+            dataVersion++;
+            closeEditModal(true);
+            loadAllData();
+        } else {
+            alert('保存失败：' + (res.message || '未知错误'));
+        }
+    });
+
+    document.getElementById('deleteCatBtn').addEventListener('click', async () => {
+        if (!currentEditingCat) return;
+        if (!confirm(`确定删除 ${currentEditingCat.name} 吗？`)) return;
+        await api.delete_cat(currentEditingCat.id);
+        closeEditModal(true);
+        loadAllData();
+    });
+
+    // ========== 图片操作按钮 ==========
+    document.getElementById('photoBtnCrop').addEventListener('click', () => {
+        if (!currentEditingCat || !selectedPhotoSeq) { alert('请先在列表中选中一张照片'); return; }
+        openCropEditor(currentEditingCat, selectedPhotoSeq === 1 ? 'main' : 'other', selectedPhotoSeq);
+    });
+
+    document.getElementById('photoBtnAdd').addEventListener('click', async () => {
+        if (!currentEditingCat) return;
+        const files = await api.open_file_dialog_multi();
+        if (!files || files.length === 0) return;
+        const res = await api.upload_images(files, currentEditingCat.id || '00', currentEditingCat.name || '新猫咪', currentEditingCat.pic_name || 'cat');
+        if (res.success) {
+            dataVersion++;
+            const cats = await api.get_cats();
+            const updatedCat = cats.find(c => c.id === currentEditingCat.id);
+            if (updatedCat) { currentEditingCat = updatedCat; renderPhotos(updatedCat, Date.now()); }
+        } else { alert('上传失败：' + (res.message || '未知错误')); }
+    });
+
+    document.getElementById('photoBtnSwap').addEventListener('click', async () => {
+        if (!currentEditingCat || !selectedPhotoSeq || selectedPhotoSeq === 1) return;
+        if (!confirm(`将第 ${selectedPhotoSeq} 张照片与主图交换？`)) return;
+        const res = await api.swap_to_main(currentEditingCat.id, currentEditingCat.pic_name, selectedPhotoSeq);
+        if (res.success) {
+            dataVersion++;
+            const cats = await api.get_cats();
+            const updated = cats.find(c => c.id === currentEditingCat.id);
+            if (updated) { currentEditingCat = updated; renderPhotos(updated, Date.now()); }
+        } else { alert('交换失败：' + (res.message || '未知错误')); }
+    });
+
+    document.getElementById('photoBtnDelete').addEventListener('click', async () => {
+        if (!currentEditingCat || !selectedPhotoSeq || selectedPhotoSeq === 1) return;
+        if (!confirm(`确定删除第 ${selectedPhotoSeq} 张照片？`)) return;
+        await api.delete_photo(currentEditingCat.id, currentEditingCat.pic_name, selectedPhotoSeq);
+        dataVersion++;
+        const cats = await api.get_cats();
+        const updated = cats.find(c => c.id === currentEditingCat.id);
+        if (updated) { currentEditingCat = updated; renderPhotos(updated, Date.now()); }
+    });
+
+    document.getElementById('photoBtnFolder').addEventListener('click', async () => {
+        if (!currentEditingCat) return;
+        await api.open_folder(currentEditingCat.id, currentEditingCat.name);
+    });
+
+    // ========== 裁剪编辑器 ==========
+    function openCropEditor(cat, type, seq) {
+        const picName = cat.pic_name;
+        let src = '';
+        if (type === 'main') src = mediaUrl(cat.avatar_hd || cat.avatar.replace('_thumb.jpg', '.jpg'));
+        else {
+            const photo = cat.otherPhotos.find(p => p.seq == seq);
+            if (photo) src = mediaUrl(photo.hd);
+        }
+        if (!src) { alert('找不到高清原图'); return; }
+        cropTarget = { catId: cat.id, picName, seq: parseInt(seq), src };
+        const img = new Image();
+        img.onload = () => {
+            cropImgOriginalWidth = img.naturalWidth;
+            cropImgOriginalHeight = img.naturalHeight;
+            document.getElementById('cropImage').src = src;
+            document.getElementById('cropOverlay').classList.add('active');
+            document.body.classList.add('modal-open');
+            resetCropBox();
+        };
+        img.src = src;
+    }
+
+    function resetCropBox() {
+        const container = document.getElementById('cropContainer');
+        const img = document.getElementById('cropImage');
+        const w = cropImgOriginalWidth, h = cropImgOriginalHeight;
+        const containerW = container.clientWidth, containerH = container.clientHeight;
+        cropScale = Math.min(containerW / w, containerH / h, 1);
+        img.style.width = (w * cropScale) + 'px';
+        img.style.height = (h * cropScale) + 'px';
+        const minSide = Math.min(w, h);
+        const initSize = minSide * 0.6 * cropScale;
+        cropBox = { x: (w * cropScale - initSize) / 2, y: (h * cropScale - initSize) / 2, size: initSize };
+        updateCropBoxPosition();
+    }
+
+    function updateCropBoxPosition() {
+        const boxEl = document.getElementById('cropBox');
+        boxEl.style.left = cropBox.x + 'px';
+        boxEl.style.top = cropBox.y + 'px';
+        boxEl.style.width = cropBox.size + 'px';
+        boxEl.style.height = cropBox.size + 'px';
+    }
+
+    document.getElementById('cropResetBtn').addEventListener('click', resetCropBox);
+    document.getElementById('cropCancelBtn').addEventListener('click', () => {
+        document.getElementById('cropOverlay').classList.remove('active');
+        document.body.classList.remove('modal-open');
+    });
+    document.getElementById('cropSaveBtn').addEventListener('click', async () => {
+        if (!cropTarget) return;
+        const x1 = Math.round(cropBox.x / cropScale);
+        const y1 = Math.round(cropBox.y / cropScale);
+        const side = Math.round(cropBox.size / cropScale);
+        const res = await api.crop_thumbnail(cropTarget.catId, cropTarget.picName, cropTarget.seq, [x1, y1, x1+side, y1+side]);
+        if (res.success) {
+            dataVersion++;
+            document.getElementById('cropOverlay').classList.remove('active');
+            document.body.classList.remove('modal-open');
+            const cats = await api.get_cats();
+            const updated = cats.find(c => c.id === currentEditingCat.id);
+            if (updated) { currentEditingCat = updated; renderPhotos(updated, Date.now()); }
+        } else alert('裁剪失败：' + (res.message || '未知错误'));
+    });
+
+    // 裁剪框交互 (修正版)
+    (function() {
+        const box = document.getElementById('cropBox');
+        let dragging = false, resizing = false, resizeDir = '';
+        let dragStartX = 0, dragStartY = 0, startBoxX = 0, startBoxY = 0, startSize = 0;
+
+        function clampBox() {
+            const maxW = document.getElementById('cropImage').offsetWidth;
+            const maxH = document.getElementById('cropImage').offsetHeight;
+            if (cropBox.x < 0) cropBox.x = 0;
+            if (cropBox.y < 0) cropBox.y = 0;
+            if (cropBox.x + cropBox.size > maxW) cropBox.x = maxW - cropBox.size;
+            if (cropBox.y + cropBox.size > maxH) cropBox.y = maxH - cropBox.size;
+            cropBox.size = Math.max(50, Math.min(cropBox.size, maxW, maxH));
+        }
+
+        function getFixedCorner(dir, box) {
+            switch(dir) {
+                case 'nw': return { x: box.x + box.size, y: box.y + box.size };
+                case 'ne': return { x: box.x, y: box.y + box.size };
+                case 'sw': return { x: box.x + box.size, y: box.y };
+                case 'se': return { x: box.x, y: box.y };
+            }
+        }
+
+        box.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            if (e.target.classList.contains('crop-handle')) {
+                resizing = true;
+                resizeDir = e.target.dataset.dir;
+                const fixed = getFixedCorner(resizeDir, cropBox);
+                resizeFixedX = fixed.x;
+                resizeFixedY = fixed.y;
+                startBoxX = cropBox.x; startBoxY = cropBox.y; startSize = cropBox.size;
+            } else {
+                dragging = true;
+                startBoxX = cropBox.x; startBoxY = cropBox.y;
+            }
+            dragStartX = e.clientX; dragStartY = e.clientY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!dragging && !resizing) return;
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            if (dragging) {
+                cropBox.x = Math.max(0, Math.min(startBoxX + dx, document.getElementById('cropImage').offsetWidth - cropBox.size));
+                cropBox.y = Math.max(0, Math.min(startBoxY + dy, document.getElementById('cropImage').offsetHeight - cropBox.size));
+            } else if (resizing) {
+                const newMouseX = startBoxX + dx + (resizeDir.includes('e') ? startSize : 0);
+                const newMouseY = startBoxY + dy + (resizeDir.includes('s') ? startSize : 0);
+                const distX = Math.abs(resizeFixedX - newMouseX);
+                const distY = Math.abs(resizeFixedY - newMouseY);
+                let newSize = Math.max(distX, distY);
+                newSize = Math.max(50, newSize);
+                let newX, newY;
+                if (resizeDir === 'nw') { newX = resizeFixedX - newSize; newY = resizeFixedY - newSize; }
+                else if (resizeDir === 'ne') { newX = resizeFixedX; newY = resizeFixedY - newSize; }
+                else if (resizeDir === 'sw') { newX = resizeFixedX - newSize; newY = resizeFixedY; }
+                else { newX = resizeFixedX; newY = resizeFixedY; }
+                cropBox.x = newX; cropBox.y = newY; cropBox.size = newSize;
+            }
+            clampBox();
+            updateCropBoxPosition();
+        });
+
+        window.addEventListener('mouseup', () => { dragging = resizing = false; });
+    })();
+
+    // ========== 标签选择弹窗 ==========
+    document.getElementById('selectTagsBtn').addEventListener('click', () => {
+        const modal = document.getElementById('tagSelectModal');
+        const list = document.getElementById('tagCheckList');
+        const allTags = Object.keys(tagColors);
+        list.innerHTML = allTags.map(tag => `
+            <div class="tag-check-item" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <input type="checkbox" id="tag_${tag}" value="${tag}" ${currentSelectedTags.includes(tag) ? 'checked' : ''}>
+                <label for="tag_${tag}" style="display:inline-block;padding:4px 10px;border-radius:20px;background:${tagColors[tag]||'#ccc'};color:#fff;">${escapeHtml(tag)}</label>
+            </div>
+        `).join('');
+        modal.classList.add('active');
+        document.body.classList.add('modal-open');
+    });
+    document.getElementById('closeTagSelectModal').addEventListener('click', () => {
+        document.getElementById('tagSelectModal').classList.remove('active');
+        document.body.classList.remove('modal-open');
+    });
+    document.getElementById('confirmTagSelection').addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('#tagCheckList input[type="checkbox"]:checked');
+        currentSelectedTags = Array.from(checkboxes).map(cb => cb.value);
+        updateSelectedTagsDisplay();
+        document.getElementById('tagSelectModal').classList.remove('active');
+        document.body.classList.remove('modal-open');
+    });
+
+    // ========== 独立应用标签 ==========
+    document.getElementById('applyTagsBtn').addEventListener('click', async () => {
+        if (!currentEditingCat || !currentEditingCat.id) { alert('请先保存猫咪基本信息'); return; }
+        const res = await api.apply_tags(currentEditingCat.id, currentSelectedTags);
+        if (res.success) {
+            currentEditingCat.tags = [...currentSelectedTags];
+            alert('标签已更新并同步到 cats.json');
+        } else {
+            alert('应用失败：' + (res.message || '未知错误'));
+        }
+    });
+
+    document.getElementById('addNewTagBtn').addEventListener('click', async () => {
+        const newTag = document.getElementById('newTagInput').value.trim();
+        if (!newTag) return;
+        if (!tagColors[newTag]) {
+            tagColors[newTag] = PRESET_COLORS[Object.keys(tagColors).length % PRESET_COLORS.length];
+            await api.save_tag_colors(tagColors);
+        }
+        currentSelectedTags.push(newTag);
+        document.getElementById('newTagInput').value = '';
+        document.getElementById('tagSelectModal').classList.remove('active');
+        document.getElementById('selectTagsBtn').click();
+    });
+
+    // ========== 标签管理 ==========
+    document.getElementById('manageTagsBtn').addEventListener('click', async () => {
+        document.getElementById('tagModal').classList.add('active');
+        renderTagManager();
+    });
+    document.getElementById('closeTagModal').addEventListener('click', () => document.getElementById('tagModal').classList.remove('active'));
+
+    let selectedTagColor = '#F9A8D4';
+    async function renderTagManager() {
+        const colors = await api.get_tag_colors();
+        tagColors = colors || {};
+        const container = document.getElementById('tagListContainer');
+        container.innerHTML = '';
+        Object.entries(tagColors).forEach(([tag, color]) => {
+            const div = document.createElement('div');
+            div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.marginBottom = '8px';
+            const pill = document.createElement('span');
+            pill.style.cssText = `background:${color};padding:5px 12px;border-radius:20px;color:#fff;margin-right:10px;cursor:pointer;`;
+            pill.textContent = tag;
+            pill.title = '点击编辑颜色';
+            pill.addEventListener('click', () => {
+                document.getElementById('newTagName').value = tag;
+                selectedTagColor = color;
+                document.querySelectorAll('.color-preset[data-color]').forEach(p => p.classList.toggle('selected', p.dataset.color === color));
+            });
+            const delBtn = document.createElement('button');
+            delBtn.className = 'del-tag'; delBtn.dataset.tag = tag;
+            delBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:1.1rem;';
+            delBtn.textContent = '🗑️';
+            delBtn.addEventListener('click', async () => {
+                delete tagColors[tag];
+                await api.save_tag_colors(tagColors);
+                renderTagManager();
+                loadAllData();
+            });
+            div.appendChild(pill); div.appendChild(delBtn);
+            container.appendChild(div);
+        });
+        const presets = document.getElementById('colorPresets');
+        presets.innerHTML = PRESET_COLORS.map(c => `<div class="color-preset" style="background:${c};" data-color="${c}"></div>`).join('');
+        document.querySelectorAll('.color-preset').forEach(el => {
+            el.addEventListener('click', function() {
+                selectedTagColor = this.dataset.color;
+                document.querySelectorAll('.color-preset').forEach(e => e.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+    }
+
+    document.getElementById('addTagBtn').addEventListener('click', async () => {
+        const name = document.getElementById('newTagName').value.trim();
+        if (!name) return;
+        tagColors[name] = selectedTagColor;
+        await api.save_tag_colors(tagColors);
+        document.getElementById('newTagName').value = '';
+        renderTagManager();
+    });
+
+    // ========== 敏感词管理 ==========
+    document.getElementById('banWordsBtn').addEventListener('click', async () => {
+        document.getElementById('banWordModal').classList.add('active');
+        const data = await api.get_ban_words();
+        banWords = data.words || [];
+        renderBanWords();
+    });
+    document.getElementById('closeBanWordModal').addEventListener('click', () => document.getElementById('banWordModal').classList.remove('active'));
+    function renderBanWords() {
+        const list = document.getElementById('banWordList');
+        list.innerHTML = banWords.map(w => `<div style="display:flex;align-items:center;margin-bottom:6px;"><span>${w}</span><button class="del-ban" data-word="${w}" style="background:none;border:none;cursor:pointer;">🗑️</button></div>`).join('');
+        document.querySelectorAll('.del-ban').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                banWords = banWords.filter(w => w !== e.target.dataset.word);
+                await api.save_ban_words({words: banWords});
+                renderBanWords();
+                loadAllData();
+            });
+        });
+    }
+    document.getElementById('addBanWordBtn').addEventListener('click', async () => {
+        const word = document.getElementById('newBanWord').value.trim();
+        if (!word) return;
+        banWords.push(word);
+        await api.save_ban_words({words: banWords});
+        document.getElementById('newBanWord').value = '';
+        renderBanWords();
+        loadAllData();
+    });
+
+    // ========== 编者留言 ==========
+    document.getElementById('editorLink').addEventListener('click', async () => {
+        document.getElementById('editorModal').classList.add('active');
+        document.body.classList.add('modal-open');
+        const md = await api.get_readme();
+        document.getElementById('editorMessage').innerHTML = (md && typeof marked !== 'undefined') ? marked.parse(md) : '<p>暂无留言</p>';
+        document.getElementById('editorTextarea').value = md || '';
+        document.getElementById('editorEditArea').style.display = 'none';
+        document.getElementById('editorMessage').style.display = '';
+    });
+    document.getElementById('closeEditorModal').addEventListener('click', () => {
+        document.getElementById('editorModal').classList.remove('active');
+        document.body.classList.remove('modal-open');
+    });
+    document.getElementById('editEditorBtn').addEventListener('click', () => {
+        document.getElementById('editorEditArea').style.display = 'block';
+        document.getElementById('editorMessage').style.display = 'none';
+    });
+    document.getElementById('cancelEditorEdit').addEventListener('click', () => {
+        document.getElementById('editorEditArea').style.display = 'none';
+        document.getElementById('editorMessage').style.display = '';
+    });
+    document.getElementById('saveEditorEdit').addEventListener('click', async () => {
+        const md = document.getElementById('editorTextarea').value;
+        const res = await api.save_readme(md);
+        if (res.success) {
+            document.getElementById('editorMessage').innerHTML = (typeof marked !== 'undefined') ? marked.parse(md) : '<p>' + md + '</p>';
+            document.getElementById('editorEditArea').style.display = 'none';
+            document.getElementById('editorMessage').style.display = '';
+        } else {
+            alert('保存失败：' + (res.message || '未知错误'));
+        }
+    });
+
+    // ========== 搜索 ==========
+    document.getElementById('searchInput').addEventListener('input', renderCats);
+
+    // ========== 排序模式 ==========
+    let sortMode = false;
+    let sortOrder = []; // 当前排序列表中的 ID 顺序
+
+    document.getElementById('sortModeToggle').addEventListener('click', async () => {
+        const btn = document.getElementById('sortModeToggle');
+        if (sortMode) {
+            // 退出排序 → 自动应用
+            if (sortOrder.length > 0) {
+                btn.textContent = '⏳ 正在应用...';
+                btn.disabled = true;
+                await applySortOrderInternal();
+                btn.disabled = false;
+            }
+            sortMode = false;
+            sortOrder = [];
+            btn.style.background = '#f0ece4'; btn.style.color = ''; btn.textContent = '🔀 排序模式';
+            renderCats();
+        } else {
+            sortMode = true;
+            btn.style.background = '#D9A05B'; btn.style.color = 'white'; btn.textContent = '🔀 退出排序';
+            // 进入排序模式时初始化顺序
+            const term = document.getElementById('searchInput').value.trim().toLowerCase();
+            let filtered = [...catsData];
+            if (currentGenderFilter !== 'all') filtered = filtered.filter(c => c.gender === currentGenderFilter);
+            if (currentStatusFilter !== 'all') filtered = filtered.filter(c => c.status === currentStatusFilter);
+            if (activeTags.size > 0) filtered = filtered.filter(c => c.tags?.some(t => activeTags.has(t)));
+            if (term) filtered = filtered.filter(c =>
+                (c.name||'').toLowerCase().includes(term) || (c.desc||'').toLowerCase().includes(term) ||
+                (c.story||'').toLowerCase().includes(term) || c.id.includes(term)
+            );
+            sortOrder = filtered.map(c => c.id);
+            renderCats();
+        }
+    });
+
+    async function applySortOrderInternal() {
+        if (sortOrder.length === 0) return;
+        const res = await api.apply_sort_order(sortOrder);
+        if (res.success) {
+            catsData = await api.get_cats();
+        } else {
+            alert('应用失败：' + (res.message || '未知错误'));
+        }
+    }
+
+    function sortListMoveRow(catId, direction, stepEl) {
+        const step = parseInt(stepEl.value) || 1;
+        const idx = sortOrder.indexOf(catId);
+        if (idx < 0) return;
+        const newIdx = direction === 'up' ? Math.max(0, idx - step) : Math.min(sortOrder.length - 1, idx + step);
+        if (newIdx === idx) return;
+        sortOrder.splice(idx, 1);
+        sortOrder.splice(newIdx, 0, catId);
+        renderCats();
+    }
+
+    // ========== 筛选交互 ==========
+    (function bindEvents() {
+        document.getElementById('genderToggle').addEventListener('click', () => {
+            const opts = document.getElementById('genderOptions'); const sym = document.getElementById('genderSymbol');
+            const open = opts.classList.toggle('show'); document.getElementById('genderToggle').classList.toggle('open', open);
+            sym.textContent = open ? '−' : '+';
+        });
+        document.querySelectorAll('.gender-btn').forEach(btn => btn.addEventListener('click', function() {
+            document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active')); this.classList.add('active');
+            currentGenderFilter = this.dataset.gender; renderCats();
+        }));
+        document.getElementById('statusToggle').addEventListener('click', () => {
+            const opts = document.getElementById('statusOptions'); const sym = document.getElementById('statusSymbol');
+            const open = opts.classList.toggle('show'); document.getElementById('statusToggle').classList.toggle('open', open);
+            sym.textContent = open ? '−' : '+';
+        });
+        document.querySelectorAll('.status-btn').forEach(btn => btn.addEventListener('click', function() {
+            document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active')); this.classList.add('active');
+            currentStatusFilter = this.dataset.status; renderCats();
+        }));
+        const tagToggle = document.getElementById('tagToggle'); const tagSymbol = document.getElementById('tagSymbol'); const tagOptions = document.getElementById('tagOptions');
+        tagToggle.addEventListener('click', () => {
+            const open = tagOptions.classList.toggle('show'); tagToggle.classList.toggle('open', open);
+            tagSymbol.textContent = open ? '−' : '+';
+        });
+        tagOptions.addEventListener('click', (e) => {
+            const btn = e.target.closest('.tag-btn'); if (!btn) return;
+            const tag = btn.dataset.tag;
+            if (tag === 'all') activeTags.clear(); else if (activeTags.has(tag)) activeTags.delete(tag); else activeTags.add(tag);
+            updateTagBtnStates(); renderCats();
+        });
+        document.getElementById('sortToggle').addEventListener('click', () => {
+            const opts = document.getElementById('sortOptions'); const sym = document.getElementById('sortSymbol');
+            const open = opts.classList.toggle('show'); document.getElementById('sortToggle').classList.toggle('open', open);
+            sym.textContent = open ? '−' : '+';
+        });
+        document.getElementById('sortDefault').addEventListener('click', () => { currentSort = 'default'; updateSortUI(); renderCats(); });
+        document.getElementById('sortAffection').addEventListener('click', () => {
+            if (currentSort === 'affection') sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+            else { currentSort = 'affection'; sortDirection = 'desc'; }
+            updateSortUI(); renderCats();
+        });
+    })();
+
+    function updateSortUI() {
+        document.getElementById('sortDefault').classList.toggle('active', currentSort === 'default');
+        const btn = document.getElementById('sortAffection'); btn.classList.toggle('active', currentSort === 'affection');
+        btn.classList.toggle('asc', currentSort === 'affection' && sortDirection === 'asc');
+    }
+    function updateTagBtnStates() {
+        document.querySelectorAll('#tagOptions .tag-btn').forEach(btn => {
+            const t = btn.dataset.tag;
+            if (t === 'all') btn.classList.toggle('active', activeTags.size === 0);
+            else btn.classList.toggle('active', activeTags.has(t));
+        });
+    }
+
+    function renderTagButtons(allTags) {
+        const group = document.getElementById('tagFilterGroup'); const opts = document.getElementById('tagOptions');
+        if (!allTags.length) { group.style.display = 'none'; return; }
+        group.style.display = '';
+        opts.innerHTML = '<button class="filter-btn tag-btn active" data-tag="all">全部Tag</button>';
+        allTags.forEach(tag => {
+            const color = tagColors[tag] || ''; const style = color ? `background:${color};color:#fff;` : '';
+            opts.innerHTML += `<button class="filter-btn tag-btn" data-tag="${escapeHtml(tag)}" style="${style}">${escapeHtml(tag)}</button>`;
+        });
+        const addTagBtn = document.createElement('button'); addTagBtn.className = 'filter-btn'; addTagBtn.style.background = '#e0e0e0'; addTagBtn.textContent = '＋ 添加标签';
+        addTagBtn.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('manageTagsBtn').click(); });
+        opts.appendChild(addTagBtn);
+        activeTags.clear(); updateTagBtnStates();
+    }
+
+    // ========== 灯箱 ==========
+    function openLightbox(url) {
+        const lb = document.getElementById('lightbox'); const img = document.getElementById('lightboxImg'); const spin = document.getElementById('lightboxSpinner');
+        lb.classList.add('active'); spin.classList.remove('hidden'); img.classList.remove('loaded');
+        const tmp = new Image();
+        tmp.onload = () => { img.src = url; spin.classList.add('hidden'); img.classList.add('loaded'); };
+        tmp.onerror = () => { img.src = ''; spin.classList.add('hidden'); img.classList.add('loaded'); };
+        tmp.src = url;
+    }
+    document.getElementById('lightboxClose').addEventListener('click', () => document.getElementById('lightbox').classList.remove('active'));
+    document.getElementById('lightbox').addEventListener('click', (e) => { if (e.target === document.getElementById('lightbox')) document.getElementById('lightbox').classList.remove('active'); });
+
+    // ========== 数据加载 ==========
+    async function loadAllData() {
+        try {
+            const cats = await api.get_cats();
+            if (!cats || cats.length === 0) { document.getElementById('catGrid').innerHTML = '<p class="loading-text">暂无猫咪数据</p>'; return; }
+            const colors = await api.get_tag_colors(); const bans = await api.get_ban_words();
+            catsData = cats; tagColors = colors || {}; banWords = bans.words || [];
+            renderCats(); renderTagButtons(getAllTags(catsData));
+        } catch (e) {
+            console.error(e); document.getElementById('catGrid').innerHTML = `<p class="error-text">❌ 数据加载失败: ${e.message}</p>`;
+        }
+    }
+
+    if (api) loadAllData(); else window.addEventListener('pywebviewready', loadAllData);
+
+    // ========== 一键压缩 ==========
+    document.getElementById('compressBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('compressBtn');
+        btn.textContent = '⏳ 压缩中...';
+        btn.disabled = true;
+        try {
+            const res = await api.compress_all_images();
+            if (!res.success) {
+                alert('压缩失败：' + (res.message || '未知错误'));
+                return;
+            }
+            const mb = (n) => (n / 1024 / 1024).toFixed(1);
+            let msg = `压缩完成！\n\n`;
+            msg += `处理 ${res.compressed.length} 张图片\n`;
+            msg += `原始: ${mb(res.before_total)}MB → 压缩后: ${mb(res.after_total)}MB\n`;
+            msg += `节省: ${res.saved_pct}%`;
+            if (res.errors.length > 0) {
+                msg += `\n\n${res.errors.length} 个错误:\n${res.errors.slice(0,5).join('\n')}`;
+            }
+            alert(msg);
+        } catch (e) {
+            alert('压缩失败: ' + e);
+        } finally {
+            btn.textContent = '🗜️ 压缩图片';
+            btn.disabled = false;
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+            document.body.classList.remove('modal-open');
+        }
+    });
+</script>
+</body>
+</html>

@@ -3,8 +3,8 @@
     "id": "01",
     "name": "丑橘(暂用名)",
     "gender": "male",
-    "avatar": "classified/01 丑橘(暂用名)/ugly_orange_01_thumb.jpg",
-    "avatar_hd": "classified/01 丑橘(暂用名)/ugly_orange_01.jpg",
+    "avatar": "data/classified/01 丑橘(暂用名)/ugly_orange_01_thumb.jpg",
+    "avatar_hd": "data/classified/01 丑橘(暂用名)/ugly_orange_01.jpg",
     "affection": 5,
     "status": "adopted",
     "desc": "校门口超级亲人的橘",
@@ -12,8 +12,8 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/01 丑橘(暂用名)/ugly_orange_02_thumb.jpg",
-        "hd": "classified/01 丑橘(暂用名)/ugly_orange_02.jpg",
+        "thumb": "data/classified/01 丑橘(暂用名)/ugly_orange_02_thumb.jpg",
+        "hd": "data/classified/01 丑橘(暂用名)/ugly_orange_02.jpg",
         "seq": 2
       }
     ],
@@ -23,8 +23,8 @@
     "id": "02",
     "name": "草草",
     "gender": "female",
-    "avatar": "classified/02 草草/grass_grass_01_thumb.jpg",
-    "avatar_hd": "classified/02 草草/grass_grass_01.jpg",
+    "avatar": "data/classified/02 草草/grass_grass_01_thumb.jpg",
+    "avatar_hd": "data/classified/02 草草/grass_grass_01.jpg",
     "affection": 1,
     "status": "normal",
     "desc": "超级怕人的潦草三花",
@@ -35,8 +35,8 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/02 草草/grass_grass_02_thumb.jpg",
-        "hd": "classified/02 草草/grass_grass_02.jpg",
+        "thumb": "data/classified/02 草草/grass_grass_02_thumb.jpg",
+        "hd": "data/classified/02 草草/grass_grass_02.jpg",
         "seq": 2
       }
     ],
@@ -46,8 +46,8 @@
     "id": "03",
     "name": "曙小咪",
     "gender": "female",
-    "avatar": "classified/03 曙小咪/shu_xiao_meow_01_thumb.jpg",
-    "avatar_hd": "classified/03 曙小咪/shu_xiao_meow_01.jpg",
+    "avatar": "data/classified/03 曙小咪/shu_xiao_meow_01_thumb.jpg",
+    "avatar_hd": "data/classified/03 曙小咪/shu_xiao_meow_01.jpg",
     "affection": 5,
     "status": "normal",
     "desc": "在减肥的雀猫",
@@ -62,8 +62,8 @@
     "id": "04",
     "name": "奶牛哥",
     "gender": "male",
-    "avatar": "classified/04 奶牛哥/milk_cow_brother_01_thumb.jpg",
-    "avatar_hd": "classified/04 奶牛哥/milk_cow_brother_01.jpg",
+    "avatar": "data/classified/04 奶牛哥/milk_cow_brother_01_thumb.jpg",
+    "avatar_hd": "data/classified/04 奶牛哥/milk_cow_brother_01.jpg",
     "affection": 5,
     "status": "normal",
     "desc": "蜕变的典范",
@@ -73,14 +73,9 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/04 奶牛哥/milk_cow_brother_02_thumb.jpg",
-        "hd": "classified/04 奶牛哥/milk_cow_brother_02.jpg",
+        "thumb": "data/classified/04 奶牛哥/milk_cow_brother_02_thumb.jpg",
+        "hd": "data/classified/04 奶牛哥/milk_cow_brother_02.jpg",
         "seq": 2
-      },
-      {
-        "thumb": "classified/04 奶牛哥/milk_cow_brother_03_thumb.jpg",
-        "hd": "classified/04 奶牛哥/milk_cow_brother_03.jpg",
-        "seq": 3
       }
     ],
     "pic_name": "milk_cow_brother"
@@ -89,8 +84,8 @@
     "id": "05",
     "name": "猫妈",
     "gender": "female",
-    "avatar": "classified/05 猫妈/cat_mom_01_thumb.jpg",
-    "avatar_hd": "classified/05 猫妈/cat_mom_01.jpg",
+    "avatar": "data/classified/05 猫妈/cat_mom_01_thumb.jpg",
+    "avatar_hd": "data/classified/05 猫妈/cat_mom_01.jpg",
     "affection": 4,
     "status": "normal",
     "desc": "三小只的妈妈",
@@ -101,18 +96,18 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/05 猫妈/cat_mom_02_thumb.jpg",
-        "hd": "classified/05 猫妈/cat_mom_02.jpg",
+        "thumb": "data/classified/05 猫妈/cat_mom_02_thumb.jpg",
+        "hd": "data/classified/05 猫妈/cat_mom_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/05 猫妈/cat_mom_03_thumb.jpg",
-        "hd": "classified/05 猫妈/cat_mom_03.jpg",
+        "thumb": "data/classified/05 猫妈/cat_mom_03_thumb.jpg",
+        "hd": "data/classified/05 猫妈/cat_mom_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "classified/05 猫妈/cat_mom_04_thumb.jpg",
-        "hd": "classified/05 猫妈/cat_mom_04.jpg",
+        "thumb": "data/classified/05 猫妈/cat_mom_04_thumb.jpg",
+        "hd": "data/classified/05 猫妈/cat_mom_04.jpg",
         "seq": 4
       }
     ],
@@ -122,8 +117,8 @@
     "id": "06",
     "name": "橘头",
     "gender": "male",
-    "avatar": "classified/06 橘头/orange_head_01_thumb.jpg",
-    "avatar_hd": "classified/06 橘头/orange_head_01.jpg",
+    "avatar": "data/classified/06 橘头/orange_head_01_thumb.jpg",
+    "avatar_hd": "data/classified/06 橘头/orange_head_01.jpg",
     "affection": 5,
     "status": "star",
     "desc": "三小只里最亲人的",
@@ -134,13 +129,13 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/06 橘头/orange_head_02_thumb.jpg",
-        "hd": "classified/06 橘头/orange_head_02.jpg",
+        "thumb": "data/classified/06 橘头/orange_head_02_thumb.jpg",
+        "hd": "data/classified/06 橘头/orange_head_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/06 橘头/orange_head_03_thumb.jpg",
-        "hd": "classified/06 橘头/orange_head_03.jpg",
+        "thumb": "data/classified/06 橘头/orange_head_03_thumb.jpg",
+        "hd": "data/classified/06 橘头/orange_head_03.jpg",
         "seq": 3
       }
     ],
@@ -150,8 +145,8 @@
     "id": "07",
     "name": "头套",
     "gender": "male",
-    "avatar": "classified/07 头套/head_tao_01_thumb.jpg",
-    "avatar_hd": "classified/07 头套/head_tao_01.jpg",
+    "avatar": "data/classified/07 头套/head_tao_01_thumb.jpg",
+    "avatar_hd": "data/classified/07 头套/head_tao_01.jpg",
     "affection": 4,
     "status": "normal",
     "desc": "三小只里最皮的",
@@ -162,18 +157,18 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/07 头套/head_tao_02_thumb.jpg",
-        "hd": "classified/07 头套/head_tao_02.jpg",
+        "thumb": "data/classified/07 头套/head_tao_02_thumb.jpg",
+        "hd": "data/classified/07 头套/head_tao_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/07 头套/head_tao_03_thumb.jpg",
-        "hd": "classified/07 头套/head_tao_03.jpg",
+        "thumb": "data/classified/07 头套/head_tao_03_thumb.jpg",
+        "hd": "data/classified/07 头套/head_tao_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "classified/07 头套/head_tao_04_thumb.jpg",
-        "hd": "classified/07 头套/head_tao_04.jpg",
+        "thumb": "data/classified/07 头套/head_tao_04_thumb.jpg",
+        "hd": "data/classified/07 头套/head_tao_04.jpg",
         "seq": 4
       }
     ],
@@ -183,8 +178,8 @@
     "id": "08",
     "name": "黑头",
     "gender": "male",
-    "avatar": "classified/08 黑头/black_head_01_thumb.jpg",
-    "avatar_hd": "classified/08 黑头/black_head_01.jpg",
+    "avatar": "data/classified/08 黑头/black_head_01_thumb.jpg",
+    "avatar_hd": "data/classified/08 黑头/black_head_01.jpg",
     "affection": 4,
     "status": "normal",
     "desc": "三小只里最高冷的",
@@ -195,13 +190,13 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/08 黑头/black_head_02_thumb.jpg",
-        "hd": "classified/08 黑头/black_head_02.jpg",
+        "thumb": "data/classified/08 黑头/black_head_02_thumb.jpg",
+        "hd": "data/classified/08 黑头/black_head_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/08 黑头/black_head_03_thumb.jpg",
-        "hd": "classified/08 黑头/black_head_03.jpg",
+        "thumb": "data/classified/08 黑头/black_head_03_thumb.jpg",
+        "hd": "data/classified/08 黑头/black_head_03.jpg",
         "seq": 3
       }
     ],
@@ -211,8 +206,8 @@
     "id": "09",
     "name": "老橘",
     "gender": "male",
-    "avatar": "classified/09 老橘/big_orange_one_01_thumb.jpg",
-    "avatar_hd": "classified/09 老橘/big_orange_one_01.jpg",
+    "avatar": "data/classified/09 老橘/big_orange_one_01_thumb.jpg",
+    "avatar_hd": "data/classified/09 老橘/big_orange_one_01.jpg",
     "affection": 1,
     "status": "normal",
     "desc": "战斗力最强的大橘",
@@ -220,18 +215,18 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/09 老橘/big_orange_one_02_thumb.jpg",
-        "hd": "classified/09 老橘/big_orange_one_02.jpg",
+        "thumb": "data/classified/09 老橘/big_orange_one_02_thumb.jpg",
+        "hd": "data/classified/09 老橘/big_orange_one_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/09 老橘/big_orange_one_03_thumb.jpg",
-        "hd": "classified/09 老橘/big_orange_one_03.jpg",
+        "thumb": "data/classified/09 老橘/big_orange_one_03_thumb.jpg",
+        "hd": "data/classified/09 老橘/big_orange_one_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "classified/09 老橘/big_orange_one_04_thumb.jpg",
-        "hd": "classified/09 老橘/big_orange_one_04.jpg",
+        "thumb": "data/classified/09 老橘/big_orange_one_04_thumb.jpg",
+        "hd": "data/classified/09 老橘/big_orange_one_04.jpg",
         "seq": 4
       }
     ],
@@ -241,8 +236,8 @@
     "id": "10",
     "name": "古典纹(暂用名)",
     "gender": "female",
-    "avatar": "classified/10 古典纹(暂用名)/gu_dian_wen_01_thumb.jpg",
-    "avatar_hd": "classified/10 古典纹(暂用名)/gu_dian_wen_01.jpg",
+    "avatar": "data/classified/10 古典纹(暂用名)/gu_dian_wen_01_thumb.jpg",
+    "avatar_hd": "data/classified/10 古典纹(暂用名)/gu_dian_wen_01.jpg",
     "affection": 2,
     "status": "lost",
     "desc": "怕人的古典纹狸花",
@@ -250,18 +245,18 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_02_thumb.jpg",
-        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_02.jpg",
+        "thumb": "data/classified/10 古典纹(暂用名)/gu_dian_wen_02_thumb.jpg",
+        "hd": "data/classified/10 古典纹(暂用名)/gu_dian_wen_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_03_thumb.jpg",
-        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_03.jpg",
+        "thumb": "data/classified/10 古典纹(暂用名)/gu_dian_wen_03_thumb.jpg",
+        "hd": "data/classified/10 古典纹(暂用名)/gu_dian_wen_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "classified/10 古典纹(暂用名)/gu_dian_wen_04_thumb.jpg",
-        "hd": "classified/10 古典纹(暂用名)/gu_dian_wen_04.jpg",
+        "thumb": "data/classified/10 古典纹(暂用名)/gu_dian_wen_04_thumb.jpg",
+        "hd": "data/classified/10 古典纹(暂用名)/gu_dian_wen_04.jpg",
         "seq": 4
       }
     ],
@@ -271,8 +266,8 @@
     "id": "11",
     "name": "宕机猫(暂用名)",
     "gender": "unknown",
-    "avatar": "classified/11 宕机猫(暂用名)/river_side_milk_cow_01_thumb.jpg",
-    "avatar_hd": "classified/11 宕机猫(暂用名)/river_side_milk_cow_01.jpg",
+    "avatar": "data/classified/11 宕机猫(暂用名)/river_side_milk_cow_01_thumb.jpg",
+    "avatar_hd": "data/classified/11 宕机猫(暂用名)/river_side_milk_cow_01.jpg",
     "affection": 1,
     "status": "lost",
     "desc": "很像宕机猫",
@@ -280,8 +275,8 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02_thumb.jpg",
-        "hd": "classified/11 宕机猫(暂用名)/river_side_milk_cow_02.jpg",
+        "thumb": "data/classified/11 宕机猫(暂用名)/river_side_milk_cow_02_thumb.jpg",
+        "hd": "data/classified/11 宕机猫(暂用名)/river_side_milk_cow_02.jpg",
         "seq": 2
       }
     ],
@@ -291,8 +286,8 @@
     "id": "12",
     "name": "简州猫妈(暂用名)",
     "gender": "female",
-    "avatar": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_01_thumb.jpg",
-    "avatar_hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_01.jpg",
+    "avatar": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_01_thumb.jpg",
+    "avatar_hd": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_01.jpg",
     "affection": 2,
     "status": "normal",
     "desc": "怕人的猫妈",
@@ -300,18 +295,18 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02.jpg",
+        "thumb": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02_thumb.jpg",
+        "hd": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03.jpg",
+        "thumb": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03_thumb.jpg",
+        "hd": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04_thumb.jpg",
-        "hd": "classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04.jpg",
+        "thumb": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04_thumb.jpg",
+        "hd": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04.jpg",
         "seq": 4
       }
     ],
@@ -321,8 +316,8 @@
     "id": "13",
     "name": "奶牛猫妈",
     "gender": "female",
-    "avatar": "classified/13 奶牛猫妈/cow_cat_mom_01_thumb.jpg",
-    "avatar_hd": "classified/13 奶牛猫妈/cow_cat_mom_01.jpg",
+    "avatar": "data/classified/13 奶牛猫妈/cow_cat_mom_01_thumb.jpg",
+    "avatar_hd": "data/classified/13 奶牛猫妈/cow_cat_mom_01.jpg",
     "affection": 1,
     "status": "star",
     "desc": "可怜不幸的猫妈",
@@ -332,13 +327,13 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/13 奶牛猫妈/cow_cat_mom_02_thumb.jpg",
-        "hd": "classified/13 奶牛猫妈/cow_cat_mom_02.jpg",
+        "thumb": "data/classified/13 奶牛猫妈/cow_cat_mom_02_thumb.jpg",
+        "hd": "data/classified/13 奶牛猫妈/cow_cat_mom_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/13 奶牛猫妈/cow_cat_mom_03_thumb.jpg",
-        "hd": "classified/13 奶牛猫妈/cow_cat_mom_03.jpg",
+        "thumb": "data/classified/13 奶牛猫妈/cow_cat_mom_03_thumb.jpg",
+        "hd": "data/classified/13 奶牛猫妈/cow_cat_mom_03.jpg",
         "seq": 3
       }
     ],
@@ -348,8 +343,8 @@
     "id": "14",
     "name": "白手套口水巾1号(暂用名)",
     "gender": "male",
-    "avatar": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_01_thumb.jpg",
-    "avatar_hd": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_01.jpg",
+    "avatar": "data/classified/14 白手套口水巾1号(暂用名)/white_glove_bib_01_thumb.jpg",
+    "avatar_hd": "data/classified/14 白手套口水巾1号(暂用名)/white_glove_bib_01.jpg",
     "affection": 3,
     "status": "normal",
     "desc": "五小只里胆子最大的",
@@ -359,8 +354,8 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02_thumb.jpg",
-        "hd": "classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02.jpg",
+        "thumb": "data/classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02_thumb.jpg",
+        "hd": "data/classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02.jpg",
         "seq": 2
       }
     ],
@@ -370,8 +365,8 @@
     "id": "15",
     "name": "白手套口水巾2号(暂用名)",
     "gender": "unknown",
-    "avatar": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_01_thumb.jpg",
-    "avatar_hd": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_01.jpg",
+    "avatar": "data/classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_01_thumb.jpg",
+    "avatar_hd": "data/classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_01.jpg",
     "affection": 3,
     "status": "normal",
     "desc": "五小只里面最早独立的",
@@ -381,8 +376,8 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02_thumb.jpg",
-        "hd": "classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02.jpg",
+        "thumb": "data/classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02_thumb.jpg",
+        "hd": "data/classified/15 白手套口水巾2号(暂用名)/white_glove_bib_two_02.jpg",
         "seq": 2
       }
     ],
@@ -392,8 +387,8 @@
     "id": "16",
     "name": "悍匪",
     "gender": "male",
-    "avatar": "classified/16 悍匪/black_boss_01_thumb.jpg",
-    "avatar_hd": "classified/16 悍匪/black_boss_01.jpg",
+    "avatar": "data/classified/16 悍匪/black_boss_01_thumb.jpg",
+    "avatar_hd": "data/classified/16 悍匪/black_boss_01.jpg",
     "affection": 3,
     "status": "normal",
     "desc": "五小只里最霸道的",
@@ -403,8 +398,8 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/16 悍匪/black_boss_02_thumb.jpg",
-        "hd": "classified/16 悍匪/black_boss_02.jpg",
+        "thumb": "data/classified/16 悍匪/black_boss_02_thumb.jpg",
+        "hd": "data/classified/16 悍匪/black_boss_02.jpg",
         "seq": 2
       }
     ],
@@ -414,8 +409,8 @@
     "id": "17",
     "name": "五月",
     "gender": "female",
-    "avatar": "classified/17 五月/May_01_thumb.jpg",
-    "avatar_hd": "classified/17 五月/May_01.jpg",
+    "avatar": "data/classified/17 五月/May_01_thumb.jpg",
+    "avatar_hd": "data/classified/17 五月/May_01.jpg",
     "affection": 3,
     "status": "normal",
     "desc": "五小只里最好看的",
@@ -426,13 +421,13 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/17 五月/May_02_thumb.jpg",
-        "hd": "classified/17 五月/May_02.jpg",
+        "thumb": "data/classified/17 五月/May_02_thumb.jpg",
+        "hd": "data/classified/17 五月/May_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/17 五月/May_03_thumb.jpg",
-        "hd": "classified/17 五月/May_03.jpg",
+        "thumb": "data/classified/17 五月/May_03_thumb.jpg",
+        "hd": "data/classified/17 五月/May_03.jpg",
         "seq": 3
       }
     ],
@@ -442,8 +437,8 @@
     "id": "18",
     "name": "六月",
     "gender": "male",
-    "avatar": "classified/18 六月/June_01_thumb.jpg",
-    "avatar_hd": "classified/18 六月/June_01.jpg",
+    "avatar": "data/classified/18 六月/June_01_thumb.jpg",
+    "avatar_hd": "data/classified/18 六月/June_01.jpg",
     "affection": 2,
     "status": "normal",
     "desc": "五小只里胆子最小的",
@@ -453,13 +448,13 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/18 六月/June_02_thumb.jpg",
-        "hd": "classified/18 六月/June_02.jpg",
+        "thumb": "data/classified/18 六月/June_02_thumb.jpg",
+        "hd": "data/classified/18 六月/June_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/18 六月/June_03_thumb.jpg",
-        "hd": "classified/18 六月/June_03.jpg",
+        "thumb": "data/classified/18 六月/June_03_thumb.jpg",
+        "hd": "data/classified/18 六月/June_03.jpg",
         "seq": 3
       }
     ],
@@ -469,8 +464,8 @@
     "id": "19",
     "name": "大脚橘",
     "gender": "male",
-    "avatar": "classified/19 大脚橘/big_foot_orange_01_thumb.jpg",
-    "avatar_hd": "classified/19 大脚橘/big_foot_orange_01.jpg",
+    "avatar": "data/classified/19 大脚橘/big_foot_orange_01_thumb.jpg",
+    "avatar_hd": "data/classified/19 大脚橘/big_foot_orange_01.jpg",
     "affection": 5,
     "status": "normal",
     "desc": "贪吃的话痨",
@@ -485,8 +480,8 @@
     "id": "20",
     "name": "贪吃哥",
     "gender": "male",
-    "avatar": "classified/20 贪吃哥/like_eat_brother_01_thumb.jpg",
-    "avatar_hd": "classified/20 贪吃哥/like_eat_brother_01.jpg",
+    "avatar": "data/classified/20 贪吃哥/like_eat_brother_01_thumb.jpg",
+    "avatar_hd": "data/classified/20 贪吃哥/like_eat_brother_01.jpg",
     "affection": 3,
     "status": "normal",
     "desc": "一直在蹭饭的路上",
@@ -496,13 +491,13 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/20 贪吃哥/like_eat_brother_02_thumb.jpg",
-        "hd": "classified/20 贪吃哥/like_eat_brother_02.jpg",
+        "thumb": "data/classified/20 贪吃哥/like_eat_brother_02_thumb.jpg",
+        "hd": "data/classified/20 贪吃哥/like_eat_brother_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/20 贪吃哥/like_eat_brother_03_thumb.jpg",
-        "hd": "classified/20 贪吃哥/like_eat_brother_03.jpg",
+        "thumb": "data/classified/20 贪吃哥/like_eat_brother_03_thumb.jpg",
+        "hd": "data/classified/20 贪吃哥/like_eat_brother_03.jpg",
         "seq": 3
       }
     ],
@@ -512,8 +507,8 @@
     "id": "21",
     "name": "头3",
     "gender": "male",
-    "avatar": "classified/21 头3/head_three_01_thumb.jpg",
-    "avatar_hd": "classified/21 头3/head_three_01.jpg",
+    "avatar": "data/classified/21 头3/head_three_01_thumb.jpg",
+    "avatar_hd": "data/classified/21 头3/head_three_01.jpg",
     "affection": 5,
     "status": "normal",
     "desc": "猕猴桃",
@@ -523,8 +518,8 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/21 头3/head_three_02_thumb.jpg",
-        "hd": "classified/21 头3/head_three_02.jpg",
+        "thumb": "data/classified/21 头3/head_three_02_thumb.jpg",
+        "hd": "data/classified/21 头3/head_three_02.jpg",
         "seq": 2
       }
     ],
@@ -534,8 +529,8 @@
     "id": "22",
     "name": "头孢",
     "gender": "female",
-    "avatar": "classified/22 头孢/tou_baby_01_thumb.jpg",
-    "avatar_hd": "classified/22 头孢/tou_baby_01.jpg",
+    "avatar": "data/classified/22 头孢/tou_baby_01_thumb.jpg",
+    "avatar_hd": "data/classified/22 头孢/tou_baby_01.jpg",
     "affection": 4,
     "status": "normal",
     "desc": "哈气就是喵喵",
@@ -545,8 +540,8 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/22 头孢/tou_baby_02_thumb.jpg",
-        "hd": "classified/22 头孢/tou_baby_02.jpg",
+        "thumb": "data/classified/22 头孢/tou_baby_02_thumb.jpg",
+        "hd": "data/classified/22 头孢/tou_baby_02.jpg",
         "seq": 2
       }
     ],
@@ -556,8 +551,8 @@
     "id": "23",
     "name": "细细条",
     "gender": "male",
-    "avatar": "classified/23 细细条/thin_stripe_01_thumb.jpg",
-    "avatar_hd": "classified/23 细细条/thin_stripe_01.jpg",
+    "avatar": "data/classified/23 细细条/thin_stripe_01_thumb.jpg",
+    "avatar_hd": "data/classified/23 细细条/thin_stripe_01.jpg",
     "affection": 2,
     "status": "normal",
     "desc": "一只渣猫",
@@ -572,8 +567,8 @@
     "id": "24",
     "name": "袁小花",
     "gender": "female",
-    "avatar": "classified/24 袁小花/yuan_small_flower_01_thumb.jpg",
-    "avatar_hd": "classified/24 袁小花/yuan_small_flower_01.jpg",
+    "avatar": "data/classified/24 袁小花/yuan_small_flower_01_thumb.jpg",
+    "avatar_hd": "data/classified/24 袁小花/yuan_small_flower_01.jpg",
     "affection": 5,
     "status": "normal",
     "desc": "亲人的三花",
@@ -583,13 +578,13 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/24 袁小花/yuan_small_flower_02_thumb.jpg",
-        "hd": "classified/24 袁小花/yuan_small_flower_02.jpg",
+        "thumb": "data/classified/24 袁小花/yuan_small_flower_02_thumb.jpg",
+        "hd": "data/classified/24 袁小花/yuan_small_flower_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/24 袁小花/yuan_small_flower_03_thumb.jpg",
-        "hd": "classified/24 袁小花/yuan_small_flower_03.jpg",
+        "thumb": "data/classified/24 袁小花/yuan_small_flower_03_thumb.jpg",
+        "hd": "data/classified/24 袁小花/yuan_small_flower_03.jpg",
         "seq": 3
       }
     ],
@@ -599,8 +594,8 @@
     "id": "25",
     "name": "袁小牛",
     "gender": "male",
-    "avatar": "classified/25 袁小牛/yuan_small_cow_01_thumb.jpg",
-    "avatar_hd": "classified/25 袁小牛/yuan_small_cow_01.jpg",
+    "avatar": "data/classified/25 袁小牛/yuan_small_cow_01_thumb.jpg",
+    "avatar_hd": "data/classified/25 袁小牛/yuan_small_cow_01.jpg",
     "affection": 5,
     "status": "normal",
     "desc": "貌美的奶牛",
@@ -610,8 +605,8 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/25 袁小牛/yuan_small_cow_02_thumb.jpg",
-        "hd": "classified/25 袁小牛/yuan_small_cow_02.jpg",
+        "thumb": "data/classified/25 袁小牛/yuan_small_cow_02_thumb.jpg",
+        "hd": "data/classified/25 袁小牛/yuan_small_cow_02.jpg",
         "seq": 2
       }
     ],
@@ -621,8 +616,8 @@
     "id": "26",
     "name": "点点",
     "gender": "male",
-    "avatar": "classified/26 点点/dot_dot_01_thumb.jpg",
-    "avatar_hd": "classified/26 点点/dot_dot_01.jpg",
+    "avatar": "data/classified/26 点点/dot_dot_01_thumb.jpg",
+    "avatar_hd": "data/classified/26 点点/dot_dot_01.jpg",
     "affection": 5,
     "status": "normal",
     "desc": "高精力和低精力并存",
@@ -637,8 +632,8 @@
     "id": "27",
     "name": "怕人三花(暂用名)",
     "gender": "female",
-    "avatar": "classified/27 怕人三花(暂用名)/pa_ren_san_hua_01_thumb.jpg",
-    "avatar_hd": "classified/27 怕人三花(暂用名)/pa_ren_san_hua_01.jpg",
+    "avatar": "data/classified/27 怕人三花(暂用名)/pa_ren_san_hua_01_thumb.jpg",
+    "avatar_hd": "data/classified/27 怕人三花(暂用名)/pa_ren_san_hua_01.jpg",
     "affection": 1,
     "status": "normal",
     "desc": "普通的三花",
@@ -646,8 +641,8 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/27 怕人三花(暂用名)/pa_ren_san_hua_02_thumb.jpg",
-        "hd": "classified/27 怕人三花(暂用名)/pa_ren_san_hua_02.jpg",
+        "thumb": "data/classified/27 怕人三花(暂用名)/pa_ren_san_hua_02_thumb.jpg",
+        "hd": "data/classified/27 怕人三花(暂用名)/pa_ren_san_hua_02.jpg",
         "seq": 2
       }
     ],
@@ -657,8 +652,8 @@
     "id": "28",
     "name": "狸花1号(暂用名)",
     "gender": "unknown",
-    "avatar": "classified/28 狸花1号(暂用名)/li_hua_one_01_thumb.jpg",
-    "avatar_hd": "classified/28 狸花1号(暂用名)/li_hua_one_01.jpg",
+    "avatar": "data/classified/28 狸花1号(暂用名)/li_hua_one_01_thumb.jpg",
+    "avatar_hd": "data/classified/28 狸花1号(暂用名)/li_hua_one_01.jpg",
     "affection": 1,
     "status": "normal",
     "desc": "普通的狸花",
@@ -666,18 +661,18 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/28 狸花1号(暂用名)/li_hua_one_02_thumb.jpg",
-        "hd": "classified/28 狸花1号(暂用名)/li_hua_one_02.jpg",
+        "thumb": "data/classified/28 狸花1号(暂用名)/li_hua_one_02_thumb.jpg",
+        "hd": "data/classified/28 狸花1号(暂用名)/li_hua_one_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/28 狸花1号(暂用名)/li_hua_one_03_thumb.jpg",
-        "hd": "classified/28 狸花1号(暂用名)/li_hua_one_03.jpg",
+        "thumb": "data/classified/28 狸花1号(暂用名)/li_hua_one_03_thumb.jpg",
+        "hd": "data/classified/28 狸花1号(暂用名)/li_hua_one_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "classified/28 狸花1号(暂用名)/li_hua_one_04_thumb.jpg",
-        "hd": "classified/28 狸花1号(暂用名)/li_hua_one_04.jpg",
+        "thumb": "data/classified/28 狸花1号(暂用名)/li_hua_one_04_thumb.jpg",
+        "hd": "data/classified/28 狸花1号(暂用名)/li_hua_one_04.jpg",
         "seq": 4
       }
     ],
@@ -687,8 +682,8 @@
     "id": "29",
     "name": "狸花2号(暂用名)",
     "gender": "unknown",
-    "avatar": "classified/29 狸花2号(暂用名)/li_hua_two_01_thumb.jpg",
-    "avatar_hd": "classified/29 狸花2号(暂用名)/li_hua_two_01.jpg",
+    "avatar": "data/classified/29 狸花2号(暂用名)/li_hua_two_01_thumb.jpg",
+    "avatar_hd": "data/classified/29 狸花2号(暂用名)/li_hua_two_01.jpg",
     "affection": 1,
     "status": "normal",
     "desc": "普通的狸花",
@@ -696,8 +691,8 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/29 狸花2号(暂用名)/li_hua_two_02_thumb.jpg",
-        "hd": "classified/29 狸花2号(暂用名)/li_hua_two_02.jpg",
+        "thumb": "data/classified/29 狸花2号(暂用名)/li_hua_two_02_thumb.jpg",
+        "hd": "data/classified/29 狸花2号(暂用名)/li_hua_two_02.jpg",
         "seq": 2
       }
     ],
@@ -707,8 +702,8 @@
     "id": "30",
     "name": "狸花3号(暂用名)",
     "gender": "unknown",
-    "avatar": "classified/30 狸花3号(暂用名)/li_hua_three_01_thumb.jpg",
-    "avatar_hd": "classified/30 狸花3号(暂用名)/li_hua_three_01.jpg",
+    "avatar": "data/classified/30 狸花3号(暂用名)/li_hua_three_01_thumb.jpg",
+    "avatar_hd": "data/classified/30 狸花3号(暂用名)/li_hua_three_01.jpg",
     "affection": 1,
     "status": "lost",
     "desc": "普通的狸花",
@@ -716,8 +711,8 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/30 狸花3号(暂用名)/li_hua_three_02_thumb.jpg",
-        "hd": "classified/30 狸花3号(暂用名)/li_hua_three_02.jpg",
+        "thumb": "data/classified/30 狸花3号(暂用名)/li_hua_three_02_thumb.jpg",
+        "hd": "data/classified/30 狸花3号(暂用名)/li_hua_three_02.jpg",
         "seq": 2
       }
     ],
@@ -727,8 +722,8 @@
     "id": "31",
     "name": "狸花4号(暂用名)",
     "gender": "male",
-    "avatar": "classified/31 狸花4号(暂用名)/li_hua_four_01_thumb.jpg",
-    "avatar_hd": "classified/31 狸花4号(暂用名)/li_hua_four_01.jpg",
+    "avatar": "data/classified/31 狸花4号(暂用名)/li_hua_four_01_thumb.jpg",
+    "avatar_hd": "data/classified/31 狸花4号(暂用名)/li_hua_four_01.jpg",
     "affection": 5,
     "status": "lost",
     "desc": "普通的狸花",
@@ -741,8 +736,8 @@
     "id": "32",
     "name": "花卷",
     "gender": "male",
-    "avatar": "classified/32 花卷/flower_juan_01_thumb.jpg",
-    "avatar_hd": "classified/32 花卷/flower_juan_01.jpg",
+    "avatar": "data/classified/32 花卷/flower_juan_01_thumb.jpg",
+    "avatar_hd": "data/classified/32 花卷/flower_juan_01.jpg",
     "affection": 3,
     "status": "normal",
     "desc": "普通的狸花",
@@ -752,23 +747,23 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "classified/32 花卷/flower_juan_02_thumb.jpg",
-        "hd": "classified/32 花卷/flower_juan_02.jpg",
+        "thumb": "data/classified/32 花卷/flower_juan_02_thumb.jpg",
+        "hd": "data/classified/32 花卷/flower_juan_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/32 花卷/flower_juan_03_thumb.jpg",
-        "hd": "classified/32 花卷/flower_juan_03.jpg",
+        "thumb": "data/classified/32 花卷/flower_juan_03_thumb.jpg",
+        "hd": "data/classified/32 花卷/flower_juan_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "classified/32 花卷/flower_juan_04_thumb.jpg",
-        "hd": "classified/32 花卷/flower_juan_04.jpg",
+        "thumb": "data/classified/32 花卷/flower_juan_04_thumb.jpg",
+        "hd": "data/classified/32 花卷/flower_juan_04.jpg",
         "seq": 4
       },
       {
-        "thumb": "classified/32 花卷/flower_juan_05_thumb.jpg",
-        "hd": "classified/32 花卷/flower_juan_05.jpg",
+        "thumb": "data/classified/32 花卷/flower_juan_05_thumb.jpg",
+        "hd": "data/classified/32 花卷/flower_juan_05.jpg",
         "seq": 5
       }
     ],
@@ -778,8 +773,8 @@
     "id": "33",
     "name": "白猫(暂用名)",
     "gender": "unknown",
-    "avatar": "classified/33 白猫(暂用名)/white_cat_01_thumb.jpg",
-    "avatar_hd": "classified/33 白猫(暂用名)/white_cat_01.jpg",
+    "avatar": "data/classified/33 白猫(暂用名)/white_cat_01_thumb.jpg",
+    "avatar_hd": "data/classified/33 白猫(暂用名)/white_cat_01.jpg",
     "affection": 1,
     "status": "lost",
     "desc": "普通的白猫",
@@ -792,8 +787,8 @@
     "id": "34",
     "name": "古典纹猫妈(暂用名)",
     "gender": "female",
-    "avatar": "classified/34 古典纹猫妈(暂用名)/gu_dian_wen_cat_mom_01_thumb.jpg",
-    "avatar_hd": "classified/34 古典纹猫妈(暂用名)/gu_dian_wen_cat_mom_01.jpg",
+    "avatar": "data/classified/34 古典纹猫妈(暂用名)/gu_dian_wen_cat_mom_01_thumb.jpg",
+    "avatar_hd": "data/classified/34 古典纹猫妈(暂用名)/gu_dian_wen_cat_mom_01.jpg",
     "affection": 1,
     "status": "normal",
     "desc": "普通的狸花",
@@ -806,8 +801,8 @@
     "id": "35",
     "name": "漂亮橘",
     "gender": "male",
-    "avatar": "classified/35 漂亮橘/big_orange_one_01_thumb.jpg",
-    "avatar_hd": "classified/35 漂亮橘/big_orange_one_01.jpg",
+    "avatar": "data/classified/35 漂亮橘/big_orange_one_01_thumb.jpg",
+    "avatar_hd": "data/classified/35 漂亮橘/big_orange_one_01.jpg",
     "affection": 1,
     "status": "normal",
     "desc": "漂亮的大橘",
@@ -815,13 +810,13 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "classified/35 漂亮橘/big_orange_one_02_thumb.jpg",
-        "hd": "classified/35 漂亮橘/big_orange_one_02.jpg",
+        "thumb": "data/classified/35 漂亮橘/big_orange_one_02_thumb.jpg",
+        "hd": "data/classified/35 漂亮橘/big_orange_one_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "classified/35 漂亮橘/big_orange_one_03_thumb.jpg",
-        "hd": "classified/35 漂亮橘/big_orange_one_03.jpg",
+        "thumb": "data/classified/35 漂亮橘/big_orange_one_03_thumb.jpg",
+        "hd": "data/classified/35 漂亮橘/big_orange_one_03.jpg",
         "seq": 3
       }
     ],
@@ -837,8 +832,8 @@
     "story": "8月的一个晚上，一只小狸花突然出现在奶牛猫妈孩子的窝边，过了两天，猫妈出现了。",
     "pic_name": "miow_mum_two",
     "tags": [],
-    "avatar": "classified/36 猫妈2号（暂用名）/miow_mum_two_01_thumb.jpg",
-    "avatar_hd": "classified/36 猫妈2号（暂用名）/miow_mum_two_01.jpg",
+    "avatar": "data/classified/36 猫妈2号（暂用名）/miow_mum_two_01_thumb.jpg",
+    "avatar_hd": "data/classified/36 猫妈2号（暂用名）/miow_mum_two_01.jpg",
     "otherPhotos": []
   },
   {
@@ -851,12 +846,12 @@
     "story": "8 月的一个晚上，一只小狸花突然出现在奶牛猫妈孩子的窝边，猫德满分，和另外 4 只原住民形成鲜明对比。",
     "pic_name": "little_lihua",
     "tags": [],
-    "avatar": "classified/37 小狸花（暂用名）/little_lihua_01_thumb.jpg",
-    "avatar_hd": "classified/37 小狸花（暂用名）/little_lihua_01.jpg",
+    "avatar": "data/classified/37 小狸花（暂用名）/little_lihua_01_thumb.jpg",
+    "avatar_hd": "data/classified/37 小狸花（暂用名）/little_lihua_01.jpg",
     "otherPhotos": [
       {
-        "thumb": "classified/37 小狸花（暂用名）/little_lihua_02_thumb.jpg",
-        "hd": "classified/37 小狸花（暂用名）/little_lihua_02.jpg",
+        "thumb": "data/classified/37 小狸花（暂用名）/little_lihua_02_thumb.jpg",
+        "hd": "data/classified/37 小狸花（暂用名）/little_lihua_02.jpg",
         "seq": 2
       }
     ]
@@ -871,8 +866,8 @@
     "story": "在先行走失的一只小猫，一只被曙光同学们养着，已经被领养了。",
     "pic_name": "song_son",
     "tags": [],
-    "avatar": "classified/38 松子/song_son_01_thumb.jpg",
-    "avatar_hd": "classified/38 松子/song_son_01.jpg",
+    "avatar": "data/classified/38 松子/song_son_01_thumb.jpg",
+    "avatar_hd": "data/classified/38 松子/song_son_01.jpg",
     "otherPhotos": []
   },
   {
@@ -885,32 +880,32 @@
     "story": "2026年7月7日暴雨天，它被同学从体育馆下水道附近发现并救助，救助人给它起名袁小七。它性格胆小、躲人，却很喜欢被摸摸（尤其屁股！可以在它吃饭时偷偷摸它??！摸了以后尾巴屁股都会翘的高高的），不会哈人，也不会咬人，平时活泼爱玩，目前还在慢慢和人类建立信任。如今已学会自己避雨，下雨天会钻进圆桌底下躲雨（所以大家可以给圆桌留个小缝方便它躲藏）。它还经常偷吃原住民小牛小花的猫粮，小牛并不排斥它，貌似也没多喜欢…",
     "pic_name": "yuan_liiittle_seven",
     "tags": [],
-    "avatar": "classified/39 袁小 7/yuan_liiittle_seven_01_thumb.jpg",
-    "avatar_hd": "classified/39 袁小 7/yuan_liiittle_seven_01.jpg",
+    "avatar": "data/classified/39 袁小 7/yuan_liiittle_seven_01_thumb.jpg",
+    "avatar_hd": "data/classified/39 袁小 7/yuan_liiittle_seven_01.jpg",
     "otherPhotos": [
       {
-        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_03_thumb.jpg",
-        "hd": "classified/39 袁小 7/yuan_liiittle_seven_03.jpg",
+        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_03_thumb.jpg",
+        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_04_thumb.jpg",
-        "hd": "classified/39 袁小 7/yuan_liiittle_seven_04.jpg",
+        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_04_thumb.jpg",
+        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_04.jpg",
         "seq": 4
       },
       {
-        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_05_thumb.jpg",
-        "hd": "classified/39 袁小 7/yuan_liiittle_seven_05.jpg",
+        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_05_thumb.jpg",
+        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_05.jpg",
         "seq": 5
       },
       {
-        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_06_thumb.jpg",
-        "hd": "classified/39 袁小 7/yuan_liiittle_seven_06.jpg",
+        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_06_thumb.jpg",
+        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_06.jpg",
         "seq": 6
       },
       {
-        "thumb": "classified/39 袁小 7/yuan_liiittle_seven_07_thumb.jpg",
-        "hd": "classified/39 袁小 7/yuan_liiittle_seven_07.jpg",
+        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_07_thumb.jpg",
+        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_07.jpg",
         "seq": 7
       }
     ]
@@ -925,12 +920,12 @@
     "story": "眼睛还没睁开，就被遗弃在猫妈窝里的小橘子，不会喵喵，只会开摩托（打呼）。",
     "pic_name": "little_orange",
     "tags": [],
-    "avatar": "classified/40 小橘咪/little_orange_01_thumb.jpg",
-    "avatar_hd": "classified/40 小橘咪/little_orange_01.jpg",
+    "avatar": "data/classified/40 小橘咪/little_orange_01_thumb.jpg",
+    "avatar_hd": "data/classified/40 小橘咪/little_orange_01.jpg",
     "otherPhotos": [
       {
-        "thumb": "classified/40 小橘咪/little_orange_02_thumb.jpg",
-        "hd": "classified/40 小橘咪/little_orange_02.jpg",
+        "thumb": "data/classified/40 小橘咪/little_orange_02_thumb.jpg",
+        "hd": "data/classified/40 小橘咪/little_orange_02.jpg",
         "seq": 2
       }
     ]
