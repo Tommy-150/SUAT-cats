@@ -720,17 +720,17 @@
   },
   {
     "id": "31",
-    "name": "狸花4号(暂用名)",
+    "name": "眼屎狸",
     "gender": "male",
-    "avatar": "data/classified/31 狸花4号(暂用名)/li_hua_four_01_thumb.jpg",
-    "avatar_hd": "data/classified/31 狸花4号(暂用名)/li_hua_four_01.jpg",
+    "avatar": "data/classified/31 眼屎狸/eyes_shit_so_much_01_thumb.jpg",
+    "avatar_hd": "data/classified/31 眼屎狸/eyes_shit_so_much_01.jpg",
     "affection": 5,
     "status": "lost",
-    "desc": "普通的狸花",
-    "story": "一只普通的亲人狸花，以前陪伴小咪长大，眼屎很多，2025年9月失踪",
+    "desc": "眼屎很多的狸花",
+    "story": "一只普通的亲人狸花，看着小咪长大，天天被小咪当猎物打，眼屎很多，2025年9月失踪",
     "tags": [],
     "otherPhotos": [],
-    "pic_name": "li_hua_four"
+    "pic_name": "eyes_shit_so_much"
   },
   {
     "id": "32",
