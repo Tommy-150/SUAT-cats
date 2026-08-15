@@ -1,10 +1,10 @@
 [
   {
     "id": "01",
-    "name": "丑橘(暂用名)",
+    "name": "丑橘",
     "gender": "male",
-    "avatar": "data/classified/01 丑橘(暂用名)/ugly_orange_01_thumb.jpg",
-    "avatar_hd": "data/classified/01 丑橘(暂用名)/ugly_orange_01.jpg",
+    "avatar": "data/classified/01 丑橘/ugly_orange_01_thumb.jpg",
+    "avatar_hd": "data/classified/01 丑橘/ugly_orange_01.jpg",
     "affection": 5,
     "status": "adopted",
     "desc": "校门口超级亲人的橘",
@@ -12,8 +12,8 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "data/classified/01 丑橘(暂用名)/ugly_orange_02_thumb.jpg",
-        "hd": "data/classified/01 丑橘(暂用名)/ugly_orange_02.jpg",
+        "thumb": "data/classified/01 丑橘/ugly_orange_02_thumb.jpg",
+        "hd": "data/classified/01 丑橘/ugly_orange_02.jpg",
         "seq": 2
       }
     ],
@@ -234,10 +234,10 @@
   },
   {
     "id": "10",
-    "name": "古典纹(暂用名)",
+    "name": "小古典纹",
     "gender": "female",
-    "avatar": "data/classified/10 古典纹(暂用名)/gu_dian_wen_01_thumb.jpg",
-    "avatar_hd": "data/classified/10 古典纹(暂用名)/gu_dian_wen_01.jpg",
+    "avatar": "data/classified/10 小古典纹/gu_dian_wen_01_thumb.jpg",
+    "avatar_hd": "data/classified/10 小古典纹/gu_dian_wen_01.jpg",
     "affection": 2,
     "status": "lost",
     "desc": "怕人的古典纹狸花",
@@ -245,18 +245,18 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "data/classified/10 古典纹(暂用名)/gu_dian_wen_02_thumb.jpg",
-        "hd": "data/classified/10 古典纹(暂用名)/gu_dian_wen_02.jpg",
+        "thumb": "data/classified/10 小古典纹/gu_dian_wen_02_thumb.jpg",
+        "hd": "data/classified/10 小古典纹/gu_dian_wen_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "data/classified/10 古典纹(暂用名)/gu_dian_wen_03_thumb.jpg",
-        "hd": "data/classified/10 古典纹(暂用名)/gu_dian_wen_03.jpg",
+        "thumb": "data/classified/10 小古典纹/gu_dian_wen_03_thumb.jpg",
+        "hd": "data/classified/10 小古典纹/gu_dian_wen_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "data/classified/10 古典纹(暂用名)/gu_dian_wen_04_thumb.jpg",
-        "hd": "data/classified/10 古典纹(暂用名)/gu_dian_wen_04.jpg",
+        "thumb": "data/classified/10 小古典纹/gu_dian_wen_04_thumb.jpg",
+        "hd": "data/classified/10 小古典纹/gu_dian_wen_04.jpg",
         "seq": 4
       }
     ],
@@ -264,10 +264,10 @@
   },
   {
     "id": "11",
-    "name": "宕机猫(暂用名)",
+    "name": "宕机猫",
     "gender": "unknown",
-    "avatar": "data/classified/11 宕机猫(暂用名)/river_side_milk_cow_01_thumb.jpg",
-    "avatar_hd": "data/classified/11 宕机猫(暂用名)/river_side_milk_cow_01.jpg",
+    "avatar": "data/classified/11 宕机猫/river_side_milk_cow_01_thumb.jpg",
+    "avatar_hd": "data/classified/11 宕机猫/river_side_milk_cow_01.jpg",
     "affection": 1,
     "status": "lost",
     "desc": "很像宕机猫",
@@ -275,8 +275,8 @@
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "data/classified/11 宕机猫(暂用名)/river_side_milk_cow_02_thumb.jpg",
-        "hd": "data/classified/11 宕机猫(暂用名)/river_side_milk_cow_02.jpg",
+        "thumb": "data/classified/11 宕机猫/river_side_milk_cow_02_thumb.jpg",
+        "hd": "data/classified/11 宕机猫/river_side_milk_cow_02.jpg",
         "seq": 2
       }
     ],
@@ -915,7 +915,7 @@
     "name": "小橘咪",
     "gender": "unknown",
     "affection": 5,
-    "status": "normal",
+    "status": "adopted",
     "desc": "被遗弃在猫妈窝里的橘子",
     "story": "眼睛还没睁开，就被遗弃在猫妈窝里的小橘子，不会喵喵，只会开摩托（打呼）。",
     "pic_name": "little_orange",
