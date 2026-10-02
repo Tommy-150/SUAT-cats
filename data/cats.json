@@ -209,9 +209,9 @@
     "avatar": "data/classified/09 老橘/big_orange_one_01_thumb.jpg",
     "avatar_hd": "data/classified/09 老橘/big_orange_one_01.jpg",
     "affection": 1,
-    "status": "normal",
+    "status": "lost",
     "desc": "战斗力最强的大橘",
-    "story": "每天晚上都会从校外游荡过来，抢猫妈的饭吃、欺负三小只、和猫猫打架，只对古典纹好，罪大恶极。",
+    "story": "每天晚上都会从校外游荡过来，抢猫妈的饭吃、欺负三小只、和猫猫打架，只对古典纹好，罪大恶极。最后一次见到他的时间：2026.7.31",
     "tags": [],
     "otherPhotos": [
       {
@@ -284,29 +284,29 @@
   },
   {
     "id": "12",
-    "name": "简州猫妈(暂用名)",
+    "name": "小右",
     "gender": "female",
-    "avatar": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_01_thumb.jpg",
-    "avatar_hd": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_01.jpg",
+    "avatar": "data/classified/12 小右/jian_zhou_cat_mum_01_thumb.jpg",
+    "avatar_hd": "data/classified/12 小右/jian_zhou_cat_mum_01.jpg",
     "affection": 2,
     "status": "normal",
     "desc": "怕人的猫妈",
-    "story": "狸花帮的一员，生下了大约四只小猫仔，但是目前见不到任何一只崽子。",
+    "story": "因为鼻嘎在嘴的右边，所以叫小右。狸花帮的一员，2025 年暑假生下了大约四只小猫仔，但是目前见不到任何一只崽子（疑似有一只在狸花帮里面）。2026 年暑假又生了一窝。喜欢哈气，喜欢打人，但是看到有人类有食物就翘着尾巴走过来。",
     "tags": [],
     "otherPhotos": [
       {
-        "thumb": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02_thumb.jpg",
-        "hd": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_02.jpg",
+        "thumb": "data/classified/12 小右/jian_zhou_cat_mum_02_thumb.jpg",
+        "hd": "data/classified/12 小右/jian_zhou_cat_mum_02.jpg",
         "seq": 2
       },
       {
-        "thumb": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03_thumb.jpg",
-        "hd": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_03.jpg",
+        "thumb": "data/classified/12 小右/jian_zhou_cat_mum_03_thumb.jpg",
+        "hd": "data/classified/12 小右/jian_zhou_cat_mum_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04_thumb.jpg",
-        "hd": "data/classified/12 简州猫妈(暂用名)/jian_zhou_cat_mum_04.jpg",
+        "thumb": "data/classified/12 小右/jian_zhou_cat_mum_04_thumb.jpg",
+        "hd": "data/classified/12 小右/jian_zhou_cat_mum_04.jpg",
         "seq": 4
       }
     ],
@@ -357,6 +357,11 @@
         "thumb": "data/classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02_thumb.jpg",
         "hd": "data/classified/14 白手套口水巾1号(暂用名)/white_glove_bib_02.jpg",
         "seq": 2
+      },
+      {
+        "thumb": "data/classified/14 白手套口水巾1号(暂用名)/white_glove_bib_03_thumb.jpg",
+        "hd": "data/classified/14 白手套口水巾1号(暂用名)/white_glove_bib_03.jpg",
+        "seq": 3
       }
     ],
     "pic_name": "white_glove_bib"
@@ -505,10 +510,10 @@
   },
   {
     "id": "21",
-    "name": "头3",
+    "name": "头三",
     "gender": "male",
-    "avatar": "data/classified/21 头3/head_three_01_thumb.jpg",
-    "avatar_hd": "data/classified/21 头3/head_three_01.jpg",
+    "avatar": "data/classified/21 头三/head_three_01_thumb.jpg",
+    "avatar_hd": "data/classified/21 头三/head_three_01.jpg",
     "affection": 5,
     "status": "normal",
     "desc": "猕猴桃",
@@ -518,8 +523,8 @@
     ],
     "otherPhotos": [
       {
-        "thumb": "data/classified/21 头3/head_three_02_thumb.jpg",
-        "hd": "data/classified/21 头3/head_three_02.jpg",
+        "thumb": "data/classified/21 头三/head_three_02_thumb.jpg",
+        "hd": "data/classified/21 头三/head_three_02.jpg",
         "seq": 2
       }
     ],
@@ -637,7 +642,7 @@
     "affection": 1,
     "status": "normal",
     "desc": "普通的三花",
-    "story": "突然出现的一只怕人的三花，常常过来蹭饭。",
+    "story": "突然出现的一只怕人的三花，常常过来蹭饭。最后一次见到她的时间：2026.6.13",
     "tags": [],
     "otherPhotos": [
       {
@@ -655,9 +660,9 @@
     "avatar": "data/classified/28 狸花1号(暂用名)/li_hua_one_01_thumb.jpg",
     "avatar_hd": "data/classified/28 狸花1号(暂用名)/li_hua_one_01.jpg",
     "affection": 1,
-    "status": "normal",
+    "status": "lost",
     "desc": "普通的狸花",
-    "story": "一只普通的怕人狸花，背上有纹，有口水巾",
+    "story": "一只普通的怕人狸花，背上有纹，有口水巾，最后一次见到 ta 的时间：2026.4.16。",
     "tags": [],
     "otherPhotos": [
       {
@@ -740,7 +745,7 @@
     "avatar_hd": "data/classified/32 花卷/flower_juan_01.jpg",
     "affection": 3,
     "status": "normal",
-    "desc": "普通的狸花",
+    "desc": "贪吃的狸花",
     "story": "一只尝尝到处蹭饭的狸花，2026年5月出现在校门口，喜欢蹭饭，和贪吃哥是好朋猫，抢二头的地盘。是个给",
     "tags": [
       "已绝育"
@@ -785,14 +790,14 @@
   },
   {
     "id": "34",
-    "name": "古典纹猫妈(暂用名)",
+    "name": "古典纹猫妈",
     "gender": "female",
-    "avatar": "data/classified/34 古典纹猫妈(暂用名)/gu_dian_wen_cat_mom_01_thumb.jpg",
-    "avatar_hd": "data/classified/34 古典纹猫妈(暂用名)/gu_dian_wen_cat_mom_01.jpg",
+    "avatar": "data/classified/34 古典纹猫妈/gu_dian_wen_cat_mom_01_thumb.jpg",
+    "avatar_hd": "data/classified/34 古典纹猫妈/gu_dian_wen_cat_mom_01.jpg",
     "affection": 1,
-    "status": "normal",
+    "status": "lost",
     "desc": "普通的狸花",
-    "story": "大肚子怕人狸花，很像古典纹的放大版，只是左后腿多了一块纹，",
+    "story": "大肚子怕人狸花，很像古典纹的放大版，只是左后腿多了一块纹，最后一次见到时间：2026.7.9。",
     "tags": [],
     "otherPhotos": [],
     "pic_name": "gu_dian_wen_cat_mom"
@@ -824,35 +829,46 @@
   },
   {
     "id": "36",
-    "name": "猫妈2号（暂用名）",
+    "name": "乖乖",
     "gender": "female",
     "affection": 5,
     "status": "normal",
     "desc": "带着她的孩子新来的猫妈",
-    "story": "8月的一个晚上，一只小狸花突然出现在奶牛猫妈孩子的窝边，过了两天，猫妈出现了。",
+    "story": "8月的一个晚上，一只小狸花（嗷呜）突然出现在奶牛猫妈孩子的窝边，过了两天，乖乖出现了。",
     "pic_name": "miow_mum_two",
     "tags": [],
-    "avatar": "data/classified/36 猫妈2号（暂用名）/miow_mum_two_01_thumb.jpg",
-    "avatar_hd": "data/classified/36 猫妈2号（暂用名）/miow_mum_two_01.jpg",
-    "otherPhotos": []
+    "avatar": "data/classified/36 乖乖/miow_mum_two_01_thumb.jpg",
+    "avatar_hd": "data/classified/36 乖乖/miow_mum_two_01.jpg",
+    "otherPhotos": [
+      {
+        "thumb": "data/classified/36 乖乖/miow_mum_two_02_thumb.jpg",
+        "hd": "data/classified/36 乖乖/miow_mum_two_02.jpg",
+        "seq": 2
+      }
+    ]
   },
   {
     "id": "37",
-    "name": "小狸花（暂用名）",
-    "gender": "unknown",
+    "name": "嗷呜",
+    "gender": "female",
     "affection": 5,
     "status": "normal",
     "desc": "突然出现一只猫德满分的小狸花",
     "story": "8 月的一个晚上，一只小狸花突然出现在奶牛猫妈孩子的窝边，猫德满分，和另外 4 只原住民形成鲜明对比。",
     "pic_name": "little_lihua",
     "tags": [],
-    "avatar": "data/classified/37 小狸花（暂用名）/little_lihua_01_thumb.jpg",
-    "avatar_hd": "data/classified/37 小狸花（暂用名）/little_lihua_01.jpg",
+    "avatar": "data/classified/37 嗷呜/little_lihua_01_thumb.jpg",
+    "avatar_hd": "data/classified/37 嗷呜/little_lihua_01.jpg",
     "otherPhotos": [
       {
-        "thumb": "data/classified/37 小狸花（暂用名）/little_lihua_02_thumb.jpg",
-        "hd": "data/classified/37 小狸花（暂用名）/little_lihua_02.jpg",
+        "thumb": "data/classified/37 嗷呜/little_lihua_02_thumb.jpg",
+        "hd": "data/classified/37 嗷呜/little_lihua_02.jpg",
         "seq": 2
+      },
+      {
+        "thumb": "data/classified/37 嗷呜/little_lihua_03_thumb.jpg",
+        "hd": "data/classified/37 嗷呜/little_lihua_03.jpg",
+        "seq": 3
       }
     ]
   },
@@ -861,7 +877,7 @@
     "name": "松子",
     "gender": "male",
     "affection": 5,
-    "status": "adopted",
+    "status": "lost",
     "desc": "在先行走失的一只小猫",
     "story": "在先行走失的一只小猫，一只被曙光同学们养着，已经被领养了。",
     "pic_name": "song_son",
@@ -872,40 +888,40 @@
   },
   {
     "id": "39",
-    "name": "袁小 7",
+    "name": "袁小七",
     "gender": "male",
-    "affection": 4,
+    "affection": 5,
     "status": "normal",
     "desc": "在大雨中走失的小猫",
     "story": "2026年7月7日暴雨天，它被同学从体育馆下水道附近发现并救助，救助人给它起名袁小七。它性格胆小、躲人，却很喜欢被摸摸（尤其屁股！可以在它吃饭时偷偷摸它??！摸了以后尾巴屁股都会翘的高高的），不会哈人，也不会咬人，平时活泼爱玩，目前还在慢慢和人类建立信任。如今已学会自己避雨，下雨天会钻进圆桌底下躲雨（所以大家可以给圆桌留个小缝方便它躲藏）。它还经常偷吃原住民小牛小花的猫粮，小牛并不排斥它，貌似也没多喜欢…",
     "pic_name": "yuan_liiittle_seven",
     "tags": [],
-    "avatar": "data/classified/39 袁小 7/yuan_liiittle_seven_01_thumb.jpg",
-    "avatar_hd": "data/classified/39 袁小 7/yuan_liiittle_seven_01.jpg",
+    "avatar": "data/classified/39 袁小七/yuan_liiittle_seven_01_thumb.jpg",
+    "avatar_hd": "data/classified/39 袁小七/yuan_liiittle_seven_01.jpg",
     "otherPhotos": [
       {
-        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_03_thumb.jpg",
-        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_03.jpg",
+        "thumb": "data/classified/39 袁小七/yuan_liiittle_seven_03_thumb.jpg",
+        "hd": "data/classified/39 袁小七/yuan_liiittle_seven_03.jpg",
         "seq": 3
       },
       {
-        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_04_thumb.jpg",
-        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_04.jpg",
+        "thumb": "data/classified/39 袁小七/yuan_liiittle_seven_04_thumb.jpg",
+        "hd": "data/classified/39 袁小七/yuan_liiittle_seven_04.jpg",
         "seq": 4
       },
       {
-        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_05_thumb.jpg",
-        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_05.jpg",
+        "thumb": "data/classified/39 袁小七/yuan_liiittle_seven_05_thumb.jpg",
+        "hd": "data/classified/39 袁小七/yuan_liiittle_seven_05.jpg",
         "seq": 5
       },
       {
-        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_06_thumb.jpg",
-        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_06.jpg",
+        "thumb": "data/classified/39 袁小七/yuan_liiittle_seven_06_thumb.jpg",
+        "hd": "data/classified/39 袁小七/yuan_liiittle_seven_06.jpg",
         "seq": 6
       },
       {
-        "thumb": "data/classified/39 袁小 7/yuan_liiittle_seven_07_thumb.jpg",
-        "hd": "data/classified/39 袁小 7/yuan_liiittle_seven_07.jpg",
+        "thumb": "data/classified/39 袁小七/yuan_liiittle_seven_07_thumb.jpg",
+        "hd": "data/classified/39 袁小七/yuan_liiittle_seven_07.jpg",
         "seq": 7
       }
     ]
@@ -913,7 +929,7 @@
   {
     "id": "40",
     "name": "小橘咪",
-    "gender": "unknown",
+    "gender": "male",
     "affection": 5,
     "status": "adopted",
     "desc": "被遗弃在猫妈窝里的橘子",
@@ -929,5 +945,31 @@
         "seq": 2
       }
     ]
+  },
+  {
+    "id": "41",
+    "name": "好猫",
+    "gender": "male",
+    "affection": 5,
+    "status": "normal",
+    "desc": "超好的金渐层",
+    "story": "突然出现在曙光的一只金渐层，特别亲人。",
+    "pic_name": "gold_jian_ceng",
+    "tags": [],
+    "avatar": "data/classified/41 好猫/gold_jian_ceng_01_thumb.jpg",
+    "avatar_hd": "data/classified/41 好猫/gold_jian_ceng_01.jpg"
+  },
+  {
+    "id": "42",
+    "name": "折尾",
+    "gender": "unknown",
+    "affection": 1,
+    "status": "normal",
+    "desc": "尾巴折了的猫",
+    "story": "尾巴从中间折了一下的猫，喜欢在晚上到处游荡。",
+    "pic_name": "fold_tail",
+    "tags": [],
+    "avatar": "data/classified/42 折尾/fold_tail_01_thumb.jpg",
+    "avatar_hd": "data/classified/42 折尾/fold_tail_01.jpg"
   }
 ]
